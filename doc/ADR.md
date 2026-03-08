@@ -1,11 +1,5 @@
 # Architecture Decision Record: OptiView
 
-**Status:** Proposed
-**Date:** 2026-03-08
-**Authors:** Architecture Team
-
----
-
 ## Table of Contents
 
 1. [Overview](#1-overview)
@@ -25,14 +19,14 @@ This ADR documents the architectural decisions for **OptiView** — a high-perfo
 
 ### Key Requirements Reference
 
-| Requirement | PRD Reference |
-|-------------|---------------|
-| Auto-format negotiation | REQ-1 |
-| Dynamic resizing | REQ-2 |
-| Hybrid caching | REQ-3 |
-| Metadata extraction | REQ-4 |
-| Zero CLS | REQ-10, REQ-11 |
-| Lighthouse 90+ | Success Metrics |
+| Requirement             | PRD Reference   |
+|:------------------------|:----------------|
+| Auto-format negotiation | REQ-1           |
+| Dynamic resizing        | REQ-2           |
+| Hybrid caching          | REQ-3           |
+| Metadata extraction     | REQ-4           |
+| Zero CLS                | REQ-10, REQ-11  |
+| Lighthouse 90+          | Success Metrics |
 
 ---
 
@@ -115,12 +109,14 @@ flowchart TB
 **Decision:** Store original and processed images on the local filesystem.
 
 **Rationale:**
+
 - Simplicity for initial development phase
 - No additional infrastructure costs
 - Direct file access for image processing with Sharp
 - Easy migration path to S3-compatible storage in the future
 
 **Storage Structure:**
+
 ```
 uploads/
 ├── originals/           # Original uploaded images
@@ -136,6 +132,7 @@ uploads/
 ```
 
 **Consequences:**
+
 - ✅ Simple implementation
 - ✅ Fast local file access
 - ⚠️ Not horizontally scalable
@@ -169,11 +166,13 @@ Response:
 | GET | `/api/images/:id/lqip` | Get LQIP placeholder |
 
 **Format Priority:**
+
 1. AVIF (if `Accept` includes `image/avif`)
 2. WebP (if `Accept` includes `image/webp`)
 3. JPEG (fallback)
 
 **Rationale:**
+
 - Clean URL structure for image delivery
 - Leverages HTTP content negotiation
 - Browser automatically sends appropriate `Accept` header
@@ -197,6 +196,7 @@ Response:
 | 1920px | Full HD displays |
 
 **Rounding Algorithm:**
+
 ```typescript
 const breakpoints = [320, 640, 768, 1024, 1280, 1920];
 
@@ -208,6 +208,7 @@ function roundToBreakpoint(width: number): number {
 ```
 
 **Rationale:**
+
 - Prevents cache explosion from arbitrary width values
 - Predictable cache size: 6 widths × 3 formats = 18 variants per image
 - Covers 95%+ of device viewport widths
@@ -235,14 +236,15 @@ const { data, isLoading } = useQuery({
 
 **URL Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `genre` | string | Filter by category |
-| `rating` | number | Minimum rating filter |
-| `sort` | string | Sort field and direction |
-| `page` | number | Pagination offset |
+| Parameter | Type   | Description              |
+|:----------|:-------|:-------------------------|
+| `genre`   | string | Filter by category       |
+| `rating`  | number | Minimum rating filter    |
+| `sort`    | string | Sort field and direction |
+| `page`    | number | Pagination offset        |
 
 **Rationale:**
+
 - Shareable and bookmarkable URLs
 - Browser back/forward navigation works naturally
 - TanStack Query handles caching and refetching
@@ -268,6 +270,7 @@ const lqipBase64 = `data:image/jpeg;base64,${lqip.toString('base64')}`;
 ```
 
 **Frontend Usage:**
+
 ```css
 .image-placeholder {
   background-image: url('data:image/jpeg;base64,...');
@@ -277,6 +280,7 @@ const lqipBase64 = `data:image/jpeg;base64,${lqip.toString('base64')}`;
 ```
 
 **Rationale:**
+
 - Extremely small payload (~200-500 bytes base64)
 - Can be embedded directly in API response
 - Smooth transition to full image
@@ -289,6 +293,7 @@ const lqipBase64 = `data:image/jpeg;base64,${lqip.toString('base64')}`;
 **Decision:** Use Docker Compose to run NestJS backend and PostgreSQL in containers. Frontend is developed and deployed separately.
 
 **docker-compose.yml Structure:**
+
 ```yaml
 services:
   backend:
@@ -314,6 +319,7 @@ volumes:
 ```
 
 **Rationale:**
+
 - Consistent development environment
 - Easy to add services (Redis, etc.) later
 - Volume persistence for database and uploads
@@ -366,6 +372,7 @@ export class Image {
 ```
 
 **Rationale:**
+
 - Native NestJS integration via `@nestjs/typeorm`
 - Decorator-based entity definitions
 - Automatic migrations support
@@ -437,13 +444,13 @@ sequenceDiagram
 
 ## 6. Security Considerations
 
-| Concern | Mitigation |
-|---------|------------|
-| File upload attacks | Validate MIME type, file extension whitelist, max file size |
-| Path traversal | Use UUIDs, never use user input for file paths |
-| DoS via large images | Limit dimensions, memory limits in Sharp |
-| CORS | Configure allowed origins in NestJS |
-| Input validation | class-validator DTOs on all endpoints |
+| Concern              | Mitigation                                                  |
+|:---------------------|:------------------------------------------------------------|
+| File upload attacks  | Validate MIME type, file extension whitelist, max file size |
+| Path traversal       | Use UUIDs, never use user input for file paths              |
+| DoS via large images | Limit dimensions, memory limits in Sharp                    |
+| CORS                 | Configure allowed origins in NestJS                         |
+| Input validation     | class-validator DTOs on all endpoints                       |
 
 ---
 
@@ -467,6 +474,7 @@ Phase 1 (Current)     Phase 2              Phase 3
 ```
 
 **Migration Checklist for Phase 2:**
+
 - [ ] Add CloudFront or similar CDN
 - [ ] Implement cache headers
 - [ ] Move static assets to CDN
@@ -475,30 +483,21 @@ Phase 1 (Current)     Phase 2              Phase 3
 
 ## 8. Open Questions
 
-| # | Question | Status | Notes |
-|---|----------|--------|-------|
-| 1 | Max file size for uploads? | Open | Suggest 10MB |
-| 2 | Supported input formats? | Open | Suggest JPEG, PNG, WebP |
-| 3 | Pagination strategy? | Open | Suggest cursor-based |
-| 4 | Rate limiting? | Open | Consider for upload endpoint |
+| # | Question                   | Status | Notes                        |
+|:--|:---------------------------|:-------|:-----------------------------|
+| 1 | Max file size for uploads? | Open   | Suggest 10MB                 |
+| 2 | Supported input formats?   | Open   | Suggest JPEG, PNG, WebP      |
+| 3 | Pagination strategy?       | Open   | Suggest cursor-based         |
+| 4 | Rate limiting?             | Open   | Consider for upload endpoint |
 
 ---
 
 ## Decision Log
 
-| Date | Decision | Impact |
-|------|----------|--------|
-| 2026-03-08 | Local filesystem storage | Simplicity over scalability |
+| Date       | Decision                 | Impact                             |
+|:-----------|:-------------------------|:-----------------------------------|
+| 2026-03-08 | Local filesystem storage | Simplicity over scalability        |
 | 2026-03-08 | REST API + Accept header | Standards-based format negotiation |
-| 2026-03-08 | Fixed breakpoints | Predictable cache size |
-| 2026-03-08 | LQIP over blur-hash | Simpler implementation |
-| 2026-03-08 | TypeORM | NestJS ecosystem alignment |
-
----
-
-## Approval
-
-| Role | Name | Date | Status |
-|------|------|------|--------|
-| Tech Lead | _ | _ | Pending |
-| Product Owner | _ | _ | Pending |
+| 2026-03-08 | Fixed breakpoints        | Predictable cache size             |
+| 2026-03-08 | LQIP over blur-hash      | Simpler implementation             |
+| 2026-03-08 | TypeORM                  | NestJS ecosystem alignment         |
