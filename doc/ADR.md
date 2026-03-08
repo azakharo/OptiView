@@ -223,25 +223,27 @@ function roundToBreakpoint(width: number): number {
 
 ```typescript
 // URL as source of truth for filters
-// ?genre=nature&rating=4&sort=date_desc
+// ?genre=nature&rating=4&sort=createdAt&sortOrder=DESC
 
 const [searchParams, setSearchParams] = useSearchParams();
 
 // TanStack Query for data fetching
 const { data, isLoading } = useQuery({
-  queryKey: ['images', genre, rating, sort],
-  queryFn: () => fetchImages({ genre, rating, sort }),
+  queryKey: ['images', genre, rating, sort, sortOrder],
+  queryFn: () => fetchImages({ genre, rating, sort, sortOrder }),
 });
 ```
 
 **URL Parameters:**
 
-| Parameter | Type   | Description              |
-|:----------|:-------|:-------------------------|
-| `genre`   | string | Filter by category       |
-| `rating`  | number | Minimum rating filter    |
-| `sort`    | string | Sort field and direction |
-| `page`    | number | Pagination offset        |
+| Parameter   | Type   | Description                              | Default     |
+|:------------|:-------|:-----------------------------------------|:------------|
+| `genre`     | string | Filter by category                       | -           |
+| `rating`    | number | Minimum rating filter                    | -           |
+| `sort`      | string | Sort field (e.g., createdAt, rating)     | `createdAt` |
+| `sortOrder` | string | Sort direction: ASC or DESC              | `DESC`      |
+| `page`      | number | Page number for pagination               | `1`         |
+| `pageSize`  | number | Number of items per page                 | `10`        |
 
 **Rationale:**
 
@@ -449,7 +451,7 @@ sequenceDiagram
 | File upload attacks  | Validate MIME type, file extension whitelist, max file size |
 | Path traversal       | Use UUIDs, never use user input for file paths              |
 | DoS via large images | Limit dimensions, memory limits in Sharp                    |
-| CORS                 | Configure allowed origins in NestJS                         |
+| CORS                 | Public API - allow all origins with wildcard                |
 | Input validation     | class-validator DTOs on all endpoints                       |
 
 ---
