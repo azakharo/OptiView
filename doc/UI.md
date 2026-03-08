@@ -178,9 +178,9 @@ This document defines the user interface design for OptiView - a high-performanc
 │                                                                 │
 │   Upload Queue:                                                 │
 │   ┌─────────────────────────────────────────────────────────┐   │
-│   │ photo1.jpg  ██████████████████████ 100%  ✅ Done        │   │
-│   │ photo2.jpg  ████████████░░░░░░░░░░░░ 60%   ⏳ Uploading │   │
-│   │ photo3.jpg  ░░░░░░░░░░░░░░░░░░░░░░░░ 0%    ⏸ Waiting   │   │
+│   │ photo1.jpg [Genre: Nature ▼]  ████████ 100%  ✅ Done    │   │
+│   │ photo2.jpg [Genre: Architect▼] ████░░░░ 60%   ⏳ Upload  │   │
+│   │ photo3.jpg [Genre: Uncategoriz] ░░░░░░░░ 0%    ⏸ Wait   │   │
 │   └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │                                           [Upload More]         │
@@ -194,9 +194,20 @@ This document defines the user interface design for OptiView - a high-performanc
 - Multiple file selection supported
 - File type validation (JPEG, PNG, WebP only)
 - File size validation (max 10MB per file)
+- **Genre selection per image** - dropdown for each file in the queue
 - Progress bar per file
 - Status indicators: Waiting / Uploading / Processing / Done / Error
 - Auto-navigate to gallery after all uploads complete (optional)
+
+**Genre Selection:**
+
+| Aspect            | Description                                                          |
+|:------------------|:---------------------------------------------------------------------|
+| Available Genres  | Nature, Architecture, Portrait, Uncategorized                        |
+| Adding new genres | A user can add his/her own new genre                                 |
+| Selection Timing  | Genre must be selected before or during upload                       |
+| Default Value     | Uncategorized                                                        |
+| **Immutability**  | **Genre can only be set at upload time and cannot be changed later** |
 
 **Default Values for New Uploads:**
 
