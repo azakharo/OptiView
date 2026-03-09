@@ -1,24 +1,4 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./uploads:/app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-    restart: unless-stopped
-
   postgres:
     image: postgres:16-alpine
     volumes:

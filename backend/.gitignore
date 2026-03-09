@@ -19,3 +19,8 @@ uploads/lqip/*
 .idea/
 *.swp
 *.swo
+
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
