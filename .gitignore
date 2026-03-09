@@ -2,6 +2,9 @@
 node_modules/
 dist/
 
+# Environment
+.env
+
 # Uploads
 uploads/originals/*
 uploads/processed/*
