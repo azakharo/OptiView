@@ -53,7 +53,7 @@ None - this is the starting point.
 | Type | Artifact | Description |
 |:-----|:---------|:------------|
 | Code | `docker-compose.yml` | Multi-container setup for backend + PostgreSQL |
-| Code | `.env.example` | Environment variables template |
+| Code | `.env` | Environment variables template |
 | Code | `backend/nest-cli.json` | NestJS configuration |
 | Code | `backend/tsconfig.json` | TypeScript configuration |
 | Doc | `backend/README.md` | Backend setup instructions |
