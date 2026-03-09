@@ -44,6 +44,10 @@
   * Genre is immutable once set at upload time.
 * **REQ-12: Lightbox Modal.** Users can view images in full-screen mode with navigation between images and download options for different sizes (640px, 1280px, 1920px).
 * **REQ-13: Quick Upload Access.** A floating action button (FAB) provides quick navigation to the upload page.
+* **REQ-14: Rating Update.** Users can update the rating of any image after upload.
+  * Rating is a shared/global value - no user attribution.
+  * Rating can be changed from both the image card in the gallery and the Lightbox modal.
+  * Optimistic UI updates with error rollback.
 
 ### 4.3. User Experience (UX)
 

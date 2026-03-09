@@ -164,12 +164,35 @@ Response:
 | GET | `/api/images/:id/metadata` | Get image metadata |
 | POST | `/api/images/upload` | Upload new image |
 | GET | `/api/images/:id/lqip` | Get LQIP placeholder |
+| PATCH | `/api/images/:id/rating` | Update image rating |
 
 **Format Priority:**
 
 1. AVIF (if `Accept` includes `image/avif`)
 2. WebP (if `Accept` includes `image/webp`)
 3. JPEG (fallback)
+
+**Rating Update Endpoint:**
+
+```
+PATCH /api/images/:id/rating
+Content-Type: application/json
+
+Request Body:
+{
+  "rating": 4
+}
+
+Response (200 OK):
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "rating": 4,
+  "updatedAt": "2026-03-09T12:00:00Z"
+}
+
+Validation:
+- rating: required, integer, min: 1, max: 5
+```
 
 **Rationale:**
 
@@ -440,6 +463,33 @@ sequenceDiagram
     end
 
     API-->>Browser: Return image with Content-Type
+```
+
+### Rating Update Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant TanStack Query
+    participant API
+    participant Database
+
+    User->>Frontend: Click on star 4
+    Frontend->>TanStack Query: Optimistic update to rating 4
+    TanStack Query-->>Frontend: UI shows 4 stars immediately
+    Frontend->>API: PATCH /api/images/:id/rating
+
+    alt Success
+        API->>Database: UPDATE images SET rating = 4
+        Database-->>API: Updated record
+        API-->>TanStack Query: 200 OK with new rating
+        TanStack Query-->>Frontend: Confirm update
+    else Error
+        API-->>TanStack Query: 400/404/500 error
+        TanStack Query-->>Frontend: Revert to previous value
+        Frontend-->>User: Show error toast notification
+    end
 ```
 
 ---

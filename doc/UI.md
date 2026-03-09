@@ -77,9 +77,16 @@ This document defines the user interface design for OptiView - a high-performanc
 │                    │  ← Dominant color background
 │                    │
 ├────────────────────┤
-│ ★★★★☆  Nature      │  ← Rating stars + Genre tag
+│ ★★★★☆  Nature      │  ← Interactive rating stars + Genre tag
 └────────────────────┘
 ```
+
+**Rating Interaction:**
+
+- Stars are clickable - any user can change the rating
+- Hover shows preview of potential rating
+- Click on star N sets rating to N
+- Optimistic UI update - reverts on API error
 
 **Loading Sequence per Card:**
 
@@ -128,6 +135,8 @@ This document defines the user interface design for OptiView - a high-performanc
 │                     │                 │                        │
 │                     └─────────────────┘                        │
 │                                                                 │
+│                    ★★★★☆  Nature                               │
+│                                                                 │
 │           [Download 1920px] [Download 1280px] [Download 640px] │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -139,6 +148,8 @@ This document defines the user interface design for OptiView - a high-performanc
 - Close button (X) - top right
 - Navigation arrows (< / >) - sides or bottom
 - Image centered, max 90vh height
+- **Rating stars** - interactive, below image
+- Genre tag - displayed next to rating
 - Download buttons below image
 
 **Download Options:**
@@ -215,6 +226,50 @@ This document defines the user interface design for OptiView - a high-performanc
 |:-------|:--------------|
 | Genre  | Uncategorized |
 | Rating | 3 (of 5)      |
+
+---
+
+### 4.6 RatingStars Component
+
+**Purpose:** Reusable component for displaying and editing image ratings.
+
+**Props:**
+
+| Prop      | Type                   | Default   | Description                          |
+|:----------|:-----------------------|:----------|:-------------------------------------|
+| rating    | number                 | required  | Current rating value 1-5             |
+| readonly  | boolean                | false     | If true stars are display only       |
+| size      | sm / md / lg           | md        | Star size variant                    |
+| onChange  | function - rating: void | undefined | Callback when rating changes        |
+
+**Size Variants:**
+
+| Variant | Star Size | Use Case                      |
+|:--------|:----------|:------------------------------|
+| sm      | 16px      | Image card in gallery         |
+| md      | 20px      | Lightbox - default            |
+| lg      | 24px      | Lightbox - enhanced visibility |
+
+**Visual States:**
+
+| State       | Filled Star | Empty Star |
+|:------------|:------------|:-----------|
+| Default     | ★ solid     | ☆ outline  |
+| Hover       | ★ highlighted with gold color | ☆ outline |
+| Active      | ★ highlighted | ☆ outline  |
+
+**Interaction Behavior:**
+
+1. Mouse hover over star N highlights all stars from 1 to N
+2. Click on star N calls onChange with value N
+3. Visual feedback: slight scale animation on hover 1.1x
+4. After successful API update: brief success flash optional
+
+**Accessibility:**
+
+- Each star is a button with aria-label
+- aria-valuenow / aria-valuemax for screen readers
+- Keyboard: Tab to focus / Enter or Space to select
 
 ---
 
