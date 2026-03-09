@@ -15,9 +15,9 @@
 ## 3. Goals & Objectives
 
 1. **Performance Optimization:** Implement a hybrid image processing system (On-the-fly + Caching).
-2. **Adaptive Delivery:** Automate the selection of image formats (AVIF, WebP, JPEG) based on browser capabilities.
-3. **Visual Excellence:** Eliminate Cumulative Layout Shift (CLS) (by using aspect ratio?) and use advanced loading states (LQIP).
-4. **User Engagement:** Provide a smooth interface for filtering, sorting, and viewing high-quality photography.
+2. **Adaptive Delivery:** Automate the selection of image formats (AVIF > WebP > JPEG) based on browser capabilities.
+3. **Visual Excellence:** Eliminate Cumulative Layout Shift (CLS) using aspect ratio locking and advanced loading states (LQIP + dominant color).
+4. **User Engagement:** Provide a smooth interface for filtering, sorting, and viewing high-quality photography with shareable URL states.
 
 ---
 
@@ -28,18 +28,22 @@
 * **REQ-1: Auto-Format Negotiation.** The server must analyze the `Accept` request header to deliver the most efficient format (AVIF > WebP > JPEG).
 * **REQ-2: Dynamic Resizing.** The system must generate image versions corresponding to the user's viewport (Mobile/Tablet/Desktop).
 * **REQ-3: Hybrid Caching.** First-time requests for a specific size/format trigger generation; subsequent requests serve from the server-side cache.
-* **REQ-4: Metadata Extraction.** During upload, the system must calculate the "Dominant Color" (and aspect-ratio?) and generate a "Blur-hash/LQIP" for placeholder use.
+* **REQ-4: Metadata Extraction.** During upload, the system must calculate the dominant color, aspect ratio, and generate a LQIP (Low Quality Image Placeholder) for loading states.
 
 ### 4.2. User Interface & Features
 
-* **REQ-5: Image Gallery.** A responsive grid displaying images with their rating and category.
+* **REQ-5: Image Gallery.** A responsive masonry grid displaying images with their rating and category.
 * **REQ-6: Filtering System.** Users can filter content by:
-  * Genre (e.g., Nature, Architecture, Portrait).
-  * Minimum Rating (e.g., 4 stars and up).
+  * Genre (default categories: Nature, Architecture, Portrait, Uncategorized; users can also add custom genres).
+  * Minimum Rating (1-5 stars).
 * **REQ-7: Sorting Mechanism.** Users can sort the display by:
   * Date of Creation (Newest/Oldest).
   * Rating (High to Low).
-* **REQ-8: Upload Module.** Drag-and-drop interface for users to add new images to the server.
+* **REQ-8: Upload Module.** Drag-and-drop interface for users to add new images with:
+  * Genre selection per image (default: "Uncategorized").
+  * Genre is immutable once set at upload time.
+* **REQ-12: Lightbox Modal.** Users can view images in full-screen mode with navigation between images and download options for different sizes (640px, 1280px, 1920px).
+* **REQ-13: Quick Upload Access.** A floating action button (FAB) provides quick navigation to the upload page.
 
 ### 4.3. User Experience (UX)
 
@@ -51,24 +55,14 @@
 
 ## 5. Technical Requirements
 
-### 5.1. Tech Stack (Defined)
+### 5.1. Tech Stack
 
-* **Frontend:** React.js (Vite).
-* **Backend:** Node.js with NestJS framework.
-* **Database:** PostgreSQL (for image metadata, ratings, and file paths).
-* **Image Processing:** Sharp library (for Node.js).
+* **Frontend:** React.js with Vite
+* **Backend:** Node.js with NestJS framework
+* **Database:** PostgreSQL
+* **Image Processing:** Sharp library
 
-### 5.2. Data Model
-
-The database must store:
-
-* `id`: Unique identifier.
-* `filename`: Path to the original high-res file.
-* `genre`: Category tag.
-* `rating`: Numeric value.
-* `aspect_ratio`: To facilitate layout stability.
-* `dominant_color`: Hex code for UI placeholders.
-* `created_at`: Timestamp.
+*(Detailed versions, infrastructure, and data model defined in ADR)*
 
 ---
 
@@ -77,6 +71,11 @@ The database must store:
 * **Out of Scope:** User authentication and private profiles (all users are guests/contributors).
 * **Out of Scope:** Video content or animated GIFs.
 * **Out of Scope:** High-concurrency "Request Collapsing".
+* **Out of Scope:** Image editing after upload.
+* **Out of Scope:** Genre modification after upload (immutable).
+* **Constraint:** Max file size: 10MB per image.
+* **Constraint:** Supported input formats: JPEG, PNG, WebP.
+* **Constraint:** Default rating for new uploads: 3 (of 5).
 * **Constraint:** The application must be optimized for modern browsers (Chrome, Firefox, Safari, Edge).
 
 ---
