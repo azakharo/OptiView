@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppService } from './app.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AppService } from "./app.service";
 
-describe('AppService', () => {
+describe("AppService", () => {
   let service: AppService;
 
   beforeEach(async () => {
@@ -12,14 +12,14 @@ describe('AppService', () => {
     service = module.get<AppService>(AppService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  it('should return health status', () => {
+  it("should return health status", () => {
     const result = service.getHealth();
-    expect(result).toHaveProperty('status', 'ok');
-    expect(result).toHaveProperty('timestamp');
+    expect(result).toHaveProperty("status", "ok");
+    expect(result).toHaveProperty("timestamp");
     expect(new Date(result.timestamp).toISOString()).toBe(result.timestamp);
   });
 });

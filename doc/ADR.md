@@ -97,7 +97,7 @@ flowchart TB
 
 | Technology | Purpose |
 |------------|---------|
-| Docker | Backend containerization |
+| Docker | Postgres containerization |
 | Docker Compose | Multi-container orchestration |
 
 ---
@@ -315,7 +315,7 @@ const lqipBase64 = `data:image/jpeg;base64,${lqip.toString('base64')}`;
 
 ### ADR-006: Docker Compose for Backend Services
 
-**Decision:** Use Docker Compose to run PostgreSQL in containers. Backend and Frontend is developed and deployed separately.
+**Decision:** Use Docker Compose to run PostgreSQL in a container. Backend and Frontend is developed and deployed separately.
 
 **docker-compose.yml Structure:**
 
