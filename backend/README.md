@@ -1,56 +1,50 @@
-# OptiView Backend
+# Minimal backend starter which uses Nest, TypeORM, Postgres
 
-High-performance image delivery backend service built with NestJS.
+Postgres runs in Docker container.
+The backend runs locally for development.
 
-## Overview
-
-This is the backend service for **OptiView** - a web application designed to demonstrate high-performance image delivery. The system serves images optimized for user's screen size, pixel density, and browser format support.
-
-For detailed architecture decisions, see [../doc/ADR.md](../doc/ADR.md).
-
-## Prerequisites
-
-| Requirement | Version | Purpose |
-|-------------|---------|---------|
-| Docker | 20.x+ | Container runtime |
-| Docker Compose | 2.x+ | Multi-container orchestration |
-| Node.js | 20.x+ | Local development (optional) |
-| npm | 10.x+ | Package manager |
-
-## Quick Start
-
-### 1. Configure Environment Variables
-
-Edit `.env` in the project root:
-
-### 2. Install dependecies
+## Install deps
 
 ```bash
 $ npm install
 ```
 
-### 3. Start Database
+## Run Postgres
 
 ```bash
-# Build and start all services
-docker-compose up -d
+$ docker-compose up -d
 ```
 
-### 4. Start dev server
+## Start dev server
 
 ```bash
 # watch mode
 $ npm run start:dev
 ```
 
-### 5. Verify Services
+API is available on:
+`http://localhost:3000`
+
+API documentation is available on:
+`http://localhost:3000/api/docs`
+
+## Shuting down
+
+First stop the dev server.
 
 ```bash
-# Check health endpoint
-curl http://localhost:3000
-
-# Expected response
-# {"statusCode":200,"message":"Hello World!"}
+$ docker-compose down
 ```
 
-The backend API is now running at `http://localhost:3000`.
+## Other useful npm scripts
+
+* working with migrations: create, generate, show, run, revert
+* ts - run type-checking
+* lint - run eslint + prettier
+* db seed and reset (truncate all tables)
+
+## Configuring project
+
+* Change package name in package.json
+* Configure db access in `src/data-source.ts`
+* Modify `src/database/run-seed.ts` file to fill in the db with test data
