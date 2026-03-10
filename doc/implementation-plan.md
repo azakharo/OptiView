@@ -225,26 +225,26 @@ Implement all REST API endpoints for image management according to ADR-002.
 
 ### Artifacts
 
-| Type | Artifact | Description |
-|:-----|:---------|:------------|
-| Code | `backend/src/modules/images/images.controller.ts` | REST API controller |
-| Code | `backend/src/modules/images/dto/` | Data Transfer Objects |
-| Code | `backend/src/modules/upload/upload.controller.ts` | Upload endpoint |
-| Code | `backend/src/modules/upload/upload.module.ts` | Upload module |
-| Code | `backend/src/filters/http-exception.filter.ts` | Global exception filter |
-| Test | `backend/test/api.e2e-spec.ts` | API endpoint tests |
-| Doc | `backend/API.md` | API documentation |
+| Type | Artifact                                          | Description             |
+|:-----|:--------------------------------------------------|:------------------------|
+| Code | `backend/src/modules/images/images.controller.ts` | REST API controller     |
+| Code | `backend/src/modules/images/dto/`                 | Data Transfer Objects   |
+| Code | `backend/src/modules/upload/upload.controller.ts` | Upload endpoint         |
+| Code | `backend/src/modules/upload/upload.module.ts`     | Upload module           |
+| Code | `backend/src/filters/http-exception.filter.ts`    | Global exception filter |
+| Test | `backend/test/api.e2e-spec.ts`                    | API endpoint tests      |
+| Doc  | Swagger documentation                             | All API endpoints must be documented |
 
 ### API Endpoints to Implement
 
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| GET | `/api/images` | List with filters, pagination, sorting |
-| GET | `/api/images/:id?width=N` | Get processed image |
-| GET | `/api/images/:id/metadata` | Get image metadata JSON |
-| POST | `/api/images/upload` | Upload new image |
-| GET | `/api/images/:id/lqip` | Get LQIP placeholder |
-| PATCH | `/api/images/:id/rating` | Update rating 1-5 |
+| Method | Endpoint                   | Description                            |
+|:-------|:---------------------------|:---------------------------------------|
+| GET    | `/api/images`              | List with filters, pagination, sorting |
+| GET    | `/api/images/:id?width=N`  | Get processed image                    |
+| GET    | `/api/images/:id/metadata` | Get image metadata JSON                |
+| POST   | `/api/images/upload`       | Upload new image                       |
+| GET    | `/api/images/:id/lqip`     | Get LQIP placeholder                   |
+| PATCH  | `/api/images/:id/rating`   | Update rating 1-5                      |
 
 ### Tasks
 
