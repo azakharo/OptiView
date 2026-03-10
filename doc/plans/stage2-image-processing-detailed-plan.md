@@ -131,30 +131,6 @@ npm install sharp
 npm install -D @types/sharp
 ```
 
-**Verification:**
-
-Create a simple test to verify Sharp is working:
-
-```typescript
-// test/sharp-setup.spec.ts
-import sharp from 'sharp';
-
-describe('Sharp Setup', () => {
-  it('should be able to create sharp instance', async () => {
-    const instance = sharp();
-    expect(instance).toBeDefined();
-  });
-});
-```
-
-**Acceptance Criteria:**
-
-- [ ] Sharp package installed without errors
-- [ ] TypeScript types available
-- [ ] Test passes confirming Sharp is functional
-
----
-
 ### Task 2: Create Uploads Directory Structure
 
 **Directories to Create:**
@@ -486,33 +462,6 @@ async extractDominantColor(input: Buffer | string): Promise<string> {
   }
 
   // Convert to hex with proper padding
-  const toHex = (n: number): string => n.toString(16).padStart(2, '0');
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
-}
-```
-
-**Alternative Implementation (using resize + raw for more accurate dominant color):**
-
-```typescript
-/**
- * Extract dominant color by sampling pixels from a resized version
- * This gives a more perceptually accurate dominant color
- */
-async extractDominantColor(input: Buffer | string): Promise<string> {
-  const image = typeof input === 'string' ? sharp(input) : sharp(input);
-
-  // Resize to 1x1 pixel to get the "average" color
-  const { data } = await image
-    .clone()
-    .resize(1, 1, { fit: 'cover' })
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  const r = data[0];
-  const g = data[1];
-  const b = data[2];
-
   const toHex = (n: number): string => n.toString(16).padStart(2, '0');
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
@@ -1157,13 +1106,13 @@ For MVP, cache is permanent. Future considerations:
 
 ## 5. Risks and Mitigations
 
-| Risk | Probability | Impact | Mitigation | Owner |
-|:-----|:------------|:-------|:-----------|:------|
-| Sharp memory issues with large files | Medium | High | Implement file size limits (10MB), use streaming for large files | Backend |
-| Unsupported image formats | Medium | Medium | Validate format early, provide clear error messages | Backend |
-| Slow processing for batch uploads | Low | Medium | Process sequentially for MVP, consider queue for Phase 2 | Backend |
-| Cache directory growth | Low | Medium | Document expected cache size, plan cleanup strategy | Backend |
-| AVIF encoding slowness | Medium | Low | Use effort=4 for balanced speed/compression | Backend |
+| Risk                                 | Probability | Impact | Mitigation                                                       | Owner   |
+|:-------------------------------------|:------------|:-------|:-----------------------------------------------------------------|:--------|
+| Sharp memory issues with large files | Medium      | High   | Implement file size limits (10MB), use streaming for large files | Backend |
+| Unsupported image formats            | Medium      | Medium | Validate format early, provide clear error messages              | Backend |
+| Slow processing for batch uploads    | Low         | Medium | Process sequentially for MVP, consider queue for Phase 2         | Backend |
+| Cache directory growth               | Low         | Medium | Document expected cache size, plan cleanup strategy              | Backend |
+| AVIF encoding slowness               | Medium      | Low    | Use effort=4 for balanced speed/compression                      | Backend |
 
 ---
 
@@ -1301,19 +1250,19 @@ Add these packages to `backend/package.json`:
 
 ### Output Format Quality Settings
 
-| Format | Quality | Additional Options | Notes |
-|:-------|:--------|:-------------------|:------|
-| JPEG | 85 | mozjpeg: true | Better compression |
-| WebP | 80 | effort: 4 | Balance speed/size |
-| AVIF | 80 | effort: 4 | Slower but better compression |
-| LQIP JPEG | 20 | mozjpeg: true | Smallest possible |
+| Format    | Quality | Additional Options | Notes                         |
+|:----------|:--------|:-------------------|:------------------------------|
+| JPEG      | 85      | mozjpeg: true      | Better compression            |
+| WebP      | 80      | effort: 4          | Balance speed/size            |
+| AVIF      | 80      | effort: 4          | Slower but better compression |
+| LQIP JPEG | 20      | mozjpeg: true      | Smallest possible             |
 
 ### Resize Options
 
-| Option | Value | Rationale |
-|:-------|:------|:----------|
-| fit | 'inside' | Preserve aspect ratio, never crop |
-| withoutEnlargement | true | Don't upscale small images |
+| Option             | Value    | Rationale                         |
+|:-------------------|:---------|:----------------------------------|
+| fit                | 'inside' | Preserve aspect ratio, never crop |
+| withoutEnlargement | true     | Don't upscale small images        |
 
 ---
 
