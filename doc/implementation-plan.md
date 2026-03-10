@@ -108,7 +108,7 @@ Implement the database schema and TypeORM entities for image metadata storage.
 | Code | `backend/src/entities/genre.enum.ts` | Genre enumeration |
 | Code | `backend/src/migrations/` | Initial migration files |
 | Test | `backend/src/entities/image.entity.spec.ts` | Entity unit tests |
-| Doc | Database schema documentation | ERD or table structure docs |
+| Doc | Swagger documentation | |
 
 ### Tasks
 
