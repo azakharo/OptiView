@@ -6,9 +6,9 @@ export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
-  username: process.env.DB_USERNAME || 'user',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_DATABASE || 'backend_starter_db',
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_DATABASE || 'opti_view_db',
   entities: [],
   migrations: isTsNode
     ? ['src/migrations/**/*.ts']

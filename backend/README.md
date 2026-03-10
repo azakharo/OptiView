@@ -42,9 +42,3 @@ $ docker-compose down
 * ts - run type-checking
 * lint - run eslint + prettier
 * db seed and reset (truncate all tables)
-
-## Configuring project
-
-* Change package name in package.json
-* Configure db access in `src/data-source.ts`
-* Modify `src/database/run-seed.ts` file to fill in the db with test data
