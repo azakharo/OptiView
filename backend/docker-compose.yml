@@ -2,12 +2,12 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: backend_starter_postgres
+    container_name: opti_view_postgres
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: backend_starter_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: opti_view_db
     ports:
       - '5432:5432'
     volumes:
