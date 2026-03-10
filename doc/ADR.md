@@ -71,8 +71,8 @@ flowchart TB
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 18.x | UI framework |
-| Vite | 5.x | Build tool and dev server |
+| React | 19.x | UI framework |
+| Vite | 7.x | Build tool and dev server |
 | React Router | 6.x | SPA routing and URL state management |
 | TanStack Query | 5.x | Server state management and caching |
 | TypeScript | 5.x | Type safety |
@@ -91,7 +91,7 @@ flowchart TB
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| PostgreSQL | 16.x | Primary data store |
+| PostgreSQL | 15.x | Primary data store |
 
 ### Infrastructure
 
@@ -322,7 +322,7 @@ const lqipBase64 = `data:image/jpeg;base64,${lqip.toString('base64')}`;
 ```yaml
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:

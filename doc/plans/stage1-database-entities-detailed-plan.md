@@ -13,7 +13,7 @@ Implement the database schema and TypeORM entities for image metadata storage as
 ### Dependencies
 
 - **Stage 0: Infrastructure Setup** must be completed
-- PostgreSQL 16 container running via Docker Compose
+- PostgreSQL 15 container running via Docker Compose
 - NestJS project initialized with TypeORM integration
 - Database connectivity verified
 
