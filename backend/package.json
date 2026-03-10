@@ -37,6 +37,7 @@
     "class-validator": "0.14.1",
     "pg": "8.20.0",
     "reflect-metadata": "0.2.2",
+    "sharp": "0.34.5",
     "typeorm": "0.3.28"
   },
   "devDependencies": {
@@ -48,6 +49,7 @@
     "@types/express": "5.0.6",
     "@types/jest": "30.0.0",
     "@types/node": "22.19.15",
+    "@types/sharp": "0.31.1",
     "@types/supertest": "6.0.3",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",

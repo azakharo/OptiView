@@ -6,5 +6,10 @@
     {
       "path": "doc"
     }
-  ]
+  ],
+  "settings": {
+    "cSpell.words": [
+      "lqip"
+    ]
+  }
 }
