@@ -176,7 +176,7 @@ Implement the core image processing capabilities using Sharp library.
 ### Tasks
 
 - [ ] Install and configure Sharp library
-- [ ] Create uploads directory structure: originals/, processed/, lqip/
+- [ ] Create uploads directory structure: ../backend/uploads/originals/, ../backend/uploads/processed/, ../backend/uploads/lqip/
 - [ ] Implement metadata extraction: width, height, aspectRatio
 - [ ] Implement dominant color extraction
 - [ ] Implement LQIP generation with 20px width, JPEG 20% quality

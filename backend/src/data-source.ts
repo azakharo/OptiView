@@ -1,4 +1,5 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { Image } from './entities/image.entity';
 
 const isTsNode = !!process[Symbol.for('ts-node.register.instance')];
 
@@ -9,7 +10,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'opti_view_db',
-  entities: [],
+  entities: [Image],
   migrations: isTsNode
     ? ['src/migrations/**/*.ts']
     : ['dist/migrations/**/*.js'],
