@@ -158,7 +158,7 @@ export class ImagesController {
           callback(null, true);
         } else {
           callback(
-            new Error(
+            new BadRequestException(
               'Invalid file type. Only JPEG, PNG, and WebP are allowed.',
             ),
             false,

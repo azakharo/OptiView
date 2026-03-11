@@ -135,12 +135,13 @@ describe('Images API (e2e)', () => {
         .get('/api/images')
         .expect(200);
 
-      expect(response.body).toHaveProperty('items');
-      expect(response.body).toHaveProperty('total');
-      expect(response.body).toHaveProperty('page');
-      expect(response.body).toHaveProperty('pageSize');
-      expect(response.body).toHaveProperty('totalPages');
-      expect(Array.isArray(response.body.items)).toBe(true);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('pagination');
+      expect(response.body.pagination).toHaveProperty('page');
+      expect(response.body.pagination).toHaveProperty('pageSize');
+      expect(response.body.pagination).toHaveProperty('totalItems');
+      expect(response.body.pagination).toHaveProperty('totalPages');
+      expect(Array.isArray(response.body.data)).toBe(true);
     });
 
     it('should filter by genre', async () => {
@@ -149,7 +150,7 @@ describe('Images API (e2e)', () => {
         .expect(200);
 
       expect(
-        response.body.items.every((img: any) => img.genre === 'Nature'),
+        response.body.data.every((img: any) => img.genre === 'Nature'),
       ).toBe(true);
     });
 
@@ -158,7 +159,7 @@ describe('Images API (e2e)', () => {
         .get('/api/images?rating=4')
         .expect(200);
 
-      expect(response.body.items.every((img: any) => img.rating >= 4)).toBe(
+      expect(response.body.data.every((img: any) => img.rating >= 4)).toBe(
         true,
       );
     });
@@ -168,7 +169,7 @@ describe('Images API (e2e)', () => {
         .get('/api/images?sort=rating&sortOrder=ASC')
         .expect(200);
 
-      const items = response.body.items;
+      const items = response.body.data;
       for (let i = 1; i < items.length; i++) {
         expect(items[i].rating).toBeGreaterThanOrEqual(items[i - 1].rating);
       }
@@ -179,9 +180,9 @@ describe('Images API (e2e)', () => {
         .get('/api/images?page=1&pageSize=2')
         .expect(200);
 
-      expect(response.body.items.length).toBeLessThanOrEqual(2);
-      expect(response.body.page).toBe(1);
-      expect(response.body.pageSize).toBe(2);
+      expect(response.body.data.length).toBeLessThanOrEqual(2);
+      expect(response.body.pagination.page).toBe(1);
+      expect(response.body.pagination.pageSize).toBe(2);
     });
 
     it('should reject invalid page number (400)', async () => {
@@ -269,7 +270,7 @@ describe('Images API (e2e)', () => {
         .set('Accept', 'image/avif,image/webp,image/jpeg')
         .expect(200);
 
-      expect(response.headers['content-type']).toBe('image/avif');
+      expect(response.headers['content-type']).toMatch(/^image\/avif/);
     });
 
     it('should fallback to JPEG when no modern formats accepted', async () => {
@@ -278,7 +279,7 @@ describe('Images API (e2e)', () => {
         .set('Accept', 'image/jpeg')
         .expect(200);
 
-      expect(response.headers['content-type']).toBe('image/jpeg');
+      expect(response.headers['content-type']).toMatch(/^image\/jpeg/);
     });
 
     it('should return 404 for non-existent image', async () => {

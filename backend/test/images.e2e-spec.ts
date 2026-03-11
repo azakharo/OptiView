@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import sharp from 'sharp';
 import { ImageService, ImageFormat } from '../src/modules/images/image.service';
+import { Image } from '../src/entities/image.entity';
 import {
   ensureUploadDirectories,
   DIRECTORIES,
@@ -35,9 +37,23 @@ describe('Image Processing (e2e)', () => {
 
     await fs.writeFile(testImagePath, testImageBuffer);
 
-    // Setup minimal NestJS app with ImageService
+    // Setup minimal NestJS app with ImageService with mock repository
+    const mockRepository = {
+      create: jest.fn(),
+      save: jest.fn(),
+      findOne: jest.fn(),
+      find: jest.fn(),
+      createQueryBuilder: jest.fn(),
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      providers: [ImageService],
+      providers: [
+        ImageService,
+        {
+          provide: getRepositoryToken(Image),
+          useValue: mockRepository,
+        },
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();

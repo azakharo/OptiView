@@ -314,8 +314,18 @@ export class ImageService {
     // Cache miss - generate new
     this.logger.debug(`Cache miss: ${cachedPath}`);
 
-    // Get original
-    const originalPath = await this.findOriginalPath(uuid);
+    // Try to get image from database first
+    let originalPath: string | null = null;
+    const image = await this.imageRepository.findOne({ where: { id: uuid } });
+    if (image && image.originalPath) {
+      originalPath = image.originalPath;
+    }
+
+    // If no database record or path, try to find by UUID (for backwards compatibility)
+    if (!originalPath) {
+      originalPath = await this.findOriginalPath(uuid);
+    }
+
     if (!originalPath) {
       throw new Error(`Original image not found: ${uuid}`);
     }
