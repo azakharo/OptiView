@@ -2,12 +2,19 @@
 
 ## Overview
 
-This document provides a detailed implementation plan for **Stage 4: Frontend Setup** of the OptiView project. This stage focuses on configuring the frontend application with API integration, TypeScript types, TanStack Query setup, and React Router configuration.
+This document provides a detailed implementation plan for **Stage 4: Frontend Setup** of the OptiView project. This stage focuses on configuring the frontend application with TypeScript types generated from OpenAPI specification, API client implementation, TanStack Query setup, and React Router configuration.
+
+**Key Decision:** Types are generated from backend OpenAPI specification using `openapi-typescript`. API client and React Query hooks are implemented manually for full control over:
+- Caching strategies
+- Optimistic updates
+- File upload with progress tracking
+- Error handling
 
 **Prerequisites:**
 
 - Stage 0: Infrastructure Setup - ✅ Completed
 - Frontend template exists at `/frontend` with React 19 + Vite 7 + TypeScript 5 + Tailwind CSS 4 + Flowbite React
+- Backend running with Swagger/OpenAPI at `http://localhost:3000/api/docs`
 
 ---
 
@@ -41,89 +48,40 @@ frontend/
 | Package | Version | Purpose |
 |---------|---------|---------|
 | @tanstack/react-query | 5.x | Server state management |
-| react-router-dom | 6.x | SPA routing |
+| @tanstack/react-query-devtools | 5.x | DevTools for React Query |
+| react-router-dom | 7.x | SPA routing |
+| openapi-typescript | ^7.x | Type generation from OpenAPI (dev dependency) |
 
 ---
 
-## 2. Backend API Types Reference
+## 2. Code Generation Strategy
 
-The following types must be mirrored in the frontend to ensure type safety:
+### 2.1 Why Hybrid Approach?
 
-### 2.1 Genre Enum
+Instead of manually duplicating types or using full code generation (like Orval), we use a **hybrid approach**:
 
-```typescript
-// From backend/src/entities/genre.enum.ts
-enum Genre {
-  NATURE = 'Nature',
-  ARCHITECTURE = 'Architecture',
-  PORTRAIT = 'Portrait',
-  UNCATEGORIZED = 'Uncategorized',
-}
+```mermaid
+flowchart LR
+    Backend[NestJS Backend] -->|Swagger JSON| Spec[OpenAPI Spec /api/docs-json]
+    Spec -->|openapi-typescript| Types[Generated Types]
+    Types --> |type imports| Client[Custom API Client]
+    Client --> Hooks[Custom React Query Hooks]
+    Hooks --> Components[React Components]
 ```
 
-### 2.2 Image Type
+**Benefits:**
+- ✅ Types always in sync with backend
+- ✅ Full control over hook implementations
+- ✅ Optimistic updates for rating
+- ✅ File upload with progress tracking
+- ✅ Minimal bundle size (only type imports)
 
-```typescript
-// From backend/src/modules/images/dto/image-response.dto.ts
-interface Image {
-  id: string;              // UUID
-  filename: string;
-  genre: Genre;
-  rating: number;          // 1-5
-  aspectRatio: number;
-  dominantColor: string;   // Hex color e.g. '#FF5733'
-  lqipBase64: string;      // Base64 data URI
-  width: number;
-  height: number;
-  createdAt: Date | string;
-}
-```
+### 2.2 Types Generation Workflow
 
-### 2.3 Filter Parameters
-
-```typescript
-// From backend/src/modules/images/dto/image-filter.dto.ts
-interface ImageFilters {
-  genre?: Genre;
-  rating?: number;         // Min rating filter (1-5)
-  sort?: SortField;        // 'createdAt' | 'rating' | 'filename'
-  sortOrder?: SortOrder;   // 'ASC' | 'DESC'
-  page?: number;           // Default: 1
-  pageSize?: number;       // Default: 10, Max: 100
-}
-```
-
-### 2.4 Paginated Response
-
-```typescript
-// From backend/src/modules/images/dto/paginated-response.dto.ts
-interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-}
-```
-
-### 2.5 Rating Update
-
-```typescript
-// PATCH /api/images/:id/rating
-interface RatingUpdateRequest {
-  rating: number;  // 1-5
-}
-
-interface RatingUpdateResponse {
-  id: string;
-  rating: number;
-  updatedAt: string;
-}
-```
+1. **Development:** Backend must be running at `localhost:3000`
+2. **Generate:** Run `npm run generate:types` to fetch OpenAPI spec and generate types
+3. **Commit:** Generated file `src/api/schema.gen.ts` is committed to git
+4. **Update:** Regenerate manually when backend API changes
 
 ---
 
@@ -135,17 +93,19 @@ interface RatingUpdateResponse {
 frontend/
 ├── src/
 │   ├── api/
-│   │   ├── client.ts           # Axios/fetch API client
-│   │   └── images.api.ts       # Images API methods
+│   │   ├── schema.gen.ts         # Generated types from OpenAPI
+│   │   ├── client.ts             # Base API client with error handling
+│   │   ├── images.api.ts         # Images API methods
+│   │   └── index.ts              # API barrel export
 │   ├── hooks/
-│   │   └── useImages.ts        # TanStack Query hooks
-│   ├── types/
-│   │   ├── image.ts            # Image-related types
-│   │   └── api.ts              # Generic API types
-│   ├── App.tsx                 # Router setup
-│   ├── main.tsx                # QueryClient provider
+│   │   ├── useImages.ts          # TanStack Query hooks for images
+│   │   └── index.ts              # Hooks barrel export
+│   ├── App.tsx                   # Router setup
+│   ├── main.tsx                  # QueryClient provider
 │   └── index.css
-├── .env                        # API base URL
+├── .env                          # API base URL
+├── package.json                  # Scripts for type generation
+└── orval.config.ts               # Reserved for future if needed
 ```
 
 ### 3.2 Architecture Diagram
@@ -156,7 +116,7 @@ flowchart TB
         UI[UI Components]
         Hooks[TanStack Query Hooks]
         API[API Client]
-        Types[TypeScript Types]
+        GenTypes[Generated Types]
     end
 
     subgraph State [State Management]
@@ -173,35 +133,48 @@ flowchart TB
     Hooks --> QC
     QC --> Cache
     Hooks --> API
-    API --> Types
+    API --> GenTypes
     Router --> Routes
     Routes --> UI
 
     API -->|HTTP| Backend[Backend API]
+    Backend -->|OpenAPI JSON| GenTypes
+```
+
+### 3.3 Type Usage Pattern
+
+Generated types are accessed via `components['schemas']` path:
+
+```typescript
+import type { components } from '@/api/schema.gen';
+
+// Extract types for use in application
+type Image = components['schemas']['Image'];
+type ImageFilterDto = components['schemas']['ImageFilterDto'];
+type PaginatedResponseImage = components['schemas']['PaginatedResponseDto'];
 ```
 
 ---
 
 ## 4. Detailed Task Breakdown
 
-### Task 4.1: Install Additional Dependencies
+### Task 4.1: Install Dependencies
 
-**Goal:** Add TanStack Query and React Router to the project.
+**Goal:** Add all required dependencies for the frontend setup.
 
 **Commands:**
 
 ```bash
 cd frontend
-npm install @tanstack/react-query react-router-dom
+npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom
+npm install -D openapi-typescript
 ```
 
 **Verification:**
-
 - Check `package.json` contains new dependencies
 - Run `npm run dev` to verify no import errors
 
 **Files Modified:**
-
 - `frontend/package.json`
 - `frontend/package-lock.json`
 
@@ -226,107 +199,146 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 ```
 
 **Notes:**
-
 - Vite requires `VITE_` prefix for exposed environment variables
 - Access via `import.meta.env.VITE_*`
 - `.env` should be added to `.gitignore` if it contains sensitive data (not needed for this MVP)
 
 ---
 
-### Task 4.3: Create TypeScript Types
+### Task 4.3: Add Type Generation Script
 
-**Goal:** Define TypeScript types matching backend DTOs.
+**Goal:** Configure npm script to generate types from OpenAPI spec.
 
-#### `frontend/src/types/image.ts`
+**Modify `frontend/package.json`:**
 
-```typescript
-/**
- * Genre enum representing image categories.
- * Must match backend Genre enum values exactly.
- */
-export enum Genre {
-  NATURE = 'Nature',
-  ARCHITECTURE = 'Architecture',
-  PORTRAIT = 'Portrait',
-  UNCATEGORIZED = 'Uncategorized',
-}
-
-/**
- * Fields available for sorting images.
- */
-export enum SortField {
-  CREATED_AT = 'createdAt',
-  RATING = 'rating',
-  FILENAME = 'filename',
-}
-
-/**
- * Sort order direction.
- */
-export enum SortOrder {
-  ASC = 'ASC',
-  DESC = 'DESC',
-}
-
-/**
- * Image entity representing a photo in the gallery.
- */
-export interface Image {
-  id: string;
-  filename: string;
-  genre: Genre;
-  rating: number;
-  aspectRatio: number;
-  dominantColor: string;
-  lqipBase64: string;
-  width: number;
-  height: number;
-  createdAt: string;
-}
-
-/**
- * Filter parameters for image queries.
- */
-export interface ImageFilters {
-  genre?: Genre;
-  rating?: number;
-  sort?: SortField;
-  sortOrder?: SortOrder;
-  page?: number;
-  pageSize?: number;
-}
-
-/**
- * Request body for rating update.
- */
-export interface RatingUpdateRequest {
-  rating: number;
-}
-
-/**
- * Response from rating update endpoint.
- */
-export interface RatingUpdateResponse {
-  id: string;
-  rating: number;
-  updatedAt: string;
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "generate:types": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+  }
 }
 ```
 
-#### `frontend/src/types/api.ts`
+**Usage:**
+
+```bash
+# Make sure backend is running first
+npm run generate:types
+```
+
+**Notes:**
+- Backend must be running at `localhost:3000`
+- Generated file is committed to git
+- Regenerate when backend API changes
+
+---
+
+### Task 4.4: Generate Types from OpenAPI
+
+**Goal:** Generate TypeScript types from backend OpenAPI specification.
+
+**Prerequisites:**
+- Backend running at `http://localhost:3000`
+- Swagger endpoint accessible at `/api/docs-json`
+
+**Command:**
+
+```bash
+cd frontend
+npm run generate:types
+```
+
+**Generated File:**
+
+#### `frontend/src/api/schema.gen.ts`
+
+This file is auto-generated and should not be edited manually. Example structure:
 
 ```typescript
 /**
- * Generic paginated response wrapper.
+ * This file was auto-generated by openapi-typescript.
+ * Do not make direct modifications to the file.
  */
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: PaginationMeta;
+
+export interface paths {
+  '/api/images': {
+    get: {
+      parameters: {
+        query?: {
+          genre?: components['schemas']['Genre'];
+          rating?: number;
+          sort?: 'createdAt' | 'rating' | 'filename';
+          sortOrder?: 'ASC' | 'DESC';
+          page?: number;
+          pageSize?: number;
+        };
+      };
+      responses: {
+        200: {
+          content: {
+            'application/json': components['schemas']['PaginatedResponseDto'];
+          };
+        };
+      };
+    };
+  };
+  // ... other endpoints
 }
 
+export interface components {
+  schemas: {
+    Image: {
+      id: string;
+      filename: string;
+      genre: components['schemas']['Genre'];
+      rating: number;
+      aspectRatio: number;
+      dominantColor: string;
+      lqipBase64: string;
+      width: number;
+      height: number;
+      createdAt: string;
+    };
+    Genre: 'Nature' | 'Architecture' | 'Portrait' | 'Uncategorized';
+    // ... other schemas
+  };
+}
+```
+
+---
+
+### Task 4.5: Create Type Re-exports
+
+**Goal:** Create convenient type aliases for commonly used types.
+
+#### `frontend/src/api/types.ts`
+
+```typescript
 /**
- * Pagination metadata.
+ * Re-exported types from generated schema for convenience.
+ * These provide cleaner imports throughout the application.
  */
+import type { components } from './schema.gen';
+
+// Entity types
+export type Image = components['schemas']['Image'];
+export type Genre = components['schemas']['Genre'];
+
+// DTO types
+export type ImageFilterDto = components['schemas']['ImageFilterDto'];
+export type CreateImageDto = components['schemas']['CreateImageDto'];
+export type UpdateRatingDto = components['schemas']['UpdateRatingDto'];
+export type RatingUpdateResponseDto = components['schemas']['RatingUpdateResponseDto'];
+export type LqipResponseDto = components['schemas']['LqipResponseDto'];
+
+// Response types
+export type PaginatedResponseDto = components['schemas']['PaginatedResponseDto'];
+
+// Extract pagination metadata from paginated response
 export interface PaginationMeta {
   page: number;
   pageSize: number;
@@ -336,28 +348,25 @@ export interface PaginationMeta {
   hasPrevPage: boolean;
 }
 
+// Sort field type (derived from ImageFilterDto)
+export type SortField = 'createdAt' | 'rating' | 'filename';
+export type SortOrder = 'ASC' | 'DESC';
+
 /**
- * Generic API error response.
+ * API error response structure.
  */
-export interface ApiError {
+export interface ApiErrorResponse {
   statusCode: number;
   message: string;
   error: string;
 }
 ```
 
-#### `frontend/src/types/index.ts`
-
-```typescript
-export * from './image';
-export * from './api';
-```
-
 ---
 
-### Task 4.4: Create API Client
+### Task 4.6: Create API Client
 
-**Goal:** Create a centralized API client with base URL configuration.
+**Goal:** Create a centralized API client with base URL configuration and error handling.
 
 #### `frontend/src/api/client.ts`
 
@@ -366,8 +375,9 @@ export * from './api';
  * API client configuration for backend communication.
  * Uses native fetch API for HTTP requests.
  */
+import type { ApiErrorResponse } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
  * Default headers for API requests.
@@ -375,6 +385,37 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const defaultHeaders: HeadersInit = {
   'Content-Type': 'application/json',
 };
+
+/**
+ * Custom error class for API errors.
+ */
+export class ApiError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public details?: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * Handles API error responses.
+ */
+async function handleErrorResponse(response: Response): Promise<never> {
+  let errorData: ApiErrorResponse | undefined;
+  try {
+    errorData = await response.json();
+  } catch {
+    // Ignore JSON parsing errors
+  }
+  throw new ApiError(
+    response.status,
+    errorData?.message || response.statusText,
+    errorData,
+  );
+}
 
 /**
  * Makes a GET request to the API.
@@ -387,8 +428,7 @@ export async function apiGet<T>(endpoint: string, options?: RequestInit): Promis
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new ApiError(response.status, error.message || response.statusText);
+    await handleErrorResponse(response);
   }
 
   return response.json();
@@ -406,8 +446,7 @@ export async function apiPost<T>(endpoint: string, body?: unknown, options?: Req
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new ApiError(response.status, error.message || response.statusText);
+    await handleErrorResponse(response);
   }
 
   return response.json();
@@ -425,8 +464,24 @@ export async function apiPatch<T>(endpoint: string, body: unknown, options?: Req
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new ApiError(response.status, error.message || response.statusText);
+    await handleErrorResponse(response);
+  }
+
+  return response.json();
+}
+
+/**
+ * Makes a DELETE request to the API.
+ */
+export async function apiDelete<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'DELETE',
+    headers: defaultHeaders,
+    ...options,
+  });
+
+  if (!response.ok) {
+    await handleErrorResponse(response);
   }
 
   return response.json();
@@ -444,47 +499,31 @@ export async function apiUpload<T>(endpoint: string, formData: FormData, options
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new ApiError(response.status, error.message || response.statusText);
+    await handleErrorResponse(response);
   }
 
   return response.json();
 }
-
-/**
- * Custom error class for API errors.
- */
-export class ApiError extends Error {
-  constructor(
-    public statusCode: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-export { API_BASE_URL };
 ```
 
 ---
 
-### Task 4.5: Create Images API Methods
+### Task 4.7: Create Images API Methods
 
-**Goal:** Implement typed API methods for all image endpoints.
+**Goal:** Implement typed API methods for all image endpoints using generated types.
 
 #### `frontend/src/api/images.api.ts`
 
 ```typescript
-import { apiGet, apiPatch, apiUpload } from './client';
+import { apiGet, apiPatch, apiUpload, API_BASE_URL } from './client';
 import type {
   Image,
-  ImageFilters,
-  PaginatedResponse,
-  RatingUpdateRequest,
-  RatingUpdateResponse,
-} from '@/types';
-import { API_BASE_URL } from './client';
+  ImageFilterDto,
+  PaginatedResponseDto,
+  UpdateRatingDto,
+  RatingUpdateResponseDto,
+  Genre,
+} from './types';
 
 /**
  * Images API endpoints.
@@ -501,7 +540,7 @@ const ENDPOINTS = {
 /**
  * Builds query string from filter parameters.
  */
-function buildQueryString(filters: ImageFilters): string {
+function buildQueryString(filters: ImageFilterDto): string {
   const params = new URLSearchParams();
 
   if (filters.genre) params.append('genre', filters.genre);
@@ -518,9 +557,9 @@ function buildQueryString(filters: ImageFilters): string {
 /**
  * Fetches paginated list of images with optional filters.
  */
-export async function getImages(filters: ImageFilters = {}): Promise<PaginatedResponse<Image>> {
+export async function getImages(filters: ImageFilterDto = {}): Promise<PaginatedResponseDto> {
   const queryString = buildQueryString(filters);
-  return apiGet<PaginatedResponse<Image>>(`${ENDPOINTS.IMAGES}${queryString}`);
+  return apiGet<PaginatedResponseDto>(`${ENDPOINTS.IMAGES}${queryString}`);
 }
 
 /**
@@ -548,17 +587,18 @@ export function getLqipUrl(id: string): string {
 /**
  * Updates the rating for an image.
  */
-export async function updateImageRating(id: string, rating: number): Promise<RatingUpdateResponse> {
-  const body: RatingUpdateRequest = { rating };
-  return apiPatch<RatingUpdateResponse>(ENDPOINTS.IMAGE_RATING(id), body);
+export async function updateImageRating(id: string, rating: number): Promise<RatingUpdateResponseDto> {
+  const body: UpdateRatingDto = { rating };
+  return apiPatch<RatingUpdateResponseDto>(ENDPOINTS.IMAGE_RATING(id), body);
 }
 
 /**
  * Uploads a new image with genre selection.
+ * Supports progress tracking via callback.
  */
 export async function uploadImage(
   file: File,
-  genre: string,
+  genre: Genre,
   onProgress?: (progress: number) => void,
 ): Promise<Image> {
   const formData = new FormData();
@@ -609,28 +649,34 @@ export async function uploadImage(
 #### `frontend/src/api/index.ts`
 
 ```typescript
+// Generated types
+export * from './types';
+
+// API client
 export * from './client';
+
+// API methods
 export * from './images.api';
 ```
 
 ---
 
-### Task 4.6: Create TanStack Query Hooks
+### Task 4.8: Create TanStack Query Hooks
 
-**Goal:** Implement React Query hooks for data fetching with caching.
+**Goal:** Implement React Query hooks for data fetching with caching and optimistic updates.
 
 #### `frontend/src/hooks/useImages.ts`
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as imagesApi from '@/api/images.api';
-import type { ImageFilters, Image } from '@/types';
+import type { ImageFilterDto, Image } from '@/api';
 
 /**
  * Query keys for TanStack Query cache management.
  */
 export const queryKeys = {
-  images: (filters: ImageFilters) => ['images', filters] as const,
+  images: (filters: ImageFilterDto) => ['images', filters] as const,
   image: (id: string) => ['image', id] as const,
   imageMetadata: (id: string) => ['imageMetadata', id] as const,
 } as const;
@@ -639,7 +685,7 @@ export const queryKeys = {
  * Hook for fetching paginated images with filters.
  * Automatically refetches when filters change.
  */
-export function useImages(filters: ImageFilters = {}) {
+export function useImages(filters: ImageFilterDto = {}) {
   return useQuery({
     queryKey: queryKeys.images(filters),
     queryFn: () => imagesApi.getImages(filters),
@@ -706,8 +752,7 @@ export function useUpdateRating() {
 
 /**
  * Hook for uploading images.
- * Does not use React Query's built-in progress tracking;
- * progress is handled via callback in the API function.
+ * Progress is handled via callback in the API function.
  */
 export function useUploadImage() {
   const queryClient = useQueryClient();
@@ -719,7 +764,7 @@ export function useUploadImage() {
       onProgress,
     }: {
       file: File;
-      genre: string;
+      genre: Parameters<typeof imagesApi.uploadImage>[1];
       onProgress?: (progress: number) => void;
     }) => imagesApi.uploadImage(file, genre, onProgress),
 
@@ -754,7 +799,7 @@ export * from './useImages';
 
 ---
 
-### Task 4.7: Set Up React Router
+### Task 4.9: Set Up React Router
 
 **Goal:** Configure React Router with application routes.
 
@@ -798,7 +843,7 @@ export default App;
 
 ---
 
-### Task 4.8: Configure TanStack Query Provider
+### Task 4.10: Configure TanStack Query Provider
 
 **Goal:** Set up QueryClient with development tools.
 
@@ -833,12 +878,6 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-**Note:** Requires installing devtools:
-
-```bash
-npm install @tanstack/react-query-devtools
-```
-
 ---
 
 ## 5. File Creation Summary
@@ -846,9 +885,8 @@ npm install @tanstack/react-query-devtools
 | File | Action | Description |
 |------|--------|-------------|
 | `frontend/.env` | Create | Environment variables |
-| `frontend/src/types/image.ts` | Create | Image-related types |
-| `frontend/src/types/api.ts` | Create | Generic API types |
-| `frontend/src/types/index.ts` | Create | Types barrel export |
+| `frontend/src/api/schema.gen.ts` | Generate | Auto-generated types from OpenAPI |
+| `frontend/src/api/types.ts` | Create | Convenient type re-exports |
 | `frontend/src/api/client.ts` | Create | API client with fetch |
 | `frontend/src/api/images.api.ts` | Create | Images API methods |
 | `frontend/src/api/index.ts` | Create | API barrel export |
@@ -856,7 +894,7 @@ npm install @tanstack/react-query-devtools
 | `frontend/src/hooks/index.ts` | Create | Hooks barrel export |
 | `frontend/src/App.tsx` | Modify | Add React Router |
 | `frontend/src/main.tsx` | Modify | Add QueryClient provider |
-| `frontend/package.json` | Modify | Add new dependencies |
+| `frontend/package.json` | Modify | Add dependencies and scripts |
 
 ---
 
@@ -865,30 +903,52 @@ npm install @tanstack/react-query-devtools
 ```bash
 cd frontend
 npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom
+npm install -D openapi-typescript
 ```
 
 ---
 
-## 7. Verification Checklist
+## 7. NPM Scripts
 
-### 7.1 Installation Verification
+Add to `package.json`:
+
+```json
+{
+  "scripts": {
+    "generate:types": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+  }
+}
+```
+
+---
+
+## 8. Verification Checklist
+
+### 8.1 Installation Verification
 
 - [ ] `npm run dev` starts without errors
 - [ ] No TypeScript compilation errors
 - [ ] No ESLint warnings
 
-### 7.2 API Client Verification
+### 8.2 Type Generation Verification
+
+- [ ] `npm run generate:types` runs successfully
+- [ ] `src/api/schema.gen.ts` file is created
+- [ ] Types can be imported in other files
+
+### 8.3 API Client Verification
 
 - [ ] API client connects to backend (check Network tab)
 - [ ] Environment variable is properly read
+- [ ] Error handling works correctly
 
-### 7.3 Router Verification
+### 8.4 Router Verification
 
 - [ ] `/` route shows Gallery placeholder
 - [ ] `/upload` route shows Upload placeholder
 - [ ] Browser back/forward navigation works
 
-### 7.4 TanStack Query Verification
+### 8.5 TanStack Query Verification
 
 - [ ] React Query DevTools appear in development
 - [ ] Query hooks return typed data
@@ -896,17 +956,18 @@ npm install @tanstack/react-query @tanstack/react-query-devtools react-router-do
 
 ---
 
-## 8. Risks and Mitigations
+## 9. Risks and Mitigations
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| Type mismatch between frontend/backend | Medium | Medium | Keep types in sync; consider code generation later |
-| Environment variable not loaded | Low | Medium | Verify VITE_ prefix; check .env file location |
+| Backend not running when generating types | Medium | Low | Document prerequisite; add error message in script |
+| OpenAPI spec changes break generated types | Low | Medium | Regenerate types when backend changes; TypeScript catches issues |
+| Type mismatch after API changes | Low | Medium | Regenerate types; CI can verify types are up-to-date |
 | React 19 compatibility with TanStack Query | Low | High | Use TanStack Query 5.x which supports React 19 |
 
 ---
 
-## 9. Next Steps After Stage 4
+## 10. Next Steps After Stage 4
 
 Once Stage 4 is complete, the following stages can begin:
 
@@ -923,27 +984,31 @@ Both Stage 5 and Stage 6 depend on Stage 4 being complete, but they can run in p
 
 ---
 
-## 10. Implementation Order
+## 11. Implementation Order
 
 The recommended order for implementing tasks:
 
 ```mermaid
 flowchart LR
     T1[4.1 Install Dependencies] --> T2[4.2 Environment Variables]
-    T2 --> T3[4.3 TypeScript Types]
-    T3 --> T4[4.4 API Client]
-    T4 --> T5[4.5 Images API Methods]
-    T5 --> T6[4.6 TanStack Query Hooks]
-    T6 --> T7[4.7 React Router]
-    T7 --> T8[4.8 QueryClient Provider]
-    T8 --> T9[Verification]
+    T2 --> T3[4.3 Add Type Generation Script]
+    T3 --> T4[4.4 Generate Types]
+    T4 --> T5[4.5 Create Type Re-exports]
+    T5 --> T6[4.6 Create API Client]
+    T6 --> T7[4.7 Create Images API]
+    T7 --> T8[4.8 Create TanStack Hooks]
+    T8 --> T9[4.9 Set Up React Router]
+    T9 --> T10[4.10 QueryClient Provider]
+    T10 --> T11[Verification]
 ```
 
 ---
 
-## 11. Acceptance Criteria
+## 12. Acceptance Criteria
 
 - [ ] Frontend starts with `npm run dev`
+- [ ] Types can be generated from OpenAPI spec with `npm run generate:types`
+- [ ] Generated types are properly typed and importable
 - [ ] API client successfully connects to backend
 - [ ] TanStack Query hooks return typed data
 - [ ] Router navigates between `/` and `/upload`
@@ -951,3 +1016,4 @@ flowchart LR
 - [ ] No TypeScript errors
 - [ ] No console errors in browser
 - [ ] React Query DevTools available in development mode
+- [ ] `schema.gen.ts` is committed to git
