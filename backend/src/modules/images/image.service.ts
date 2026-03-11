@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import sharp, { Sharp } from 'sharp';
 import * as fs from 'fs/promises';
+import { randomUUID } from 'crypto';
 import {
   getOriginalPath,
   getProcessedPath,
@@ -8,8 +11,25 @@ import {
   getLqipPath,
   fileExists,
   ensureDir,
+  DIRECTORIES,
 } from '../../utils/storage.util';
 import { roundToBreakpoint } from '../../utils/breakpoint.util';
+import { Image } from '../../entities/image.entity';
+import { Genre } from '../../entities/genre.enum';
+import { ImageFilterDto, SortField, SortOrder } from './dto/image-filter.dto';
+import { BadRequestException } from '@nestjs/common';
+
+/**
+ * Interface representing a Multer uploaded file
+ */
+interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  buffer: Buffer;
+  size: number;
+}
 
 export interface ImageMetadata {
   width: number;
@@ -36,6 +56,11 @@ const CONTENT_TYPES: Record<ImageFormat, string> = {
 @Injectable()
 export class ImageService {
   private readonly logger = new Logger(ImageService.name);
+
+  constructor(
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
+  ) {}
 
   /**
    * Extract metadata from an image buffer or file path
@@ -323,5 +348,132 @@ export class ImageService {
     }
 
     return null;
+  }
+
+  /**
+   * Find all images with filtering, sorting, and pagination
+   * @param filters - ImageFilterDto with genre, rating, sort, pagination options
+   * @returns Object with data array and total count
+   */
+  async findAll(
+    filters: ImageFilterDto,
+  ): Promise<{ data: Image[]; total: number }> {
+    const queryBuilder = this.imageRepository.createQueryBuilder('image');
+
+    // Apply filtering by genre
+    if (filters.genre) {
+      queryBuilder.andWhere('image.genre = :genre', { genre: filters.genre });
+    }
+
+    // Apply filtering by rating
+    if (filters.rating !== undefined) {
+      queryBuilder.andWhere('image.rating >= :rating', {
+        rating: filters.rating,
+      });
+    }
+
+    // Apply sorting
+    const sortField = filters.sort || SortField.CREATED_AT;
+    const sortOrder = filters.sortOrder || SortOrder.DESC;
+    queryBuilder.orderBy(`image.${sortField}`, sortOrder);
+
+    // Apply pagination
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+    const skip = (page - 1) * pageSize;
+    queryBuilder.skip(skip).take(pageSize);
+
+    // Get total count without pagination
+    const total = await queryBuilder.getCount();
+
+    // Get paginated data
+    const data = await queryBuilder.getMany();
+
+    return { data, total };
+  }
+
+  /**
+   * Find image by ID
+   * @param id - Image UUID
+   * @returns Image or null if not found
+   */
+  async findById(id: string): Promise<Image | null> {
+    return this.imageRepository.findOne({ where: { id } });
+  }
+
+  /**
+   * Create a new image record
+   * @param imageData - Partial image data
+   * @returns Created image
+   */
+  async create(imageData: Partial<Image>): Promise<Image> {
+    const image = this.imageRepository.create(imageData);
+    return this.imageRepository.save(image);
+  }
+
+  /**
+   * Update image rating
+   * @param id - Image UUID
+   * @param rating - New rating value (1-5)
+   * @returns Updated image or null if not found
+   */
+  async updateRating(id: string, rating: number): Promise<Image | null> {
+    const image = await this.findById(id);
+    if (!image) {
+      return null;
+    }
+
+    image.rating = rating;
+    return this.imageRepository.save(image);
+  }
+
+  /**
+   * Process complete image upload
+   * @param file - Multer uploaded file
+   * @param genre - Optional genre classification
+   * @returns Created image record
+   */
+  async processUpload(file: UploadedFile, genre?: Genre): Promise<Image> {
+    // Generate UUID
+    const uuid = randomUUID();
+
+    // Get file extension
+    const originalName = file.originalname;
+    const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+
+    // Validate image
+    const validation = await this.validateImage(file.buffer);
+    if (!validation.valid) {
+      throw new BadRequestException(validation.error);
+    }
+
+    // Extract metadata
+    const metadata = await this.extractMetadata(file.buffer);
+
+    // Extract dominant color
+    const dominantColor = await this.extractDominantColor(file.buffer);
+
+    // Generate LQIP
+    const lqipBase64 = await this.generateAndSaveLqip(file.buffer, uuid);
+
+    // Save original file
+    const originalPath = getOriginalPath(uuid, extension);
+    await ensureDir(DIRECTORIES.ORIGINALS);
+    await fs.writeFile(originalPath, file.buffer);
+
+    // Create database record
+    const image = await this.create({
+      filename: originalName,
+      originalPath,
+      genre: genre || Genre.UNCATEGORIZED,
+      rating: 3,
+      aspectRatio: metadata.aspectRatio,
+      dominantColor,
+      lqipBase64,
+      width: metadata.width,
+      height: metadata.height,
+    });
+
+    return image;
   }
 }

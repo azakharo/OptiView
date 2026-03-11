@@ -12,24 +12,24 @@ Implement all REST API endpoints for image management according to ADR-002. This
 
 ### Prerequisites
 
-| Prerequisite | Status | Location |
-|:-------------|:-------|:---------|
-| Stage 1: Database & Entities | ✅ Complete | `backend/src/entities/` |
+| Prerequisite                      | Status      | Location                                      |
+|:----------------------------------|:------------|:----------------------------------------------|
+| Stage 1: Database & Entities      | ✅ Complete | `backend/src/entities/`                       |
 | Stage 2: Image Processing Service | ✅ Complete | `backend/src/modules/images/image.service.ts` |
-| TypeORM Integration | ✅ Complete | `backend/src/data-source.ts` |
-| Swagger Setup | ✅ Complete | `backend/src/main.ts` |
+| TypeORM Integration               | ✅ Complete | `backend/src/data-source.ts`                  |
+| Swagger Setup                     | ✅ Complete | `backend/src/main.ts`                         |
 
 ### Existing Files to Reference
 
-| File | Purpose |
-|:-----|:--------|
-| [`image.entity.ts`](../../backend/src/entities/image.entity.ts) | Image database entity |
-| [`genre.enum.ts`](../../backend/src/entities/genre.enum.ts) | Genre enumeration |
-| [`image.service.ts`](../../backend/src/modules/images/image.service.ts) | Image processing service |
-| [`breakpoint.util.ts`](../../backend/src/utils/breakpoint.util.ts) | Breakpoint rounding utilities |
-| [`storage.util.ts`](../../backend/src/utils/storage.util.ts) | File storage utilities |
-| [`create-image.dto.ts`](../../backend/src/modules/images/dto/create-image.dto.ts) | Existing upload DTO |
-| [`update-rating.dto.ts`](../../backend/src/modules/images/dto/update-rating.dto.ts) | Existing rating DTO |
+| File                                                                                | Purpose                       |
+|:------------------------------------------------------------------------------------|:------------------------------|
+| [`image.entity.ts`](../../backend/src/entities/image.entity.ts)                     | Image database entity         |
+| [`genre.enum.ts`](../../backend/src/entities/genre.enum.ts)                         | Genre enumeration             |
+| [`image.service.ts`](../../backend/src/modules/images/image.service.ts)             | Image processing service      |
+| [`breakpoint.util.ts`](../../backend/src/utils/breakpoint.util.ts)                  | Breakpoint rounding utilities |
+| [`storage.util.ts`](../../backend/src/utils/storage.util.ts)                        | File storage utilities        |
+| [`create-image.dto.ts`](../../backend/src/modules/images/dto/create-image.dto.ts)   | Existing upload DTO           |
+| [`update-rating.dto.ts`](../../backend/src/modules/images/dto/update-rating.dto.ts) | Existing rating DTO           |
 
 ### Input Artifacts
 
@@ -40,16 +40,16 @@ Implement all REST API endpoints for image management according to ADR-002. This
 
 ### Output Artifacts
 
-| Type | Artifact | Description |
-|:-----|:---------|:------------|
-| Code | `images.controller.ts` | REST API controller |
-| Code | `dto/image-filter.dto.ts` | Filtering/pagination DTO |
-| Code | `dto/image-response.dto.ts` | Response DTOs |
-| Code | `dto/paginated-response.dto.ts` | Pagination wrapper DTO |
-| Code | `filters/http-exception.filter.ts` | Global exception filter |
-| Code | `interceptors/transform.interceptor.ts` | Response transformation |
-| Test | `test/api.e2e-spec.ts` | API endpoint tests |
-| Doc | Swagger documentation | All endpoints documented |
+| Type | Artifact                                | Description              |
+|:-----|:----------------------------------------|:-------------------------|
+| Code | `images.controller.ts`                  | REST API controller      |
+| Code | `dto/image-filter.dto.ts`               | Filtering/pagination DTO |
+| Code | `dto/image-response.dto.ts`             | Response DTOs            |
+| Code | `dto/paginated-response.dto.ts`         | Pagination wrapper DTO   |
+| Code | `filters/http-exception.filter.ts`      | Global exception filter  |
+| Code | `interceptors/transform.interceptor.ts` | Response transformation  |
+| Test | `test/api.e2e-spec.ts`                  | API endpoint tests       |
+| Doc  | Swagger documentation implemented       | All endpoints documented |
 
 ---
 
@@ -63,14 +63,14 @@ Implement all REST API endpoints for image management according to ADR-002. This
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|:----------|:-----|:---------|:--------|:------------|
-| `genre` | string | No | - | Filter by genre: Nature, Architecture, Portrait, Uncategorized |
-| `rating` | number | No | - | Minimum rating filter (1-5) |
-| `sort` | string | No | `createdAt` | Sort field: createdAt, rating, filename |
-| `sortOrder` | string | No | `DESC` | Sort direction: ASC, DESC |
-| `page` | number | No | `1` | Page number (1-based) |
-| `pageSize` | number | No | `10` | Items per page (max 100) |
+| Parameter   | Type   | Required | Default     | Description                                                    |
+|:------------|:-------|:---------|:------------|:---------------------------------------------------------------|
+| `genre`     | string | No       | -           | Filter by genre: Nature, Architecture, Portrait, Uncategorized |
+| `rating`    | number | No       | -           | Minimum rating filter (1-5)                                    |
+| `sort`      | string | No       | `createdAt` | Sort field: createdAt, rating, filename                        |
+| `sortOrder` | string | No       | `DESC`      | Sort direction: ASC, DESC                                      |
+| `page`      | number | No       | `1`         | Page number (1-based)                                          |
+| `pageSize`  | number | No       | `10`        | Items per page (max 100)                                       |
 
 **Example Request:**
 
@@ -145,21 +145,21 @@ GET /api/images?genre=Nature&rating=3&sort=createdAt&sortOrder=DESC&page=1&pageS
 
 **Path Parameters:**
 
-| Parameter | Type | Required | Description |
-|:----------|:-----|:---------|:------------|
-| `id` | UUID | Yes | Image unique identifier |
+| Parameter | Type | Required | Description             |
+|:----------|:-----|:---------|:------------------------|
+| `id`      | UUID | Yes      | Image unique identifier |
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|:----------|:-----|:---------|:--------|:------------|
-| `width` | number | No | `1280` | Desired image width (rounded to breakpoint) |
+| Parameter | Type   | Required | Default | Description                                 |
+|:----------|:-------|:---------|:--------|:--------------------------------------------|
+| `width`   | number | No       | `1280`  | Desired image width (rounded to breakpoint) |
 
 **Headers:**
 
-| Header | Required | Description |
-|:-------|:---------|:------------|
-| `Accept` | No | Content negotiation header (e.g., `image/avif, image/webp, image/jpeg`) |
+| Header   | Required | Description                                                             |
+|:---------|:---------|:------------------------------------------------------------------------|
+| `Accept` | No       | Content negotiation header (e.g., `image/avif, image/webp, image/jpeg`) |
 
 **Example Request:**
 
@@ -191,9 +191,9 @@ Accept: image/avif, image/webp, image/jpeg
 
 **Path Parameters:**
 
-| Parameter | Type | Required | Description |
-|:----------|:-----|:---------|:------------|
-| `id` | UUID | Yes | Image unique identifier |
+| Parameter | Type | Required | Description             |
+|:----------|:-----|:---------|:------------------------|
+| `id`      | UUID | Yes      | Image unique identifier |
 
 **Example Request:**
 
@@ -237,10 +237,10 @@ GET /api/images/550e8400-e29b-41d4-a716-446655440000/metadata
 
 **Form Fields:**
 
-| Field | Type | Required | Description |
-|:------|:-----|:---------|:------------|
-| `file` | File | Yes | Image file (JPEG, PNG, WebP) |
-| `genre` | string | No | Genre classification (defaults to Uncategorized) |
+| Field   | Type   | Required | Description                                      |
+|:--------|:-------|:---------|:-------------------------------------------------|
+| `file`  | File   | Yes      | Image file (JPEG, PNG, WebP)                     |
+| `genre` | string | No       | Genre classification (defaults to Uncategorized) |
 
 **Constraints:**
 
