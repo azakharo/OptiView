@@ -1,23 +1,36 @@
-import {useState} from 'react';
-import {Button} from 'flowbite-react';
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0);
-
+// Placeholder components - will be implemented in Stage 5 and 6
+function GalleryPage() {
   return (
-    <div className="mx-auto flex max-w-md items-center justify-center">
-      <div>
-        <h1 className="mb-4 text-center text-4xl">Vite + React</h1>
-        <div className="flex justify-center">
-          <Button color="green" onClick={() => setCount(count => count + 1)}>
-            count is {count}
-          </Button>
-        </div>
-        <div className="mt-2 text-2xl text-green-600">
-          This template uses Tailwind CSS
-        </div>
-      </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">Gallery Page</h1>
+      <p className="text-gray-600">
+        Gallery feature will be implemented in Stage 5
+      </p>
     </div>
+  );
+}
+
+function UploadPage() {
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">Upload Page</h1>
+      <p className="text-gray-600">
+        Upload feature will be implemented in Stage 6
+      </p>
+    </div>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<GalleryPage />} />
+        <Route path="/upload" element={<UploadPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
