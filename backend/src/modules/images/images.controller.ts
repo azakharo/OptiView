@@ -23,6 +23,7 @@ import {
   ApiConsumes,
   ApiQuery,
   ApiBody,
+  ApiHeader,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import type { Multer } from 'multer';
@@ -80,6 +81,13 @@ export class ImagesController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get processed image with format negotiation' })
+  @ApiHeader({
+    name: 'Accept',
+    description:
+      'Desired image format (e.g., image/webp, image/png, image/jpeg). Server will return the best matching format based on browser support.',
+    example: 'image/webp',
+    required: false,
+  })
   @ApiParam({ name: 'id', description: 'Image UUID', format: 'uuid' })
   @ApiQuery({
     name: 'width',
