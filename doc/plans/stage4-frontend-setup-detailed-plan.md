@@ -146,7 +146,6 @@ frontend/
 │   ├── main.tsx                # QueryClient provider
 │   └── index.css
 ├── .env                        # API base URL
-└── .env.example                # Environment template
 ```
 
 ### 3.2 Architecture Diagram
@@ -212,18 +211,11 @@ npm install @tanstack/react-query react-router-dom
 
 **Goal:** Set up environment configuration for API base URL.
 
-**Create Files:**
+**Create File:**
 
 #### `frontend/.env`
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000
-```
-
-#### `frontend/.env.example`
-
-```env
-# Backend API base URL
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
@@ -854,7 +846,6 @@ npm install @tanstack/react-query-devtools
 | File | Action | Description |
 |------|--------|-------------|
 | `frontend/.env` | Create | Environment variables |
-| `frontend/.env.example` | Create | Environment template |
 | `frontend/src/types/image.ts` | Create | Image-related types |
 | `frontend/src/types/api.ts` | Create | Generic API types |
 | `frontend/src/types/index.ts` | Create | Types barrel export |
