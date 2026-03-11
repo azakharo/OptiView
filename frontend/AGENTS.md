@@ -2,7 +2,7 @@
 
 ## Описание проекта
 
-SPA на React.js.
+**OptiView** is an web application designed to demonstrate high-performance image delivery. The system solves the problem of inefficient content loading by serving images tailored to the user's specific screen size, pixel density, and browser format support.
 
 ## Технологический стек
 

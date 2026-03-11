@@ -1,6 +1,6 @@
-# React.js Typescript application starter
+# OptiView frontend application
 
-Usage: create fast prototypes, solve test tasks or start a new project with minimal initial setup.
+**OptiView** is an web application designed to demonstrate high-performance image delivery. The system solves the problem of inefficient content loading by serving images tailored to the user's specific screen size, pixel density, and browser format support.
 
 ## Tech stack
 
