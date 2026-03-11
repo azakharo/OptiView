@@ -2,13 +2,13 @@
 
 ## Overview
 
-This document provides a detailed implementation plan for **Stage 4: Frontend Setup** of the OptiView project. This stage focuses on configuring the frontend application with TypeScript types generated from OpenAPI specification, API client implementation, TanStack Query setup, and React Router configuration.
+This document provides a detailed implementation plan for **Stage 4: Frontend Setup** of the OptiView project. This stage focuses on configuring the frontend application with TypeScript types generated from OpenAPI specification, API client implementation using `openapi-fetch`, TanStack Query setup, and React Router configuration.
 
-**Key Decision:** Types are generated from backend OpenAPI specification using `openapi-typescript`. API client and React Query hooks are implemented manually for full control over:
-- Caching strategies
-- Optimistic updates
-- File upload with progress tracking
-- Error handling
+**Key Decision:** Types are generated from backend OpenAPI specification using `openapi-typescript`. API client uses `openapi-fetch` for type-safe HTTP operations with:
+- Automatic type inference for all API calls
+- Full autocomplete for endpoints and parameters
+- Custom upload function for file uploads with progress tracking
+- Custom React Query hooks for caching and optimistic updates
 
 **Prerequisites:**
 
@@ -50,31 +50,40 @@ frontend/
 | @tanstack/react-query | 5.x | Server state management |
 | @tanstack/react-query-devtools | 5.x | DevTools for React Query |
 | react-router-dom | 7.x | SPA routing |
+| openapi-fetch | ^0.13.x | Type-safe fetch client for OpenAPI |
 | openapi-typescript | ^7.x | Type generation from OpenAPI (dev dependency) |
 
 ---
 
 ## 2. Code Generation Strategy
 
-### 2.1 Why Hybrid Approach?
+### 2.1 Why openapi-fetch Hybrid Approach?
 
-Instead of manually duplicating types or using full code generation (like Orval), we use a **hybrid approach**:
+Instead of manually creating API methods or using full code generation (like Orval), we use a **hybrid approach with openapi-fetch**:
 
 ```mermaid
 flowchart LR
     Backend[NestJS Backend] -->|Swagger JSON| Spec[OpenAPI Spec /api/docs-json]
-    Spec -->|openapi-typescript| Types[Generated Types]
-    Types --> |type imports| Client[Custom API Client]
-    Client --> Hooks[Custom React Query Hooks]
+    Spec -->|openapi-typescript| Types[Generated Types paths and schemas]
+    Types -->|type arg| FetchClient[openapi-fetch client]
+    FetchClient --> Hooks[Custom React Query Hooks]
+
+    subgraph Custom[Custom Functions]
+        Upload[uploadImage with XHR progress]
+    end
+
     Hooks --> Components[React Components]
+    Custom --> Hooks
 ```
 
 **Benefits:**
 - ✅ Types always in sync with backend
-- ✅ Full control over hook implementations
-- ✅ Optimistic updates for rating
-- ✅ File upload with progress tracking
-- ✅ Minimal bundle size (only type imports)
+- ✅ Automatic type inference for all API calls
+- ✅ Full autocomplete for endpoints and parameters
+- ✅ Less boilerplate - no manual API methods needed
+- ✅ Custom upload function with XHR progress tracking
+- ✅ Custom React Query hooks with optimistic updates
+- ✅ Minimal bundle size (openapi-fetch is ~3KB gzipped)
 
 ### 2.2 Types Generation Workflow
 
@@ -94,8 +103,8 @@ frontend/
 ├── src/
 │   ├── api/
 │   │   ├── schema.gen.ts         # Generated types from OpenAPI
-│   │   ├── client.ts             # Base API client with error handling
-│   │   ├── images.api.ts         # Images API methods
+│   │   ├── client.ts             # openapi-fetch client + ApiError class
+│   │   ├── images.api.ts         # Only uploadImage (custom with progress)
 │   │   └── index.ts              # API barrel export
 │   ├── hooks/
 │   │   ├── useImages.ts          # TanStack Query hooks for images
@@ -104,8 +113,7 @@ frontend/
 │   ├── main.tsx                  # QueryClient provider
 │   └── index.css
 ├── .env                          # API base URL
-├── package.json                  # Scripts for type generation
-└── orval.config.ts               # Reserved for future if needed
+└── package.json                  # Scripts for type generation
 ```
 
 ### 3.2 Architecture Diagram
@@ -166,7 +174,7 @@ type PaginatedResponseImage = components['schemas']['PaginatedResponseDto'];
 
 ```bash
 cd frontend
-npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom
+npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch
 npm install -D openapi-typescript
 ```
 
@@ -366,34 +374,45 @@ export interface ApiErrorResponse {
 
 ### Task 4.6: Create API Client
 
-**Goal:** Create a centralized API client with base URL configuration and error handling.
+**Goal:** Create a type-safe API client using openapi-fetch with base URL configuration and error handling.
 
 #### `frontend/src/api/client.ts`
 
 ```typescript
 /**
  * API client configuration for backend communication.
- * Uses native fetch API for HTTP requests.
+ * Uses openapi-fetch for type-safe HTTP requests.
  */
-import type { ApiErrorResponse } from './types';
+import createFetchClient from 'openapi-fetch';
+import type { paths, components } from './schema.gen';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
- * Default headers for API requests.
+ * Type-safe openapi-fetch client.
+ * Provides autocomplete for all API endpoints and full type inference.
  */
-const defaultHeaders: HeadersInit = {
-  'Content-Type': 'application/json',
-};
+export const client = createFetchClient<paths>({
+  baseUrl: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/**
+ * Error response type from the API.
+ */
+type ApiErrorResponse = components['schemas']['ApiErrorResponse'];
 
 /**
  * Custom error class for API errors.
+ * Includes the HTTP status code and any error details from the server.
  */
 export class ApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public details?: unknown,
+    public details?: ApiErrorResponse,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -401,200 +420,74 @@ export class ApiError extends Error {
 }
 
 /**
- * Handles API error responses.
+ * Type guard to check if an error response is an ApiErrorResponse.
  */
-async function handleErrorResponse(response: Response): Promise<never> {
-  let errorData: ApiErrorResponse | undefined;
-  try {
-    errorData = await response.json();
-  } catch {
-    // Ignore JSON parsing errors
-  }
-  throw new ApiError(
-    response.status,
-    errorData?.message || response.statusText,
-    errorData,
+function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'statusCode' in error &&
+    'message' in error
   );
 }
 
 /**
- * Makes a GET request to the API.
+ * Helper to throw ApiError from openapi-fetch error response.
  */
-export async function apiGet<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'GET',
-    headers: defaultHeaders,
-    ...options,
-  });
-
-  if (!response.ok) {
-    await handleErrorResponse(response);
+export function throwApiError(error: unknown): never {
+  if (isApiErrorResponse(error)) {
+    throw new ApiError(error.statusCode, error.message, error);
   }
-
-  return response.json();
+  throw new ApiError(500, 'An unexpected error occurred');
 }
 
 /**
- * Makes a POST request to the API.
+ * Helper to get image URL for src attribute.
+ * The browser's Accept header determines the format (AVIF/WebP/JPEG).
  */
-export async function apiPost<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers: defaultHeaders,
-    body: body ? JSON.stringify(body) : undefined,
-    ...options,
-  });
-
-  if (!response.ok) {
-    await handleErrorResponse(response);
-  }
-
-  return response.json();
+export function getImageUrl(id: string, width: number): string {
+  return `${API_BASE_URL}/api/images/${id}?width=${width}`;
 }
 
 /**
- * Makes a PATCH request to the API.
+ * Helper to get LQIP placeholder URL.
  */
-export async function apiPatch<T>(endpoint: string, body: unknown, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'PATCH',
-    headers: defaultHeaders,
-    body: JSON.stringify(body),
-    ...options,
-  });
-
-  if (!response.ok) {
-    await handleErrorResponse(response);
-  }
-
-  return response.json();
-}
-
-/**
- * Makes a DELETE request to the API.
- */
-export async function apiDelete<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'DELETE',
-    headers: defaultHeaders,
-    ...options,
-  });
-
-  if (!response.ok) {
-    await handleErrorResponse(response);
-  }
-
-  return response.json();
-}
-
-/**
- * Makes a multipart form POST request for file uploads.
- */
-export async function apiUpload<T>(endpoint: string, formData: FormData, options?: RequestInit): Promise<T> {
-  // Don't set Content-Type for FormData - browser sets it with boundary
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    body: formData,
-    ...options,
-  });
-
-  if (!response.ok) {
-    await handleErrorResponse(response);
-  }
-
-  return response.json();
+export function getLqipUrl(id: string): string {
+  return `${API_BASE_URL}/api/images/${id}/lqip`;
 }
 ```
 
 ---
 
-### Task 4.7: Create Images API Methods
+### Task 4.7: Create Custom Upload Function
 
-**Goal:** Implement typed API methods for all image endpoints using generated types.
+**Goal:** Implement a custom upload function with XHR progress tracking. All other API operations use `openapi-fetch` client directly in hooks.
+
+**Note:** With `openapi-fetch`, there's no need to create wrapper functions for standard GET/PATCH/POST operations. The client provides type-safe access to all endpoints directly. The only custom function needed is `uploadImage` for progress tracking.
 
 #### `frontend/src/api/images.api.ts`
 
 ```typescript
-import { apiGet, apiPatch, apiUpload, API_BASE_URL } from './client';
-import type {
-  Image,
-  ImageFilterDto,
-  PaginatedResponseDto,
-  UpdateRatingDto,
-  RatingUpdateResponseDto,
-  Genre,
-} from './types';
+/**
+ * Custom image upload function with progress tracking.
+ * Uses XMLHttpRequest for upload progress, which is not supported by fetch API.
+ */
+import { API_BASE_URL } from './client';
+import type { Image, Genre } from './types';
 
 /**
- * Images API endpoints.
+ * Upload endpoint path.
  */
-const ENDPOINTS = {
-  IMAGES: '/api/images',
-  IMAGE_BY_ID: (id: string) => `/api/images/${id}`,
-  IMAGE_METADATA: (id: string) => `/api/images/${id}/metadata`,
-  IMAGE_LQIP: (id: string) => `/api/images/${id}/lqip`,
-  IMAGE_RATING: (id: string) => `/api/images/${id}/rating`,
-  UPLOAD: '/api/images/upload',
-} as const;
-
-/**
- * Builds query string from filter parameters.
- */
-function buildQueryString(filters: ImageFilterDto): string {
-  const params = new URLSearchParams();
-
-  if (filters.genre) params.append('genre', filters.genre);
-  if (filters.rating !== undefined) params.append('rating', filters.rating.toString());
-  if (filters.sort) params.append('sort', filters.sort);
-  if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-  if (filters.page !== undefined) params.append('page', filters.page.toString());
-  if (filters.pageSize !== undefined) params.append('pageSize', filters.pageSize.toString());
-
-  const queryString = params.toString();
-  return queryString ? `?${queryString}` : '';
-}
-
-/**
- * Fetches paginated list of images with optional filters.
- */
-export async function getImages(filters: ImageFilterDto = {}): Promise<PaginatedResponseDto> {
-  const queryString = buildQueryString(filters);
-  return apiGet<PaginatedResponseDto>(`${ENDPOINTS.IMAGES}${queryString}`);
-}
-
-/**
- * Fetches single image metadata by ID.
- */
-export async function getImageMetadata(id: string): Promise<Image> {
-  return apiGet<Image>(ENDPOINTS.IMAGE_METADATA(id));
-}
-
-/**
- * Gets the URL for a processed image with specified width.
- * The browser's Accept header determines the format (AVIF/WebP/JPEG).
- */
-export function getImageUrl(id: string, width: number): string {
-  return `${API_BASE_URL}${ENDPOINTS.IMAGE_BY_ID(id)}?width=${width}`;
-}
-
-/**
- * Gets the URL for the LQIP placeholder.
- */
-export function getLqipUrl(id: string): string {
-  return `${API_BASE_URL}${ENDPOINTS.IMAGE_LQIP(id)}`;
-}
-
-/**
- * Updates the rating for an image.
- */
-export async function updateImageRating(id: string, rating: number): Promise<RatingUpdateResponseDto> {
-  const body: UpdateRatingDto = { rating };
-  return apiPatch<RatingUpdateResponseDto>(ENDPOINTS.IMAGE_RATING(id), body);
-}
+const UPLOAD_ENDPOINT = '/api/images/upload';
 
 /**
  * Uploads a new image with genre selection.
- * Supports progress tracking via callback.
+ * Supports progress tracking via callback using XMLHttpRequest.
+ *
+ * @param file - The image file to upload
+ * @param genre - The genre category for the image
+ * @param onProgress - Optional callback for upload progress (0-100)
+ * @returns Promise resolving to the created Image entity
  */
 export async function uploadImage(
   file: File,
@@ -605,44 +498,42 @@ export async function uploadImage(
   formData.append('file', file);
   formData.append('genre', genre);
 
-  // For progress tracking, we need XMLHttpRequest
-  if (onProgress) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
-          onProgress(progress);
-        }
-      });
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            resolve(JSON.parse(xhr.responseText));
-          } catch {
-            reject(new Error('Invalid response format'));
-          }
-        } else {
-          try {
-            const error = JSON.parse(xhr.responseText);
-            reject(new Error(error.message || 'Upload failed'));
-          } catch {
-            reject(new Error('Upload failed'));
-          }
-        }
-      });
-
-      xhr.addEventListener('error', () => reject(new Error('Network error')));
-      xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
-
-      xhr.open('POST', `${API_BASE_URL}${ENDPOINTS.UPLOAD}`);
-      xhr.send(formData);
+    // Track upload progress
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable && onProgress) {
+        const progress = Math.round((event.loaded / event.total) * 100);
+        onProgress(progress);
+      }
     });
-  }
 
-  return apiUpload<Image>(ENDPOINTS.UPLOAD, formData);
+    // Handle successful completion
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText) as Image);
+        } catch {
+          reject(new Error('Invalid response format'));
+        }
+      } else {
+        try {
+          const error = JSON.parse(xhr.responseText);
+          reject(new Error(error.message || 'Upload failed'));
+        } catch {
+          reject(new Error('Upload failed'));
+        }
+      }
+    });
+
+    // Handle errors
+    xhr.addEventListener('error', () => reject(new Error('Network error')));
+    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+
+    xhr.open('POST', `${API_BASE_URL}${UPLOAD_ENDPOINT}`);
+    xhr.send(formData);
+  });
 }
 ```
 
@@ -663,14 +554,15 @@ export * from './images.api';
 
 ### Task 4.8: Create TanStack Query Hooks
 
-**Goal:** Implement React Query hooks for data fetching with caching and optimistic updates.
+**Goal:** Implement React Query hooks using openapi-fetch client for type-safe API calls with caching and optimistic updates.
 
 #### `frontend/src/hooks/useImages.ts`
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as imagesApi from '@/api/images.api';
-import type { ImageFilterDto, Image } from '@/api';
+import { client, throwApiError, getImageUrl, getLqipUrl } from '@/api/client';
+import { uploadImage } from '@/api/images.api';
+import type { ImageFilterDto, Image } from '@/api/types';
 
 /**
  * Query keys for TanStack Query cache management.
@@ -683,12 +575,18 @@ export const queryKeys = {
 
 /**
  * Hook for fetching paginated images with filters.
- * Automatically refetches when filters change.
+ * Uses openapi-fetch client for type-safe API calls.
  */
 export function useImages(filters: ImageFilterDto = {}) {
   return useQuery({
     queryKey: queryKeys.images(filters),
-    queryFn: () => imagesApi.getImages(filters),
+    queryFn: async () => {
+      const { data, error } = await client.GET('/api/images', {
+        params: { query: filters },
+      });
+      if (error) throwApiError(error);
+      return data;
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -699,7 +597,13 @@ export function useImages(filters: ImageFilterDto = {}) {
 export function useImageMetadata(id: string) {
   return useQuery({
     queryKey: queryKeys.imageMetadata(id),
-    queryFn: () => imagesApi.getImageMetadata(id),
+    queryFn: async () => {
+      const { data, error } = await client.GET('/api/images/{id}/metadata', {
+        params: { path: { id } },
+      });
+      if (error) throwApiError(error);
+      return data;
+    },
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -707,13 +611,20 @@ export function useImageMetadata(id: string) {
 
 /**
  * Hook for updating image rating with optimistic updates.
+ * Uses openapi-fetch client for type-safe PATCH request.
  */
 export function useUpdateRating() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, rating }: { id: string; rating: number }) =>
-      imagesApi.updateImageRating(id, rating),
+    mutationFn: async ({ id, rating }: { id: string; rating: number }) => {
+      const { data, error } = await client.PATCH('/api/images/{id}/rating', {
+        params: { path: { id } },
+        body: { rating },
+      });
+      if (error) throwApiError(error);
+      return data;
+    },
 
     // Optimistic update
     onMutate: async ({ id, rating }) => {
@@ -751,8 +662,8 @@ export function useUpdateRating() {
 }
 
 /**
- * Hook for uploading images.
- * Progress is handled via callback in the API function.
+ * Hook for uploading images with progress tracking.
+ * Uses custom uploadImage function for XHR-based progress.
  */
 export function useUploadImage() {
   const queryClient = useQueryClient();
@@ -764,9 +675,9 @@ export function useUploadImage() {
       onProgress,
     }: {
       file: File;
-      genre: Parameters<typeof imagesApi.uploadImage>[1];
+      genre: Parameters<typeof uploadImage>[1];
       onProgress?: (progress: number) => void;
-    }) => imagesApi.uploadImage(file, genre, onProgress),
+    }) => uploadImage(file, genre, onProgress),
 
     onSuccess: () => {
       // Invalidate images list to show new upload
@@ -780,14 +691,14 @@ export function useUploadImage() {
  * Returns URL that can be used in img src attribute.
  */
 export function useImageUrl(id: string, width: number) {
-  return imagesApi.getImageUrl(id, width);
+  return getImageUrl(id, width);
 }
 
 /**
  * Helper hook to get LQIP URL.
  */
 export function useLqipUrl(id: string) {
-  return imagesApi.getLqipUrl(id);
+  return getLqipUrl(id);
 }
 ```
 
@@ -887,10 +798,10 @@ createRoot(document.getElementById('root')!).render(
 | `frontend/.env` | Create | Environment variables |
 | `frontend/src/api/schema.gen.ts` | Generate | Auto-generated types from OpenAPI |
 | `frontend/src/api/types.ts` | Create | Convenient type re-exports |
-| `frontend/src/api/client.ts` | Create | API client with fetch |
-| `frontend/src/api/images.api.ts` | Create | Images API methods |
+| `frontend/src/api/client.ts` | Create | openapi-fetch client + helpers |
+| `frontend/src/api/images.api.ts` | Create | Only uploadImage (custom with progress) |
 | `frontend/src/api/index.ts` | Create | API barrel export |
-| `frontend/src/hooks/useImages.ts` | Create | TanStack Query hooks |
+| `frontend/src/hooks/useImages.ts` | Create | TanStack Query hooks using openapi-fetch |
 | `frontend/src/hooks/index.ts` | Create | Hooks barrel export |
 | `frontend/src/App.tsx` | Modify | Add React Router |
 | `frontend/src/main.tsx` | Modify | Add QueryClient provider |
@@ -902,7 +813,7 @@ createRoot(document.getElementById('root')!).render(
 
 ```bash
 cd frontend
-npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom
+npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch
 npm install -D openapi-typescript
 ```
 
@@ -964,6 +875,7 @@ Add to `package.json`:
 | OpenAPI spec changes break generated types | Low | Medium | Regenerate types when backend changes; TypeScript catches issues |
 | Type mismatch after API changes | Low | Medium | Regenerate types; CI can verify types are up-to-date |
 | React 19 compatibility with TanStack Query | Low | High | Use TanStack Query 5.x which supports React 19 |
+| openapi-fetch version incompatibility | Low | Medium | Pin versions in package.json; test after updates |
 
 ---
 

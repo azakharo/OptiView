@@ -232,66 +232,78 @@ export function useUpdateRating() {
 
 ## Comparison Summary
 
-| Feature | Orval | openapi-typescript + react-query | Hybrid |
+| Feature | Orval | openapi-typescript + openapi-fetch | Hybrid with openapi-fetch |
 |---------|-------|----------------------------------|--------|
 | Types generation | ✅ Full | ✅ Full | ✅ Full |
-| API client generation | ✅ Auto | ⚠️ Manual | ⚠️ Manual |
-| React Query hooks | ✅ Auto | ✅ Auto wrapper | ⚠️ Manual |
-| Optimistic updates | ❌ Manual wrapper | ❌ Manual wrapper | ✅ Built-in |
-| File upload progress | ⚠️ Limited | ⚠️ Manual | ✅ Full control |
-| Bundle size | Larger | Minimal | Minimal |
-| Learning curve | Low | Medium | Medium |
+| API client generation | ✅ Auto | ✅ Auto via openapi-fetch | ✅ Auto via openapi-fetch |
+| React Query hooks | ✅ Auto | ⚠️ Manual in hooks layer | ⚠️ Manual in hooks layer |
+| Optimistic updates | ❌ Manual wrapper | ❌ Manual wrapper | ✅ Built-in in hooks |
+| File upload progress | ⚠️ Limited | ⚠️ Manual | ✅ Full control (custom XHR) |
+| Bundle size | Larger | Minimal (~3KB) | Minimal (~3KB) |
+| Learning curve | Low | Low | Low |
 | Customization | Limited | Medium | High |
 
 ---
 
 ## Recommendation
 
-I recommend the **Hybrid Approach** for OptiView because:
+I recommend the **Hybrid Approach with openapi-fetch** for OptiView because:
 
-1. **Types synchronization** - Guaranteed sync between frontend and backend
-2. **Custom upload logic** - Image uploads with progress tracking need custom implementation
-3. **Optimistic updates** - Rating updates benefit from custom optimistic logic
-4. **Minimal bundle** - Only type imports, no generated runtime code
-5. **Full control** - Can fine-tune caching, error handling, and retry logic
+1. **Types synchronization** - Guaranteed sync between frontend and backend via `openapi-typescript`
+2. **Reduced boilerplate** - No manual API methods needed, openapi-fetch provides type-safe calls
+3. **Full autocomplete** - Endpoints and parameters discovered via TypeScript
+4. **Custom upload logic** - Image uploads with XHR progress tracking in separate function
+5. **Optimistic updates** - Rating updates benefit from custom optimistic logic in hooks
+6. **Minimal bundle** - openapi-fetch is tiny (~3KB gzipped)
+7. **Easy maintenance** - When API changes, just regenerate types
 
 ### Proposed Workflow
 
 ```mermaid
 flowchart LR
-    Backend[NestJS Backend] -->|Swagger JSON| Spec[OpenAPI Spec]
-    Spec -->|openapi-typescript| Types[Generated Types]
-    Types --> Client[Custom API Client]
-    Client --> Hooks[Custom React Query Hooks]
+    Backend[NestJS Backend] -->|Swagger JSON| Spec[OpenAPI Spec /api/docs-json]
+    Spec -->|openapi-typescript| Types[Generated Types paths and schemas]
+    Types -->|type arg| FetchClient[openapi-fetch client]
+    FetchClient --> Hooks[Custom React Query Hooks]
+
+    subgraph Custom[Custom Functions]
+        Upload[uploadImage with XHR progress]
+    end
+
     Hooks --> Components[React Components]
+    Custom --> Hooks
 ```
 
 ### Implementation Steps
 
-1. Add `openapi-typescript` as dev dependency
+1. Add `openapi-typescript` (dev) and `openapi-fetch` as dependencies
 2. Create npm script to generate types from running backend
-3. Create type-safe API client using generated types
-4. Create custom React Query hooks with full control
-5. Add types regeneration to development workflow
+3. Create openapi-fetch client with type argument from generated schema
+4. Create custom upload function with XHR progress tracking
+5. Create custom React Query hooks using openapi-fetch client
+6. Add types regeneration to development workflow
 
 ---
 
 ## Decision
 
-**Selected approach:** Hybrid Approach
+**Selected approach:** Hybrid Approach with openapi-fetch
 
 **Rationale:**
 1. Types synchronized with backend via `openapi-typescript`
-2. Full control over file upload with progress tracking
-3. Custom optimistic updates for rating mutations
-4. Minimal bundle size (only type imports, no generated runtime code)
-5. Committed to git for stability and offline development
+2. Reduced boilerplate - no manual API methods for standard CRUD operations
+3. Full type safety with autocomplete for all API endpoints
+4. Keep custom upload implementation with XHR progress tracking
+5. Custom optimistic updates for rating mutations still in hooks layer
+6. Minimal bundle size (openapi-fetch is tiny, ~3KB gzipped)
+7. Committed to git for stability and offline development
 
 **Implementation decisions:**
 1. **Type regeneration:** Manual when API changes (not automatically)
 2. **Storage location:** `src/api/schema.gen.ts`
-3. **File uploads:** Keep custom progress tracking implementation
-4. **CI/CD:** Generated types committed to git
+3. **API client:** `openapi-fetch` for all standard requests
+4. **File uploads:** Keep custom `uploadImage` with XHR progress tracking
+5. **CI/CD:** Generated types committed to git
 
 ---
 
@@ -306,8 +318,17 @@ The detailed implementation plan has been updated in [`stage4-frontend-setup-det
 | Types | Manually duplicated | Generated from OpenAPI |
 | Type file | `src/types/image.ts` | `src/api/schema.gen.ts` + `src/api/types.ts` |
 | Synchronization | Manual | `npm run generate:types` |
-| API client | Manual | Manual (using generated types) |
-| Hooks | Manual | Manual (using generated types) |
+| API client | Manual fetch wrappers | `openapi-fetch` client |
+| Standard API methods | Manual each time | Automatic via openapi-fetch |
+| File upload | Manual with XHR | Manual with XHR (preserved for progress) |
+| Hooks | Manual | Manual (using openapi-fetch client) |
+
+### New dependencies:
+
+```bash
+npm install openapi-fetch
+npm install -D openapi-typescript
+```
 
 ### New npm script:
 
@@ -317,10 +338,49 @@ npm run generate:types
 
 This fetches the OpenAPI spec from `http://localhost:3000/api/docs-json` and generates TypeScript types.
 
+### API Client Usage Example:
+
+```typescript
+import createFetchClient from "openapi-fetch";
+import type { paths } from "./schema.gen";
+
+const client = createFetchClient<paths>({
+  baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000",
+});
+
+// Type-safe GET with autocomplete
+const { data, error } = await client.GET("/api/images", {
+  params: {
+    query: { genre: "Nature", page: 1 }
+  }
+});
+
+// Type-safe PATCH
+const { data: updated } = await client.PATCH("/api/images/{id}/rating", {
+  params: { path: { id: "123" } },
+  body: { rating: 5 },
+});
+```
+
+### Custom upload function (preserved):
+
+```typescript
+// src/api/images.api.ts - Only custom function needed
+export async function uploadImage(
+  file: File,
+  genre: Genre,
+  onProgress?: (progress: number) => void,
+): Promise<Image> {
+  // XHR-based upload with progress tracking
+  // ... implementation
+}
+```
+
 ### Workflow when API changes:
 
 1. Backend developer updates API/Swagger decorators
 2. Backend is running at `localhost:3000`
 3. Frontend developer runs `npm run generate:types`
-4. TypeScript compiler catches any breaking changes
-5. Commit updated `schema.gen.ts` to git
+4. New endpoints immediately available via `client.GET/POST/PATCH/DELETE`
+5. TypeScript compiler catches any breaking changes
+6. Commit updated `schema.gen.ts` to git
