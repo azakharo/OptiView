@@ -296,10 +296,12 @@ export class ImageService {
   ): Promise<ProcessedImage> {
     const targetFormat =
       format || (acceptHeader ? this.negotiateFormat(acceptHeader) : 'jpeg');
+
     const breakpoint = roundToBreakpoint(width);
 
     // Check cache
     const cachedPath = getProcessedPath(uuid, breakpoint, targetFormat);
+
     if (await fileExists(cachedPath)) {
       this.logger.debug(`Cache hit: ${cachedPath}`);
       const buffer = await fs.readFile(cachedPath);

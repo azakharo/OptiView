@@ -121,6 +121,7 @@ export class ImagesController {
     res.set({
       'Content-Type': processedImage.contentType,
       'Cache-Control': 'public, max-age=31536000',
+      Vary: 'Accept',
     });
 
     return processedImage.buffer;
