@@ -22,13 +22,14 @@ import {
   ApiParam,
   ApiConsumes,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import type { Multer } from 'multer';
 import { ImageService } from './image.service';
 import { ImageFilterDto } from './dto/image-filter.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
-import { UploadImageDto } from './dto/upload-image.dto';
+import { UploadImageDto, UploadImageBodyDto } from './dto/upload-image.dto';
 import { PaginatedResponseDto } from './dto/paginated-response.dto';
 import { RatingUpdateResponseDto } from './dto/rating-update-response.dto';
 import { LqipResponseDto } from './dto/lqip-response.dto';
@@ -169,6 +170,11 @@ export class ImagesController {
   )
   @ApiOperation({ summary: 'Upload a new image' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Image file to upload',
+    type: UploadImageBodyDto,
+    required: true,
+  })
   @ApiResponse({
     status: 201,
     description: 'Image uploaded successfully',
