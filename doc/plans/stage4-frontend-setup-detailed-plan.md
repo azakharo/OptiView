@@ -52,6 +52,7 @@ frontend/
 | react-router-dom | 7.x | SPA routing |
 | openapi-fetch | ^0.13.x | Type-safe fetch client for OpenAPI |
 | openapi-typescript | ^7.x | Type generation from OpenAPI (dev dependency) |
+| axios | ^1.x | HTTP client with upload progress support |
 
 ---
 
@@ -69,7 +70,7 @@ flowchart LR
     FetchClient --> Hooks[Custom React Query Hooks]
 
     subgraph Custom[Custom Functions]
-        Upload[uploadImage with XHR progress]
+        Upload[uploadImage with axios progress]
     end
 
     Hooks --> Components[React Components]
@@ -81,7 +82,7 @@ flowchart LR
 - ✅ Automatic type inference for all API calls
 - ✅ Full autocomplete for endpoints and parameters
 - ✅ Less boilerplate - no manual API methods needed
-- ✅ Custom upload function with XHR progress tracking
+- ✅ Custom upload function with axios progress tracking
 - ✅ Custom React Query hooks with optimistic updates
 - ✅ Minimal bundle size (openapi-fetch is ~3KB gzipped)
 
@@ -174,7 +175,7 @@ type PaginatedResponseImage = components['schemas']['PaginatedResponseDto'];
 
 ```bash
 cd frontend
-npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch
+npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch axios
 npm install -D openapi-typescript
 ```
 
@@ -461,17 +462,18 @@ export function getLqipUrl(id: string): string {
 
 ### Task 4.7: Create Custom Upload Function
 
-**Goal:** Implement a custom upload function with XHR progress tracking. All other API operations use `openapi-fetch` client directly in hooks.
+**Goal:** Implement a custom upload function with axios progress tracking. All other API operations use `openapi-fetch` client directly in hooks.
 
-**Note:** With `openapi-fetch`, there's no need to create wrapper functions for standard GET/PATCH/POST operations. The client provides type-safe access to all endpoints directly. The only custom function needed is `uploadImage` for progress tracking.
+**Note:** With `openapi-fetch`, there's no need to create wrapper functions for standard GET/PATCH/POST operations. The client provides type-safe access to all endpoints directly. The only custom function needed is `uploadImage` for progress tracking. Axios is used instead of XMLHttpRequest for cleaner, more readable code.
 
 #### `frontend/src/api/images.api.ts`
 
 ```typescript
 /**
  * Custom image upload function with progress tracking.
- * Uses XMLHttpRequest for upload progress, which is not supported by fetch API.
+ * Uses axios for upload progress tracking with cleaner API than raw XMLHttpRequest.
  */
+import axios from 'axios';
 import { API_BASE_URL } from './client';
 import type { Image, Genre } from './types';
 
@@ -482,7 +484,7 @@ const UPLOAD_ENDPOINT = '/api/images/upload';
 
 /**
  * Uploads a new image with genre selection.
- * Supports progress tracking via callback using XMLHttpRequest.
+ * Supports progress tracking via callback using axios onUploadProgress.
  *
  * @param file - The image file to upload
  * @param genre - The genre category for the image
@@ -498,42 +500,21 @@ export async function uploadImage(
   formData.append('file', file);
   formData.append('genre', genre);
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    // Track upload progress
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable && onProgress) {
-        const progress = Math.round((event.loaded / event.total) * 100);
-        onProgress(progress);
-      }
-    });
-
-    // Handle successful completion
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          resolve(JSON.parse(xhr.responseText) as Image);
-        } catch {
-          reject(new Error('Invalid response format'));
+  const { data } = await axios.post<Image>(
+    `${API_BASE_URL}${UPLOAD_ENDPOINT}`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          onProgress(progress);
         }
-      } else {
-        try {
-          const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.message || 'Upload failed'));
-        } catch {
-          reject(new Error('Upload failed'));
-        }
-      }
-    });
+      },
+    },
+  );
 
-    // Handle errors
-    xhr.addEventListener('error', () => reject(new Error('Network error')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
-
-    xhr.open('POST', `${API_BASE_URL}${UPLOAD_ENDPOINT}`);
-    xhr.send(formData);
-  });
+  return data;
 }
 ```
 
@@ -663,7 +644,7 @@ export function useUpdateRating() {
 
 /**
  * Hook for uploading images with progress tracking.
- * Uses custom uploadImage function for XHR-based progress.
+ * Uses custom uploadImage function with axios-based progress.
  */
 export function useUploadImage() {
   const queryClient = useQueryClient();
@@ -813,7 +794,7 @@ createRoot(document.getElementById('root')!).render(
 
 ```bash
 cd frontend
-npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch
+npm install @tanstack/react-query @tanstack/react-query-devtools react-router-dom openapi-fetch axios
 npm install -D openapi-typescript
 ```
 
