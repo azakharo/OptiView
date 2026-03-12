@@ -2,13 +2,13 @@
  * Re-exported types from generated schema for convenience.
  * These provide cleaner imports throughout the application.
  */
-import type {components} from './schema.gen';
+import type {components, operations} from './schema.gen';
 
 // Entity types
 export type Image = components['schemas']['ImageResponseDto'];
 
-// Genre enum - defined inline in schema
-export type Genre = 'Nature' | 'Architecture' | 'Portrait' | 'Uncategorized';
+// Genre enum - re-exported from schema
+export type Genre = components['schemas']['ImageResponseDto']['genre'];
 
 // DTO types
 export type UpdateRatingDto = components['schemas']['UpdateRatingDto'];
@@ -26,8 +26,8 @@ export type PaginationMetaDto = components['schemas']['PaginationMetaDto'];
 export interface ImageFilterDto {
   genre?: Genre;
   rating?: number;
-  sort?: 'createdAt' | 'rating' | 'filename';
-  sortOrder?: 'ASC' | 'DESC';
+  sort?: SortField;
+  sortOrder?: SortOrder;
   page?: number;
   pageSize?: number;
 }
@@ -38,19 +38,12 @@ export interface CreateImageDto {
   genre: Genre;
 }
 
-// Pagination metadata extracted from paginated response
-export interface PaginationMeta {
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
-
-// Sort field type
-export type SortField = 'createdAt' | 'rating' | 'filename';
-export type SortOrder = 'ASC' | 'DESC';
+export type SortField = NonNullable<
+  operations['ImagesController_listImages']['parameters']['query']
+>['sort'];
+export type SortOrder = NonNullable<
+  operations['ImagesController_listImages']['parameters']['query']
+>['sortOrder'];
 
 /**
  * API error response structure.
