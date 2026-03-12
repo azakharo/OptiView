@@ -664,21 +664,6 @@ export function useUploadImage() {
     },
   });
 }
-
-/**
- * Helper hook to get image URL with proper format negotiation.
- * Returns URL that can be used in img src attribute.
- */
-export function useImageUrl(id: string, width: number) {
-  return getImageUrl(id, width);
-}
-
-/**
- * Helper hook to get LQIP URL.
- */
-export function useLqipUrl(id: string) {
-  return getLqipUrl(id);
-}
 ```
 
 #### `frontend/src/hooks/index.ts`
