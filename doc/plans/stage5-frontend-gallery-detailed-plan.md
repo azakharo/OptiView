@@ -89,59 +89,143 @@ flowchart TB
 
 ### Task 1: Install Dependencies
 
-**Objective:** Add react-responsive-masonry for masonry grid layout.
+**Objective:** Add required packages for masonry grid layout and URL state management.
 
 **Commands:**
 
 ```powershell
 cd frontend
-npm install react-responsive-masonry
+npm install react-responsive-masonry state-in-url
 ```
+
+**Packages:**
+
+| Package | Purpose |
+|:--------|:--------|
+| react-responsive-masonry | Masonry grid layout |
+| state-in-url | Type-safe URL query parameter state management |
 
 **Files to modify:** `frontend/package.json`
 
 **Verification:**
 
-- [ ] Package installed successfully
+- [ ] Packages installed successfully
 - [ ] No peer dependency warnings
-- [ ] TypeScript types available or `@types/react-responsive-masonry` installed if needed
+- [ ] TypeScript types available or `@types/*` packages installed if needed
 
 ---
 
 ### Task 2: Create useFilters Hook
 
-**Objective:** Create a custom hook for managing filter state in URL query parameters.
+**Objective:** Create a custom hook for managing filter state in URL query parameters using the `state-in-url` library.
 
 **File:** `frontend/src/hooks/useFilters.ts`
+
+**Package Installation:**
+
+```powershell
+cd frontend
+npm install state-in-url
+```
 
 **Implementation Details:**
 
 ```typescript
-// Hook manages URL state for filters
-// Returns: { filters, setGenre, setRating, setSort, setSortOrder, resetFilters }
-// Syncs with URL: ?genre=Nature&rating=4&sort=createdAt&sortOrder=DESC&page=1
+import { useUrlState } from 'state-in-url/react-router';
+import { Genre, SortField, SortOrder } from '../api/types';
 
+// Define filter state type - only non-default values appear in URL
+type FilterState = {
+  genre: Genre | undefined;
+  rating: number | undefined;
+  sort: SortField;
+  sortOrder: SortOrder;
+  page: number;
+  pageSize: number;
+};
+
+// Default values - these won't appear in URL when set
+const defaultFilters: FilterState = {
+  genre: undefined,
+  rating: undefined,
+  sort: SortField.CREATED_AT,
+  sortOrder: SortOrder.DESC,
+  page: 1,
+  pageSize: 20,
+};
+
+// Hook returns individual filter values and setters
 interface UseFiltersReturn {
-  filters: ImageFilterDto;
+  // Individual filter values
+  genre: Genre | undefined;
+  rating: number | undefined;
+  sort: SortField;
+  sortOrder: SortOrder;
+  page: number;
+  pageSize: number;
+  // Individual setters for explicit API
   setGenre: (genre: Genre | undefined) => void;
   setRating: (rating: number | undefined) => void;
   setSort: (sort: SortField) => void;
   setSortOrder: (order: SortOrder) => void;
   setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
+  // Reset function
   resetFilters: () => void;
+}
+
+export function useFilters(): UseFiltersReturn {
+  const { urlState, setUrl, reset } = useUrlState(defaultFilters, {
+    replace: true, // Don't create history entries for filter changes
+  });
+
+  // Individual setters
+  const setGenre = (genre: Genre | undefined) => setUrl({ genre, page: 1 });
+  const setRating = (rating: number | undefined) => setUrl({ rating, page: 1 });
+  const setSort = (sort: SortField) => setUrl({ sort, page: 1 });
+  const setSortOrder = (sortOrder: SortOrder) => setUrl({ sortOrder, page: 1 });
+  const setPage = (page: number) => setUrl({ page });
+  const setPageSize = (pageSize: number) => setUrl({ pageSize, page: 1 });
+
+  return {
+    // Values
+    genre: urlState.genre,
+    rating: urlState.rating,
+    sort: urlState.sort,
+    sortOrder: urlState.sortOrder,
+    page: urlState.page,
+    pageSize: urlState.pageSize,
+    // Setters
+    setGenre,
+    setRating,
+    setSort,
+    setSortOrder,
+    setPage,
+    setPageSize,
+    // Reset
+    resetFilters: () => reset({ replace: true }),
+  };
 }
 ```
 
 **Key Features:**
 
-- Use `useSearchParams` from react-router-dom
-- Parse URL parameters into typed filter object
-- Provide setter functions that update URL
-- Default values: sort=createdAt, sortOrder=DESC, page=1, pageSize=20
+- Uses `state-in-url` library for type-safe URL state management
+- Integrates with React Router v7 via `state-in-url/react-router`
+- Only non-default values appear in URL (cleaner URLs)
+- Individual setters reset page to 1 when filter changes (standard UX pattern)
+- `replace: true` prevents polluting browser history with filter changes
 - Reset function clears all filters to defaults
+
+**URL Example:**
+
+```
+?genre=Nature&rating=4&sort=createdAt&sortOrder=DESC&page=1
+```
 
 **Dependencies:**
 
+- state-in-url (new package)
 - react-router-dom (already installed)
 - Types from [`frontend/src/api/types.ts`](frontend/src/api/types.ts)
 
@@ -150,6 +234,7 @@ interface UseFiltersReturn {
 - Test URL sync for each filter
 - Test reset functionality
 - Test default values
+- Test page reset on filter change
 
 ---
 
@@ -420,10 +505,18 @@ interface GalleryProps {
 
 ```tsx
 import Masonry from 'react-responsive-masonry';
+import { useFilters } from '../../hooks/useFilters';
 
 export function Gallery() {
-  const { filters } = useFilters();
-  const { data, isLoading, error } = useImages(filters);
+  const { genre, rating, sort, sortOrder, page, pageSize } = useFilters();
+  const { data, isLoading, error } = useImages({
+    genre,
+    rating,
+    sort,
+    sortOrder,
+    page,
+    pageSize,
+  });
 
   if (isLoading) return <LoadingSkeleton />;
   if (error) return <ErrorMessage error={error} />;
@@ -622,9 +715,12 @@ interface FABProps {
 **Component Composition:**
 
 ```tsx
+import { useFilters } from '../hooks/useFilters';
+
 export function GalleryPage() {
   const [lightboxImage, setLightboxImage] = useState<Image | null>(null);
-  const { data } = useImages(useFilters().filters);
+  const { genre, rating, sort, sortOrder, page, pageSize } = useFilters();
+  const { data } = useImages({ genre, rating, sort, sortOrder, page, pageSize });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -817,8 +913,8 @@ frontend/src/
 
 ## Implementation Order
 
-1. **Install dependencies** (react-responsive-masonry)
-2. **Create useFilters hook** - Foundation for filter state
+1. **Install dependencies** (react-responsive-masonry, state-in-url)
+2. **Create useFilters hook** - Foundation for filter state using state-in-url
 3. **Create RatingStars component** - Shared by ImageCard and Lightbox
 4. **Create GenreTag component** - Simple shared component
 5. **Create Header component** - Filter controls
