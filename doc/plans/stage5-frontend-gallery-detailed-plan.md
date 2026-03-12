@@ -37,6 +37,45 @@ This document provides a detailed implementation plan for Stage 5 of the OptiVie
 
 ---
 
+## Flowbite Component Integration
+
+This section identifies opportunities to use Flowbite React components instead of custom implementations. Using Flowbite components reduces development time, ensures consistent styling, and provides built-in accessibility support.
+
+### Component Mapping Table
+
+| Plan Component | Flowbite Component | Recommendation | Notes |
+|:---------------|:-------------------|:---------------|:------|
+| **Header** | [`Navbar`](https://flowbite-react.com/components/navbar) | ✅ **Use Flowbite** | Full navbar with brand, collapse, links - perfect fit |
+| **GenreTag** | [`Badge`](https://flowbite-react.com/components/badge) | ✅ **Use Flowbite** | Pill-shaped, color-coded badges - perfect fit |
+| **Lightbox** | [`Modal`](https://flowbite-react.com/components/modal) | ✅ **Use Flowbite** | Overlay dialog with close, keyboard support - wrap custom content in Modal |
+| **Pagination** | [`Pagination`](https://flowbite-react.com/components/pagination) | ✅ **Use Flowbite** | Built-in pagination with page change handler |
+| **GenreFilter** | [`Select`](https://flowbite-react.com/components/forms) | ✅ **Use Flowbite** | Form select component |
+| **RatingFilter** | [`Select`](https://flowbite-react.com/components/forms) | ✅ **Use Flowbite** | Form select component |
+| **SortDropdown** | [`Dropdown`](https://flowbite-react.com/components/dropdown) | ✅ **Use Flowbite** | Dropdown menu with items |
+| **RatingStars** | [`Rating`](https://flowbite-react.com/components/rating) | ⚠️ **Evaluate** | Flowbite Rating is display-only; may need custom for interactive mode |
+| **FAB** | [`Button`](https://flowbite-react.com/components/button) | ⚠️ **Style Flowbite** | Use Button with custom Tailwind classes for circular FAB |
+| **LoadingSkeleton** | No direct component | ❌ **Custom** | Use Flowbite `Spinner` or create custom skeleton |
+| **ImageCard** | No suitable component | ❌ **Custom** | Complex LQIP blur-up loading not supported by Flowbite Card |
+| **Gallery** | No suitable component | ❌ **Custom** | Masonry layout requires `react-responsive-masonry` |
+
+### Flowbite Imports Summary
+
+```typescript
+// Components to import from flowbite-react
+import {
+  Navbar,
+  Badge,
+  Modal,
+  Pagination,
+  Select,
+  Dropdown,
+  Button,
+  Spinner,
+} from 'flowbite-react';
+```
+
+---
+
 ## Component Architecture
 
 ```mermaid
@@ -240,18 +279,70 @@ export function useFilters(): UseFiltersReturn {
 
 ### Task 3: Create Header Component
 
-**Objective:** Implement the filter header with genre, rating, and sort dropdowns.
+**Objective:** Implement the filter header with genre, rating, and sort dropdowns using Flowbite components.
 
 **File:** `frontend/src/components/Header/Header.tsx`
 
 **UI Specification Reference:** UI.md Section 4.1
 
+**Flowbite Components to Use:**
+
+| Component | Flowbite Import | Usage |
+|:----------|:----------------|:------|
+| Navbar | `import { Navbar } from 'flowbite-react'` | Main header container with responsive collapse |
+| Select | `import { Select } from 'flowbite-react'` | Genre and rating filter dropdowns |
+| Dropdown | `import { Dropdown } from 'flowbite-react'` | Sort field and order selection |
+
 **Component Structure:**
 
 ```tsx
+import { Navbar, Select, Dropdown } from 'flowbite-react';
+import { useFilters } from '../../hooks/useFilters';
+
 export function Header() {
-  // Uses useFilters hook for state management
-  // Renders: Logo, GenreFilter, RatingFilter, SortDropdown
+  const { genre, rating, sort, sortOrder, setGenre, setRating, setSort, setSortOrder, resetFilters } = useFilters();
+
+  return (
+    <Navbar fluid className="fixed top-0 w-full z-50 bg-white shadow-sm">
+      <Navbar.Brand href="/">
+        <span className="text-xl font-semibold">OptiView</span>
+      </Navbar.Brand>
+      <Navbar.Toggle />
+      <Navbar.Collapse>
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Genre Filter */}
+          <Select value={genre ?? ''} onChange={(e) => setGenre(e.target.value || undefined)}>
+            <option value="">All Genres</option>
+            {GENRE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+          </Select>
+
+          {/* Rating Filter */}
+          <Select value={rating ?? ''} onChange={(e) => setRating(e.target.value ? Number(e.target.value) : undefined)}>
+            <option value="">Any Rating</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4+ Stars</option>
+            <option value="3">3+ Stars</option>
+          </Select>
+
+          {/* Sort Dropdown */}
+          <Dropdown label={`Sort: ${sort} ${sortOrder}`} size="sm">
+            <Dropdown.Item onClick={() => { setSort(SortField.CREATED_AT); setSortOrder(SortOrder.DESC); }}>
+              Newest First
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => { setSort(SortField.CREATED_AT); setSortOrder(SortOrder.ASC); }}>
+              Oldest First
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => { setSort(SortField.RATING); setSortOrder(SortOrder.DESC); }}>
+              Highest Rated
+            </Dropdown.Item>
+          </Dropdown>
+
+          {/* Reset Button */}
+          <Button size="sm" color="gray" onClick={resetFilters}>Reset</Button>
+        </div>
+      </Navbar.Collapse>
+    </Navbar>
+  );
 }
 ```
 
@@ -259,9 +350,9 @@ export function Header() {
 
 | Component | File | Description |
 |:----------|:-----|:------------|
-| GenreFilter | `Header/GenreFilter.tsx` | Dropdown for genre selection |
-| RatingFilter | `Header/RatingFilter.tsx` | Dropdown for minimum rating |
-| SortDropdown | `Header/SortDropdown.tsx` | Combined sort field and order |
+| GenreFilter | `Header/GenreFilter.tsx` | Uses Flowbite Select for genre selection |
+| RatingFilter | `Header/RatingFilter.tsx` | Uses Flowbite Select for minimum rating |
+| SortDropdown | `Header/SortDropdown.tsx` | Uses Flowbite Dropdown for sort field and order |
 
 **Props Interface:**
 
@@ -273,22 +364,23 @@ interface HeaderProps {
 
 **Behavior:**
 
-- Fixed position at top of viewport
-- Sticky on scroll
+- Fixed position at top of viewport using Navbar
+- Responsive collapse on mobile via Navbar.Collapse
 - Filters update URL query parameters on change
 - Gallery reloads via TanStack Query when filters change
 
 **Styling:**
 
-- Use Flowbite React Select components
-- Tailwind CSS for layout
-- Responsive: inline filters on tablet/desktop, stacked on mobile
+- Flowbite Navbar provides responsive layout automatically
+- Tailwind CSS for additional spacing and alignment
+- Mobile: filters stacked in collapsed menu
+- Desktop: filters inline in navbar
 
 **Tests:** `frontend/src/components/Header/Header.test.tsx`
 
 - Test filter changes update URL
-- Test responsive layout
-- Test accessibility (keyboard navigation)
+- Test responsive layout (mobile collapse)
+- Test accessibility (keyboard navigation via Flowbite)
 
 ---
 
@@ -300,14 +392,67 @@ interface HeaderProps {
 
 **UI Specification Reference:** UI.md Section 4.6
 
+**Flowbite Component:**
+
+Flowbite provides a [`Rating`](https://flowbite-react.com/components/rating) component, but it is primarily designed for display purposes. For interactive rating (click to change), a custom wrapper or component is needed.
+
+**Decision:** Use Flowbite `Rating` for readonly display, create custom interactive wrapper for click-to-rate functionality.
+
 **Props Interface:**
 
 ```typescript
+import { Rating } from 'flowbite-react';
+
 interface RatingStarsProps {
   rating: number;           // Current rating 1-5
   readonly?: boolean;       // If true, display only
   size?: 'sm' | 'md' | 'lg'; // Star size variant
   onChange?: (rating: number) => void; // Callback on click
+}
+```
+
+**Implementation Approach:**
+
+```tsx
+import { Rating } from 'flowbite-react';
+import { Star } from 'lucide-react';
+
+export function RatingStars({ rating, readonly = false, size = 'md', onChange }: RatingStarsProps) {
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-5 h-5',
+    lg: 'w-6 h-6',
+  };
+
+  if (readonly) {
+    // Use Flowbite Rating for display-only mode
+    return <Rating>{rating} out of 5</Rating>;
+  }
+
+  // Interactive mode - custom implementation with Flowbite styling
+  return (
+    <div className="flex items-center gap-1" role="group" aria-label="Rating">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={`p-0.5 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded`}
+          onClick={() => onChange?.(star)}
+          onMouseEnter={() => setHoverRating(star)}
+          onMouseLeave={() => setHoverRating(null)}
+          aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+        >
+          <Star
+            className={`${sizeClasses[size]} ${
+              (hoverRating ?? rating) >= star ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
 }
 ```
 
@@ -331,17 +476,11 @@ interface RatingStarsProps {
 - `aria-valuenow` / `aria-valuemax` for screen readers
 - Keyboard: Tab to focus, Enter or Space to select
 
-**Implementation Notes:**
-
-- Use Lucide React icons (Star component) or inline SVG
-- CSS transitions for hover effects
-- Consider using Flowbite React Rating as base if suitable
-
 **Tests:** `frontend/src/components/RatingStars/RatingStars.test.tsx`
 
 - Test click interaction
 - Test hover preview
-- Test readonly mode
+- Test readonly mode with Flowbite Rating
 - Test keyboard navigation
 - Test accessibility attributes
 
@@ -349,26 +488,63 @@ interface RatingStarsProps {
 
 ### Task 5: Create GenreTag Component
 
-**Objective:** Create a simple tag component for displaying image genre.
+**Objective:** Create a simple tag component for displaying image genre using Flowbite Badge.
 
 **File:** `frontend/src/components/GenreTag/GenreTag.tsx`
+
+**Flowbite Component:**
+
+Use [`Badge`](https://flowbite-react.com/components/badge) from Flowbite React - perfect fit for pill-shaped, color-coded tags.
 
 **Props Interface:**
 
 ```typescript
+import { Badge } from 'flowbite-react';
+import { Genre } from '../../api/types';
+
 interface GenreTagProps {
   genre: Genre;
   size?: 'sm' | 'md';
 }
 ```
 
+**Implementation:**
+
+```tsx
+import { Badge } from 'flowbite-react';
+import { Genre } from '../../api/types';
+
+const GENRE_COLORS: Record<Genre, 'info' | 'success' | 'warning' | 'failure' | 'purple' | 'pink'> = {
+  [Genre.Nature]: 'success',
+  [Genre.Architecture]: 'info',
+  [Genre.People]: 'pink',
+  [Genre.Animals]: 'warning',
+  [Genre.Food]: 'failure',
+  [Genre.Travel]: 'purple',
+  [Genre.Abstract]: 'info',
+  [Genre.Other]: 'gray',
+};
+
+export function GenreTag({ genre, size = 'sm' }: GenreTagProps) {
+  return (
+    <Badge color={GENRE_COLORS[genre]} size={size}>
+      {genre}
+    </Badge>
+  );
+}
+```
+
 **Visual Design:**
 
-- Pill-shaped badge
-- Color-coded by genre (optional enhancement)
+- Pill-shaped badge via Flowbite Badge component
+- Color-coded by genre using Flowbite color variants
 - Small text label
+- Built-in dark mode support
 
 **Tests:** `frontend/src/components/GenreTag/GenreTag.test.tsx`
+
+- Test genre color mapping
+- Test size variants
 
 ---
 
@@ -479,11 +655,17 @@ const imageUrl = `/api/images/${image.id}?width=${containerWidth}`;
 
 ### Task 7: Create Gallery Component
 
-**Objective:** Create the main gallery grid with masonry layout.
+**Objective:** Create the main gallery grid with masonry layout and Flowbite Pagination.
 
 **File:** `frontend/src/components/Gallery/Gallery.tsx`
 
 **UI Specification Reference:** UI.md Section 4.2
+
+**Flowbite Components to Use:**
+
+| Component | Flowbite Import | Usage |
+|:----------|:----------------|:------|
+| Pagination | `import { Pagination } from 'flowbite-react'` | Page navigation controls |
 
 **Props Interface:**
 
@@ -501,14 +683,15 @@ interface GalleryProps {
 | 640px - 1024px (Tablet) | 3 |
 | > 1024px (Desktop) | 4 |
 
-**Implementation with react-responsive-masonry:**
+**Implementation with react-responsive-masonry and Flowbite Pagination:**
 
 ```tsx
 import Masonry from 'react-responsive-masonry';
+import { Pagination } from 'flowbite-react';
 import { useFilters } from '../../hooks/useFilters';
 
 export function Gallery() {
-  const { genre, rating, sort, sortOrder, page, pageSize } = useFilters();
+  const { genre, rating, sort, sortOrder, page, pageSize, setPage } = useFilters();
   const { data, isLoading, error } = useImages({
     genre,
     rating,
@@ -522,16 +705,30 @@ export function Gallery() {
   if (error) return <ErrorMessage error={error} />;
   if (!data?.items?.length) return <EmptyState />;
 
+  const totalPages = Math.ceil((data?.meta?.total ?? 0) / pageSize);
+
   return (
-    <Masonry columnsCount={columnsCount} gutter="16px">
-      {data.items.map((image) => (
-        <ImageCard
-          key={image.id}
-          image={image}
-          onClick={() => openLightbox(image)}
-        />
-      ))}
-    </Masonry>
+    <div>
+      <Masonry columnsCount={columnsCount} gutter="16px">
+        {data.items.map((image) => (
+          <ImageCard
+            key={image.id}
+            image={image}
+            onClick={() => openLightbox(image)}
+          />
+        ))}
+      </Masonry>
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 ```
@@ -541,28 +738,69 @@ export function Gallery() {
 - Use `react-responsive-masonry` built-in responsive support
 - Or use custom hook with `window.matchMedia`
 
-**Pagination:**
+**Pagination with Flowbite:**
 
-- Display pagination controls below grid
-- Use `data.meta` for pagination info
-- Update `page` filter on page change
+- Flowbite `Pagination` component provides built-in page navigation
+- Displays current page, total pages, and navigation arrows
+- Automatically handles edge cases (first/last page)
+- Built-in accessibility and keyboard navigation
 
 **Tests:** `frontend/src/components/Gallery/Gallery.test.tsx`
 
 - Test masonry layout
 - Test responsive columns
-- Test pagination
+- Test pagination with Flowbite component
 - Test loading and error states
 
 ---
 
 ### Task 8: Create LoadingSkeleton Component
 
-**Objective:** Create skeleton placeholders for initial gallery load.
+**Objective:** Create skeleton placeholders for initial gallery load using Flowbite Spinner.
 
 **File:** `frontend/src/components/Gallery/LoadingSkeleton.tsx`
 
+**Flowbite Components to Use:**
+
+| Component | Flowbite Import | Usage |
+|:----------|:----------------|:------|
+| Spinner | `import { Spinner } from 'flowbite-react'` | Loading indicator |
+
 **Implementation:**
+
+```tsx
+import { Spinner } from 'flowbite-react';
+
+export function LoadingSkeleton() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Spinner size="xl" />
+    </div>
+  );
+}
+```
+
+**Alternative - Skeleton Cards:**
+
+For a more sophisticated loading state, create custom skeleton cards:
+
+```tsx
+export function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={i}
+          className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg"
+          style={{ aspectRatio: getRandomAspectRatio() }}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+**Features:**
 
 - Display grid of placeholder cards
 - Use varying aspect ratios for realistic appearance
@@ -571,25 +809,110 @@ export function Gallery() {
 
 **Tests:** `frontend/src/components/Gallery/LoadingSkeleton.test.tsx`
 
+- Test spinner renders correctly
+- Test skeleton card layout (if implemented)
+
 ---
 
 ### Task 9: Create Lightbox Component
 
-**Objective:** Create the full-screen image modal with navigation and rating.
+**Objective:** Create the full-screen image modal with navigation and rating using Flowbite Modal.
 
 **File:** `frontend/src/components/Gallery/Lightbox.tsx`
 
 **UI Specification Reference:** UI.md Section 4.4
 
+**Flowbite Components to Use:**
+
+| Component | Flowbite Import | Usage |
+|:----------|:----------------|:------|
+| Modal | `import { Modal } from 'flowbite-react'` | Full-screen overlay dialog |
+| Button | `import { Button } from 'flowbite-react'` | Download and navigation buttons |
+
 **Props Interface:**
 
 ```typescript
+import { Modal, Button } from 'flowbite-react';
+
 interface LightboxProps {
   image: Image | null;
   images: Image[];  // For navigation
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (direction: 'prev' | 'next') => void;
+}
+```
+
+**Implementation with Flowbite Modal:**
+
+```tsx
+import { Modal, Button } from 'flowbite-react';
+import { RatingStars } from '../RatingStars/RatingStars';
+import { GenreTag } from '../GenreTag/GenreTag';
+
+export function Lightbox({ image, images, isOpen, onClose, onNavigate }: LightboxProps) {
+  if (!image) return null;
+
+  return (
+    <Modal
+      show={isOpen}
+      onClose={onClose}
+      size="full"
+      position="center"
+      dismissible
+      className="bg-black/90"
+    >
+      <Modal.Header className="sr-only">
+        Image Viewer
+      </Modal.Header>
+      <Modal.Body className="flex flex-col items-center justify-center min-h-screen p-4">
+        {/* Navigation - Previous */}
+        <Button
+          className="absolute left-4 top-1/2 -translate-y-1/2"
+          color="light"
+          onClick={() => onNavigate('prev')}
+        >
+          ←
+        </Button>
+
+        {/* Main Image */}
+        <img
+          src={`/api/images/${image.id}?width=1920`}
+          alt={image.filename}
+          className="max-h-[80vh] object-contain"
+        />
+
+        {/* Navigation - Next */}
+        <Button
+          className="absolute right-4 top-1/2 -translate-y-1/2"
+          color="light"
+          onClick={() => onNavigate('next')}
+        >
+          →
+        </Button>
+
+        {/* Footer: Rating, Genre, Downloads */}
+        <div className="mt-4 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-4">
+            <RatingStars rating={image.rating} onChange={(r) => updateRating(r)} />
+            <GenreTag genre={image.genre} />
+          </div>
+
+          <div className="flex gap-2">
+            <Button size="sm" color="light" href={`/api/images/${image.id}?width=1920`} download>
+              Download 1920px
+            </Button>
+            <Button size="sm" color="light" href={`/api/images/${image.id}?width=1280`} download>
+              Download 1280px
+            </Button>
+            <Button size="sm" color="light" href={`/api/images/${image.id}?width=640`} download>
+              Download 640px
+            </Button>
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
 }
 ```
 
@@ -619,21 +942,22 @@ interface LightboxProps {
 **Features:**
 
 1. **Overlay:**
-   - Dark semi-transparent background: `rgba(0, 0, 0, 0.9)`
-   - Click outside image closes modal
+   - Flowbite Modal with `size="full"` for full-screen
+   - Dark semi-transparent background via Tailwind `bg-black/90`
+   - Click outside image closes modal (dismissible prop)
 
 2. **Close Button:**
-   - Top right corner
-   - ESC key closes modal
+   - Flowbite Modal provides built-in close button
+   - ESC key closes modal (built-in)
 
 3. **Navigation:**
-   - Arrow buttons on sides
-   - Keyboard: Left/Right arrows navigate
+   - Flowbite Button components for arrow buttons
+   - Keyboard: Left/Right arrows navigate (custom handler)
    - Wrap around at ends (optional)
 
 4. **Image Display:**
    - Centered horizontally and vertically
-   - Max height: 90vh
+   - Max height: 80vh
    - Responsive width
 
 5. **Rating:**
@@ -641,18 +965,18 @@ interface LightboxProps {
    - Interactive, size='md' or 'lg'
 
 6. **Genre Tag:**
-   - Displayed next to rating
+   - Flowbite Badge displayed next to rating
 
 7. **Download Buttons:**
+   - Flowbite Button components
    - 2-3 size options: 1920px, 1280px, 640px
-   - Use same format negotiation as gallery
 
 **Accessibility:**
 
-- Focus trap when open
-- Return focus to trigger element on close
-- ARIA role="dialog"
-- Keyboard navigation support
+- Flowbite Modal provides focus trap automatically
+- Return focus to trigger element on close (built-in)
+- ARIA role="dialog" (built-in)
+- Keyboard navigation support (built-in ESC to close)
 
 **State Management:**
 
@@ -666,8 +990,8 @@ const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
 - Test open/close behavior
 - Test keyboard navigation
-- Test click outside to close
-- Test focus trap
+- Test click outside to close (Flowbite dismissible)
+- Test focus trap (Flowbite built-in)
 - Test rating interaction
 - Test download buttons
 
@@ -675,34 +999,58 @@ const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
 ### Task 10: Create FAB Component
 
-**Objective:** Create the floating action button for navigation to upload page.
+**Objective:** Create the floating action button for navigation to upload page using Flowbite Button.
 
 **File:** `frontend/src/components/FAB/FAB.tsx`
 
 **UI Specification Reference:** UI.md Section 4.3
 
+**Flowbite Components to Use:**
+
+| Component | Flowbite Import | Usage |
+|:----------|:----------------|:------|
+| Button | `import { Button } from 'flowbite-react'` | Base button with custom styling |
+
 **Props Interface:**
 
 ```typescript
-interface FABProps {
-  // No props - navigates to /upload
+import { Button } from 'flowbite-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+
+export function FAB() {
+  const navigate = useNavigate();
+
+  return (
+    <Button
+      className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-transform"
+      color="blue"
+      onClick={() => navigate('/upload')}
+    >
+      <Plus className="w-6 h-6" />
+    </Button>
+  );
 }
 ```
 
 **Visual Design:**
 
-- Circular button, 56px diameter
-- Plus icon (+)
+- Flowbite Button with custom Tailwind classes for circular shape
+- Circular button, 56px diameter (w-14 h-14)
+- Plus icon (+) from Lucide React
 - Fixed position, bottom-right corner
-- Elevated shadow
-- Secondary color from theme
+- Elevated shadow (shadow-lg)
+- Primary color from Flowbite theme
 
 **Behavior:**
 
-- Click navigates to `/upload` route
-- Subtle hover/focus animation (scale 1.05)
+- Click navigates to `/upload` route using React Router's `useNavigate`
+- Subtle hover/focus animation (scale 1.05) via Tailwind transition
 
 **Tests:** `frontend/src/components/FAB/FAB.test.tsx`
+
+- Test navigation to /upload on click
+- Test accessibility (keyboard navigation)
 
 ---
 
