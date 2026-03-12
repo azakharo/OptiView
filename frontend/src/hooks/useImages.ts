@@ -1,5 +1,5 @@
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {client, throwApiError} from '@/api/client';
+import {client} from '@/api/client';
 import {uploadImage} from '@/api/images.api';
 import type {ImageFilterDto, Image} from '@/api/types';
 
@@ -15,33 +15,26 @@ export const queryKeys = {
 /**
  * Hook for fetching paginated images with filters.
  * Uses openapi-fetch client for type-safe API calls.
+ * Error handling is handled by client middleware.
  */
 export function useImages(filters: ImageFilterDto = {}) {
   return useQuery({
     queryKey: queryKeys.images(filters),
-    queryFn: async () => {
-      const {data, error} = await client.GET('/api/images', {
-        params: {query: filters},
-      });
-      if (error) throwApiError(error);
-      return data;
-    },
+    queryFn: async () =>
+      (await client.GET('/api/images', {params: {query: filters}})).data!,
   });
 }
 
 /**
  * Hook for fetching single image metadata.
+ * Error handling is handled by client middleware.
  */
 export function useImageMetadata(id: string) {
   return useQuery({
     queryKey: queryKeys.imageMetadata(id),
-    queryFn: async () => {
-      const {data, error} = await client.GET('/api/images/{id}/metadata', {
-        params: {path: {id}},
-      });
-      if (error) throwApiError(error);
-      return data;
-    },
+    queryFn: async () =>
+      (await client.GET('/api/images/{id}/metadata', {params: {path: {id}}}))
+        .data!,
     enabled: !!id,
   });
 }
@@ -49,18 +42,18 @@ export function useImageMetadata(id: string) {
 /**
  * Hook for updating image rating with optimistic updates.
  * Uses openapi-fetch client for type-safe PATCH request.
+ * Error handling is handled by client middleware.
  */
 export function useUpdateRating() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({id, rating}: {id: string; rating: number}) => {
-      const {data, error} = await client.PATCH('/api/images/{id}/rating', {
+      const {data} = await client.PATCH('/api/images/{id}/rating', {
         params: {path: {id}},
         body: {rating},
       });
-      if (error) throwApiError(error);
-      return data;
+      return data!;
     },
 
     // Optimistic update

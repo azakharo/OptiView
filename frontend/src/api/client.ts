@@ -2,12 +2,37 @@
  * API client configuration for backend communication.
  * Uses openapi-fetch for type-safe HTTP requests.
  */
-import createFetchClient from 'openapi-fetch';
+import createFetchClient, {type Middleware} from 'openapi-fetch';
 import type {paths} from './schema.gen';
 import type {ApiErrorResponse} from './types';
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:3000';
+
+/**
+ * Middleware to handle HTTP errors globally.
+ * Throws ApiError for non-2xx responses instead of returning error object.
+ */
+const errorMiddleware: Middleware = {
+  async onResponse({response}) {
+    if (!response.ok) {
+      const clonedResponse = response.clone();
+      let errorDetails: ApiErrorResponse | undefined;
+
+      try {
+        errorDetails = (await clonedResponse.json()) as ApiErrorResponse;
+      } catch {
+        // Response body is not JSON
+      }
+
+      throw new ApiError(
+        response.status,
+        errorDetails?.message ?? response.statusText,
+        errorDetails,
+      );
+    }
+  },
+};
 
 /**
  * Type-safe openapi-fetch client.
@@ -19,6 +44,9 @@ export const client = createFetchClient<paths>({
     'Content-Type': 'application/json',
   },
 });
+
+// Register error-handling middleware
+client.use(errorMiddleware);
 
 /**
  * Custom error class for API errors.
