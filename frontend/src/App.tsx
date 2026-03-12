@@ -1,17 +1,7 @@
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {GalleryPage} from './pages/GalleryPage';
 
-// Placeholder components - will be implemented in Stage 5 and 6
-function GalleryPage() {
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Gallery Page</h1>
-      <p className="text-gray-600">
-        Gallery feature will be implemented in Stage 5
-      </p>
-    </div>
-  );
-}
-
+// Placeholder for future upload page
 function UploadPage() {
   return (
     <div className="container mx-auto p-4">

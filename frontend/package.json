@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "ts": "tsc --build --noEmit",
-    "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+    "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.21",
@@ -17,13 +20,18 @@
     "axios": "1.13.6",
     "flowbite-react": "0.12.10",
     "openapi-fetch": "0.17.0",
+    "prop-types": "15.8.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-router-dom": "7.13.1"
+    "react-responsive-masonry": "2.7.1",
+    "react-router-dom": "7.13.1",
+    "state-in-url": "6.1.1"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",
     "@tailwindcss/vite": "4.1.17",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
     "@types/node": "24.10.1",
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
@@ -36,12 +44,14 @@
     "eslint-plugin-react-refresh": "0.4.24",
     "eslint-plugin-react-x": "2.3.9",
     "globals": "16.5.0",
+    "jsdom": "28.1.0",
     "openapi-typescript": "7.13.0",
     "prettier": "3.7.3",
     "prettier-plugin-tailwindcss": "0.7.1",
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.4",
-    "vite": "7.2.4"
+    "vite": "7.2.4",
+    "vitest": "4.1.0"
   }
 }
