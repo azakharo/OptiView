@@ -317,7 +317,7 @@ The detailed implementation plan has been updated in [`stage4-frontend-setup-det
 |--------|----------|-----|
 | Types | Manually duplicated | Generated from OpenAPI |
 | Type file | `src/types/image.ts` | `src/api/schema.gen.ts` + `src/api/types.ts` |
-| Synchronization | Manual | `npm run generate:types` |
+| Synchronization | Manual | `npm run gen` |
 | API client | Manual fetch wrappers | `openapi-fetch` client |
 | Standard API methods | Manual each time | Automatic via openapi-fetch |
 | File upload | Manual with XHR | Manual with XHR (preserved for progress) |
@@ -333,7 +333,7 @@ npm install -D openapi-typescript
 ### New npm script:
 
 ```bash
-npm run generate:types
+npm run gen
 ```
 
 This fetches the OpenAPI spec from `http://localhost:3000/api/docs-json` and generates TypeScript types.
@@ -380,7 +380,7 @@ export async function uploadImage(
 
 1. Backend developer updates API/Swagger decorators
 2. Backend is running at `localhost:3000`
-3. Frontend developer runs `npm run generate:types`
+3. Frontend developer runs `npm run gen`
 4. New endpoints immediately available via `client.GET/POST/PATCH/DELETE`
 5. TypeScript compiler catches any breaking changes
 6. Commit updated `schema.gen.ts` to git

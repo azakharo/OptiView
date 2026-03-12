@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "ts": "tsc --build --noEmit",
-    "generate:types": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+    "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.21",

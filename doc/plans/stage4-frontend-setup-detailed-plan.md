@@ -89,7 +89,7 @@ flowchart LR
 ### 2.2 Types Generation Workflow
 
 1. **Development:** Backend must be running at `localhost:3000`
-2. **Generate:** Run `npm run generate:types` to fetch OpenAPI spec and generate types
+2. **Generate:** Run `npm run gen` to fetch OpenAPI spec and generate types
 3. **Commit:** Generated file `src/api/schema.gen.ts` is committed to git
 4. **Update:** Regenerate manually when backend API changes
 
@@ -227,7 +227,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:types": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+    "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
   }
 }
 ```
@@ -236,7 +236,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 ```bash
 # Make sure backend is running first
-npm run generate:types
+npm run gen
 ```
 
 **Notes:**
@@ -258,7 +258,7 @@ npm run generate:types
 
 ```bash
 cd frontend
-npm run generate:types
+npm run gen
 ```
 
 **Generated File:**
@@ -807,7 +807,7 @@ Add to `package.json`:
 ```json
 {
   "scripts": {
-    "generate:types": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
+    "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts"
   }
 }
 ```
@@ -824,7 +824,7 @@ Add to `package.json`:
 
 ### 8.2 Type Generation Verification
 
-- [ ] `npm run generate:types` runs successfully
+- [ ] `npm run gen` runs successfully
 - [ ] `src/api/schema.gen.ts` file is created
 - [ ] Types can be imported in other files
 
@@ -900,7 +900,7 @@ flowchart LR
 ## 12. Acceptance Criteria
 
 - [ ] Frontend starts with `npm run dev`
-- [ ] Types can be generated from OpenAPI spec with `npm run generate:types`
+- [ ] Types can be generated from OpenAPI spec with `npm run gen`
 - [ ] Generated types are properly typed and importable
 - [ ] API client successfully connects to backend
 - [ ] TanStack Query hooks return typed data
