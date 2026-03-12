@@ -1,5 +1,5 @@
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {client, throwApiError, getImageUrl, getLqipUrl} from '@/api/client';
+import {client, throwApiError} from '@/api/client';
 import {uploadImage} from '@/api/images.api';
 import type {ImageFilterDto, Image} from '@/api/types';
 
@@ -96,7 +96,7 @@ export function useUpdateRating() {
     },
 
     // Refetch after settling
-    onSettled: (data, error, {id}) => {
+    onSettled: (_data, _error, {id}) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.imageMetadata(id),
       });
