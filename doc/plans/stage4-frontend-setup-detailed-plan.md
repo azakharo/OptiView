@@ -568,7 +568,6 @@ export function useImages(filters: ImageFilterDto = {}) {
       if (error) throwApiError(error);
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -586,7 +585,6 @@ export function useImageMetadata(id: string) {
       return data;
     },
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -753,7 +751,6 @@ import App from './App';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },

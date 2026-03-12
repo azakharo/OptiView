@@ -49,9 +49,6 @@ export default defineConfig({
         query: {
           useQuery: true,
           useMutation: true,
-          options: {
-            staleTime: 1000 * 60 * 5, // 5 minutes
-          },
         },
       },
     },
@@ -189,7 +186,6 @@ export function useImages(filters: ImageFilters) {
   return useQuery({
     queryKey: ['images', filters],
     queryFn: () => getImages(filters),
-    staleTime: 5 * 60 * 1000,
   });
 }
 
