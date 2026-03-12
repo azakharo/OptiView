@@ -15,25 +15,25 @@ This document provides a detailed implementation plan for Stage 5 of the OptiVie
 
 ### Technology Stack (Already Configured)
 
-| Technology | Version | Purpose |
-|:-----------|:--------|:--------|
-| React | 19.x | UI framework |
-| Vite | 7.x | Build tool |
-| TanStack Query | 5.x | Server state management |
-| React Router | 7.x | SPA routing |
-| Tailwind CSS | 4.x | Styling |
-| Flowbite React | 0.12.x | UI component library |
-| react-responsive-masonry | ^2.4.0 | Masonry grid layout |
+| Technology               | Version | Purpose                 |
+|:-------------------------|:--------|:------------------------|
+| React                    | 19.x    | UI framework            |
+| Vite                     | 7.x     | Build tool              |
+| TanStack Query           | 5.x     | Server state management |
+| React Router             | 7.x     | SPA routing             |
+| Tailwind CSS             | 4.x     | Styling                 |
+| Flowbite React           | 0.12.x  | UI component library    |
+| react-responsive-masonry | ^2.4.0  | Masonry grid layout     |
 
 ### Existing Artifacts from Stage 4
 
-| Artifact | Status | Description |
-|:---------|:-------|:------------|
-| [`frontend/src/api/client.ts`](frontend/src/api/client.ts) | ✅ | OpenAPI-fetch client with error handling |
-| [`frontend/src/api/images.api.ts`](frontend/src/api/images.api.ts) | ✅ | Upload function with progress tracking |
-| [`frontend/src/api/types.ts`](frontend/src/api/types.ts) | ✅ | TypeScript types from OpenAPI schema |
-| [`frontend/src/hooks/useImages.ts`](frontend/src/hooks/useImages.ts) | ✅ | TanStack Query hooks for images |
-| [`frontend/src/App.tsx`](frontend/src/App.tsx) | ✅ | Router setup with placeholder pages |
+| Artifact                                                             | Status | Description                              |
+|:---------------------------------------------------------------------|:-------|:-----------------------------------------|
+| [`frontend/src/api/client.ts`](frontend/src/api/client.ts)           | ✅     | OpenAPI-fetch client with error handling |
+| [`frontend/src/api/images.api.ts`](frontend/src/api/images.api.ts)   | ✅     | Upload function with progress tracking   |
+| [`frontend/src/api/types.ts`](frontend/src/api/types.ts)             | ✅     | TypeScript types from OpenAPI schema     |
+| [`frontend/src/hooks/useImages.ts`](frontend/src/hooks/useImages.ts) | ✅     | TanStack Query hooks for images          |
+| [`frontend/src/App.tsx`](frontend/src/App.tsx)                       | ✅     | Router setup with placeholder pages      |
 
 ---
 
@@ -51,7 +51,6 @@ flowchart TB
     end
 
     subgraph Gallery
-        Gallery[Gallery]
         ImageCard[ImageCard]
         Lightbox[Lightbox]
     end
