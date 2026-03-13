@@ -34,7 +34,7 @@ export function ImageCard({image, onClick}: ImageCardProps) {
         <div
           className="absolute inset-0 transition-opacity duration-300"
           style={{
-            backgroundImage: `url(data:image/jpeg;base64,${image.lqipBase64})`,
+            backgroundImage: `url(${image.lqipBase64})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(20px)',
