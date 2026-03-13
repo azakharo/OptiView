@@ -38,8 +38,7 @@ export function Gallery({onImageClick}: GalleryProps) {
     );
   }
 
-  // Handle both possible response structures
-  const items = (data as unknown as {data?: Image[]})?.data ?? [];
+  const items = data?.data ?? [];
   const pagination = data?.pagination;
   const totalItems = pagination?.totalItems ?? 0;
   const totalPages = Math.ceil(totalItems / pageSize);

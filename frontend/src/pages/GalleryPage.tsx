@@ -1,4 +1,4 @@
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useMemo} from 'react';
 import {Header} from '../components/Header/Header';
 import {Gallery} from '../components/Gallery/Gallery';
 import {Lightbox} from '../components/Gallery/Lightbox';
@@ -12,7 +12,7 @@ export function GalleryPage() {
   const {genre, rating, sort, sortOrder, page, pageSize} = useFilters();
   const {data} = useImages({genre, rating, sort, sortOrder, page, pageSize});
 
-  const images = data?.data ?? [];
+  const images = useMemo(() => data?.data ?? [], [data]);
 
   const handleImageClick = useCallback((image: Image) => {
     setLightboxImage(image);
