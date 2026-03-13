@@ -19,7 +19,7 @@ export type UploadImageBodyDto = components['schemas']['UploadImageBodyDto'];
 
 // Response types
 export type PaginatedResponseDto =
-  components['schemas']['PaginatedResponseDto'];
+  components['schemas']['PaginatedImageResponseDto'];
 export type PaginationMetaDto = components['schemas']['PaginationMetaDto'];
 
 // Image filter type - derived from listImages operation parameters

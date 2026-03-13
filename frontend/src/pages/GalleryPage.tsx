@@ -12,8 +12,7 @@ export function GalleryPage() {
   const {genre, rating, sort, sortOrder, page, pageSize} = useFilters();
   const {data} = useImages({genre, rating, sort, sortOrder, page, pageSize});
 
-  // Handle both possible response structures (schema bug: data is unknown[][] in generated types)
-  const images = (data as unknown as {data?: Image[]})?.data ?? [];
+  const images = data?.data ?? [];
 
   const handleImageClick = useCallback((image: Image) => {
     setLightboxImage(image);

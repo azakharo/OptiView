@@ -4,497 +4,497 @@
  */
 
 export interface paths {
-  '/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppController_getHello"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['AppController_getHello'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List images with filtering, sorting, and pagination */
+        get: operations["ImagesController_listImages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List images with filtering, sorting, and pagination */
-    get: operations['ImagesController_listImages'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get processed image with format negotiation */
+        get: operations["ImagesController_getImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get processed image with format negotiation */
-    get: operations['ImagesController_getImage'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images/{id}/metadata': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images/{id}/metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get image metadata as JSON */
+        get: operations["ImagesController_getMetadata"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get image metadata as JSON */
-    get: operations['ImagesController_getMetadata'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images/upload': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a new image */
+        post: operations["ImagesController_uploadImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Upload a new image */
-    post: operations['ImagesController_uploadImage'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images/{id}/lqip': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images/{id}/lqip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Low Quality Image Placeholder */
+        get: operations["ImagesController_getLqip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Low Quality Image Placeholder */
-    get: operations['ImagesController_getLqip'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/images/{id}/rating': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/images/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update image rating (1-5) */
+        patch: operations["ImagesController_updateRating"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update image rating (1-5) */
-    patch: operations['ImagesController_updateRating'];
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    PaginationMetaDto: {
-      /**
-       * @description Current page number
-       * @example 1
-       */
-      page: number;
-      /**
-       * @description Number of items per page
-       * @example 10
-       */
-      pageSize: number;
-      /**
-       * @description Total number of items across all pages
-       * @example 50
-       */
-      totalItems: number;
-      /**
-       * @description Total number of pages
-       * @example 5
-       */
-      totalPages: number;
-      /**
-       * @description Whether there is a next page available
-       * @example true
-       */
-      hasNextPage: boolean;
-      /**
-       * @description Whether there is a previous page available
-       * @example false
-       */
-      hasPrevPage: boolean;
+    schemas: {
+        ImageResponseDto: {
+            /**
+             * @description Unique identifier for the image (UUID v4)
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            id: string;
+            /**
+             * @description Original filename of the image
+             * @example landscape-photo.jpg
+             */
+            filename: string;
+            /**
+             * @description Genre/category classification of the image
+             * @example Nature
+             * @enum {string}
+             */
+            genre: "Nature" | "Architecture" | "Portrait" | "Uncategorized";
+            /**
+             * @description User rating for the image (1-5 scale)
+             * @example 4
+             */
+            rating: number;
+            /**
+             * @description Aspect ratio of the image (width / height)
+             * @example 1.5
+             */
+            aspectRatio: number;
+            /**
+             * @description Dominant color of the image in hexadecimal format
+             * @example #FF5733
+             */
+            dominantColor: string;
+            /**
+             * @description Low-quality image placeholder as base64-encoded string
+             * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
+             */
+            lqipBase64: string;
+            /**
+             * @description Width of the image in pixels
+             * @example 1920
+             */
+            width: number;
+            /**
+             * @description Height of the image in pixels
+             * @example 1080
+             */
+            height: number;
+            /**
+             * Format: date-time
+             * @description Timestamp when the image was created
+             * @example 2024-01-15T10:30:00.000Z
+             */
+            createdAt: string;
+        };
+        PaginationMetaDto: {
+            /**
+             * @description Current page number
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of items per page
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Total number of items across all pages
+             * @example 50
+             */
+            totalItems: number;
+            /**
+             * @description Total number of pages
+             * @example 5
+             */
+            totalPages: number;
+            /**
+             * @description Whether there is a next page available
+             * @example true
+             */
+            hasNextPage: boolean;
+            /**
+             * @description Whether there is a previous page available
+             * @example false
+             */
+            hasPrevPage: boolean;
+        };
+        PaginatedImageResponseDto: {
+            /** @description Array of data items for the current page */
+            data: components["schemas"]["ImageResponseDto"][];
+            /** @description Pagination metadata for the response */
+            pagination: components["schemas"]["PaginationMetaDto"];
+        };
+        UploadImageBodyDto: {
+            /**
+             * Format: binary
+             * @description Image file to upload (JPEG, PNG, or WebP)
+             */
+            file: string;
+            /**
+             * @description The genre/category of the image
+             * @default Uncategorized
+             * @example Nature
+             * @enum {string}
+             */
+            genre: "Nature" | "Architecture" | "Portrait" | "Uncategorized";
+        };
+        LqipResponseDto: {
+            /**
+             * @description Low-quality image placeholder as base64-encoded string
+             * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
+             */
+            lqipBase64: string;
+        };
+        UpdateRatingDto: {
+            /**
+             * @description User rating for the image (1-5 scale)
+             * @example 4
+             */
+            rating: number;
+        };
+        RatingUpdateResponseDto: {
+            /**
+             * @description Unique identifier for the image (UUID v4)
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            id: string;
+            /**
+             * @description Updated rating for the image (1-5 scale)
+             * @example 4
+             */
+            rating: number;
+            /**
+             * Format: date-time
+             * @description Timestamp when the rating was updated
+             * @example 2024-01-15T10:30:00.000Z
+             */
+            updatedAt: string;
+        };
     };
-    PaginatedResponseDto: {
-      /** @description Array of data items for the current page */
-      data: unknown[][];
-      /** @description Pagination metadata for the response */
-      pagination: components['schemas']['PaginationMetaDto'];
-    };
-    ImageResponseDto: {
-      /**
-       * @description Unique identifier for the image (UUID v4)
-       * @example 550e8400-e29b-41d4-a716-446655440000
-       */
-      id: string;
-      /**
-       * @description Original filename of the image
-       * @example landscape-photo.jpg
-       */
-      filename: string;
-      /**
-       * @description Genre/category classification of the image
-       * @example Nature
-       * @enum {string}
-       */
-      genre: 'Nature' | 'Architecture' | 'Portrait' | 'Uncategorized';
-      /**
-       * @description User rating for the image (1-5 scale)
-       * @example 4
-       */
-      rating: number;
-      /**
-       * @description Aspect ratio of the image (width / height)
-       * @example 1.5
-       */
-      aspectRatio: number;
-      /**
-       * @description Dominant color of the image in hexadecimal format
-       * @example #FF5733
-       */
-      dominantColor: string;
-      /**
-       * @description Low-quality image placeholder as base64-encoded string
-       * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
-       */
-      lqipBase64: string;
-      /**
-       * @description Width of the image in pixels
-       * @example 1920
-       */
-      width: number;
-      /**
-       * @description Height of the image in pixels
-       * @example 1080
-       */
-      height: number;
-      /**
-       * Format: date-time
-       * @description Timestamp when the image was created
-       * @example 2024-01-15T10:30:00.000Z
-       */
-      createdAt: string;
-    };
-    UploadImageBodyDto: {
-      /**
-       * Format: binary
-       * @description Image file to upload (JPEG, PNG, or WebP)
-       */
-      file: string;
-      /**
-       * @description The genre/category of the image
-       * @default Uncategorized
-       * @example Nature
-       * @enum {string}
-       */
-      genre: 'Nature' | 'Architecture' | 'Portrait' | 'Uncategorized';
-    };
-    LqipResponseDto: {
-      /**
-       * @description Low-quality image placeholder as base64-encoded string
-       * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
-       */
-      lqipBase64: string;
-    };
-    UpdateRatingDto: {
-      /**
-       * @description User rating for the image (1-5 scale)
-       * @example 4
-       */
-      rating: number;
-    };
-    RatingUpdateResponseDto: {
-      /**
-       * @description Unique identifier for the image (UUID v4)
-       * @example 550e8400-e29b-41d4-a716-446655440000
-       */
-      id: string;
-      /**
-       * @description Updated rating for the image (1-5 scale)
-       * @example 4
-       */
-      rating: number;
-      /**
-       * Format: date-time
-       * @description Timestamp when the rating was updated
-       * @example 2024-01-15T10:30:00.000Z
-       */
-      updatedAt: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  AppController_getHello: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    AppController_getHello: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    ImagesController_listImages: {
+        parameters: {
+            query?: {
+                /** @description Filter images by genre/category */
+                genre?: "Nature" | "Architecture" | "Portrait" | "Uncategorized";
+                /** @description Filter images by minimum rating (1-5 scale) */
+                rating?: number;
+                /** @description Field to sort images by */
+                sort?: "createdAt" | "rating" | "filename";
+                /** @description Sort order direction */
+                sortOrder?: "ASC" | "DESC";
+                /** @description Page number (minimum 1) */
+                page?: number;
+                /** @description Number of items per page (1-100) */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
+        requestBody?: never;
+        responses: {
+            /** @description Returns paginated list of images */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedImageResponseDto"];
+                };
+            };
+            /** @description Invalid query parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-  };
-  ImagesController_listImages: {
-    parameters: {
-      query?: {
-        /** @description Filter images by genre/category */
-        genre?: 'Nature' | 'Architecture' | 'Portrait' | 'Uncategorized';
-        /** @description Filter images by minimum rating (1-5 scale) */
-        rating?: number;
-        /** @description Field to sort images by */
-        sort?: 'createdAt' | 'rating' | 'filename';
-        /** @description Sort order direction */
-        sortOrder?: 'ASC' | 'DESC';
-        /** @description Page number (minimum 1) */
-        page?: number;
-        /** @description Number of items per page (1-100) */
-        pageSize?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    ImagesController_getImage: {
+        parameters: {
+            query?: {
+                /** @description Target width in pixels */
+                width?: string;
+            };
+            header?: {
+                /** @description Desired image format (e.g., image/webp, image/png, image/jpeg). Server will return the best matching format based on browser support. */
+                Accept?: string;
+            };
+            path: {
+                /** @description Image UUID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns processed image binary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Returns paginated list of images */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    ImagesController_getMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Image UUID */
+                id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['PaginatedResponseDto'];
+        requestBody?: never;
+        responses: {
+            /** @description Returns image metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageResponseDto"];
+                };
+            };
+            /** @description Image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-      };
-      /** @description Invalid query parameters */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
     };
-  };
-  ImagesController_getImage: {
-    parameters: {
-      query?: {
-        /** @description Target width in pixels */
-        width?: string;
-      };
-      header?: {
-        /** @description Desired image format (e.g., image/webp, image/png, image/jpeg). Server will return the best matching format based on browser support. */
-        Accept?: string;
-      };
-      path: {
-        /** @description Image UUID */
-        id: string;
-      };
-      cookie?: never;
+    ImagesController_uploadImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Image file to upload */
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["UploadImageBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Image uploaded successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageResponseDto"];
+                };
+            };
+            /** @description Invalid file or format not supported */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Returns processed image binary */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    ImagesController_getLqip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Image UUID */
+                id: string;
+            };
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Returns LQIP base64 data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LqipResponseDto"];
+                };
+            };
+            /** @description Image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-        content?: never;
-      };
     };
-  };
-  ImagesController_getMetadata: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Image UUID */
-        id: string;
-      };
-      cookie?: never;
+    ImagesController_updateRating: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Image UUID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRatingDto"];
+            };
+        };
+        responses: {
+            /** @description Rating updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatingUpdateResponseDto"];
+                };
+            };
+            /** @description Invalid rating value */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Returns image metadata */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ImageResponseDto'];
-        };
-      };
-      /** @description Image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ImagesController_uploadImage: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** @description Image file to upload */
-    requestBody: {
-      content: {
-        'multipart/form-data': components['schemas']['UploadImageBodyDto'];
-      };
-    };
-    responses: {
-      /** @description Image uploaded successfully */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ImageResponseDto'];
-        };
-      };
-      /** @description Invalid file or format not supported */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ImagesController_getLqip: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Image UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Returns LQIP base64 data */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['LqipResponseDto'];
-        };
-      };
-      /** @description Image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ImagesController_updateRating: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Image UUID */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateRatingDto'];
-      };
-    };
-    responses: {
-      /** @description Rating updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RatingUpdateResponseDto'];
-        };
-      };
-      /** @description Invalid rating value */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
 }

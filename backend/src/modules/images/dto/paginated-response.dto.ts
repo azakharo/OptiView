@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ImageResponseDto } from './image-response.dto';
 
 /**
  * DTO containing pagination metadata.
@@ -81,6 +82,50 @@ export class PaginatedResponseDto<T> {
   ): PaginatedResponseDto<T> {
     const totalPages = Math.ceil(totalItems / pageSize);
     const response = new PaginatedResponseDto<T>();
+    response.data = data;
+    response.pagination = {
+      page,
+      pageSize,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+    return response;
+  }
+}
+
+/**
+ * Concrete paginated response DTO for images.
+ * Extends PaginatedResponseDto with ImageResponseDto as the data type.
+ * This concrete type is required for proper OpenAPI schema generation,
+ * as NestJS Swagger cannot properly serialize generic types.
+ */
+export class PaginatedImageResponseDto {
+  @ApiProperty({
+    type: ImageResponseDto,
+    description: 'Array of data items for the current page',
+    isArray: true,
+  })
+  data: ImageResponseDto[];
+
+  @ApiProperty({
+    type: PaginationMetaDto,
+    description: 'Pagination metadata for the response',
+  })
+  pagination: PaginationMetaDto;
+
+  /**
+   * Creates a paginated image response instance.
+   */
+  static create(
+    data: ImageResponseDto[],
+    page: number,
+    pageSize: number,
+    totalItems: number,
+  ): PaginatedImageResponseDto {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const response = new PaginatedImageResponseDto();
     response.data = data;
     response.pagination = {
       page,

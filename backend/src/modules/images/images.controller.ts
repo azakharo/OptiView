@@ -31,7 +31,7 @@ import { ImageService } from './image.service';
 import { ImageFilterDto } from './dto/image-filter.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { UploadImageDto, UploadImageBodyDto } from './dto/upload-image.dto';
-import { PaginatedResponseDto } from './dto/paginated-response.dto';
+import { PaginatedImageResponseDto } from './dto/paginated-response.dto';
 import { RatingUpdateResponseDto } from './dto/rating-update-response.dto';
 import { LqipResponseDto } from './dto/lqip-response.dto';
 import { ImageResponseDto } from './dto/image-response.dto';
@@ -57,17 +57,17 @@ export class ImagesController {
   @ApiResponse({
     status: 200,
     description: 'Returns paginated list of images',
-    type: PaginatedResponseDto,
+    type: PaginatedImageResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid query parameters' })
   async listImages(
     @Query() filters: ImageFilterDto,
-  ): Promise<PaginatedResponseDto<ImageResponseDto>> {
+  ): Promise<PaginatedImageResponseDto> {
     const { data, total } = await this.imageService.findAll(filters);
 
     const items = data.map((image) => this.toResponseDto(image));
 
-    return PaginatedResponseDto.create(
+    return PaginatedImageResponseDto.create(
       items,
       filters.page || 1,
       filters.pageSize || 10,
