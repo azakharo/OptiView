@@ -100,8 +100,8 @@ export class ImagesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('width') widthQuery: string,
     @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<Buffer> {
+    @Res() res: Response,
+  ): Promise<void> {
     const image = await this.imageService.findById(id);
 
     if (!image) {
@@ -124,7 +124,7 @@ export class ImagesController {
       Vary: 'Accept',
     });
 
-    return processedImage.buffer;
+    res.send(processedImage.buffer);
   }
 
   /**
