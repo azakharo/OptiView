@@ -15,7 +15,7 @@ export function ImageCard({image, onClick}: ImageCardProps) {
 
   return (
     <div
-      className="group relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-shadow hover:shadow-lg"
+      className="group relative w-full cursor-pointer overflow-hidden rounded-lg shadow-md transition-shadow hover:shadow-lg"
       style={{
         aspectRatio: image.aspectRatio,
         backgroundColor: image.dominantColor || '#e5e7eb',
