@@ -54,7 +54,7 @@ export function ImageCard({image, onClick}: ImageCardProps) {
         }`}
       />
 
-      <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
         <div className="flex items-center justify-between">
           <RatingStars rating={image.rating} readonly size="sm" />
           <GenreTag genre={image.genre} size="sm" />
