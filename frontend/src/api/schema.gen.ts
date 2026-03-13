@@ -162,7 +162,7 @@ export interface components {
              * @description Low-quality image placeholder as base64-encoded string
              * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
              */
-            lqipBase64: string;
+            lqipBase64?: string | null;
             /**
              * @description Width of the image in pixels
              * @example 1920
@@ -237,7 +237,7 @@ export interface components {
              * @description Low-quality image placeholder as base64-encoded string
              * @example data:image/jpeg;base64,/9j/4AAQSkZJRg...
              */
-            lqipBase64: string;
+            lqipBase64?: string | null;
         };
         UpdateRatingDto: {
             /**
