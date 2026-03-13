@@ -8,6 +8,7 @@ export default defineConfig((env) =>
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
       css: true,
+      mockReset: true,
       include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     },
   }),
