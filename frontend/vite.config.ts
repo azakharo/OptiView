@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import * as path from 'node:path';
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
@@ -6,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import flowbiteReact from 'flowbite-react/plugin/vite';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(() => ({
   plugins: [react(), tailwindcss(), flowbiteReact()],
   resolve: {
     alias: {
@@ -21,11 +20,4 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    css: true,
-    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-  },
-});
+}));
