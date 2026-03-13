@@ -72,7 +72,7 @@ describe('Lightbox', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('should call onClose when close button is clicked', async () => {
+  it('should call onClose when close button is clicked', () => {
     const handleClose = vi.fn();
     render(
       <Lightbox
@@ -92,7 +92,7 @@ describe('Lightbox', () => {
     }
   });
 
-  it('should call onNavigate with prev when previous button is clicked', async () => {
+  it('should call onNavigate with prev when previous button is clicked', () => {
     const handleNavigate = vi.fn();
     render(
       <Lightbox
@@ -109,7 +109,7 @@ describe('Lightbox', () => {
     expect(handleNavigate).toHaveBeenCalledWith('prev');
   });
 
-  it('should call onNavigate with next when next button is clicked', async () => {
+  it('should call onNavigate with next when next button is clicked', () => {
     const handleNavigate = vi.fn();
     render(
       <Lightbox
@@ -186,7 +186,7 @@ describe('Lightbox', () => {
     expect(screen.getByText('Nature')).toBeInTheDocument();
   });
 
-  it('should handle keyboard navigation', async () => {
+  it('should handle keyboard navigation', () => {
     const handleNavigate = vi.fn();
     const handleClose = vi.fn();
     render(

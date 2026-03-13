@@ -19,10 +19,10 @@ describe('useFilters', () => {
     expect(result.current.pageSize).toBe(20);
   });
 
-  it('should set genre filter', async () => {
+  it('should set genre filter', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
-    await act(async () => {
+    act(() => {
       result.current.setGenre('Nature');
     });
 
@@ -31,10 +31,10 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should set rating filter', async () => {
+  it('should set rating filter', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
-    await act(async () => {
+    act(() => {
       result.current.setRating(4);
     });
 
@@ -43,10 +43,10 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should set sort field', async () => {
+  it('should set sort field', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
-    await act(async () => {
+    act(() => {
       result.current.setSort('rating');
     });
 
@@ -55,10 +55,10 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should set sort order', async () => {
+  it('should set sort order', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
-    await act(async () => {
+    act(() => {
       result.current.setSortOrder('ASC');
     });
 
@@ -67,21 +67,21 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should set page', async () => {
+  it('should set page', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
-    await act(async () => {
+    act(() => {
       result.current.setPage(2);
     });
 
     expect(result.current.page).toBe(2);
   });
 
-  it('should reset filters to default values', async () => {
+  it('should reset filters to default values', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
     // Change some filters
-    await act(async () => {
+    act(() => {
       result.current.setGenre('Nature');
       result.current.setRating(5);
       result.current.setSort('rating');
@@ -94,7 +94,7 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(3); // Page set to 3 in setPage call
 
     // Reset filters
-    await act(async () => {
+    act(() => {
       result.current.resetFilters();
     });
 
@@ -105,18 +105,18 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should set page size and reset page to 1', async () => {
+  it('should set page size and reset page to 1', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
     // Set page to something else first
-    await act(async () => {
+    act(() => {
       result.current.setPage(5);
     });
 
     expect(result.current.page).toBe(5);
 
     // Change page size - should reset page to 1
-    await act(async () => {
+    act(() => {
       result.current.setPageSize(50);
     });
 
@@ -124,36 +124,36 @@ describe('useFilters', () => {
     expect(result.current.page).toBe(1);
   });
 
-  it('should clear genre when set to undefined', async () => {
+  it('should clear genre when set to undefined', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
     // Set genre first
-    await act(async () => {
+    act(() => {
       result.current.setGenre('Nature');
     });
 
     expect(result.current.genre).toBe('Nature');
 
     // Clear genre
-    await act(async () => {
+    act(() => {
       result.current.setGenre(undefined);
     });
 
     expect(result.current.genre).toBeUndefined();
   });
 
-  it('should clear rating when set to undefined', async () => {
+  it('should clear rating when set to undefined', () => {
     const {result} = renderHook(() => useFilters(), {wrapper});
 
     // Set rating first
-    await act(async () => {
+    act(() => {
       result.current.setRating(4);
     });
 
     expect(result.current.rating).toBe(4);
 
     // Clear rating
-    await act(async () => {
+    act(() => {
       result.current.setRating(undefined);
     });
 

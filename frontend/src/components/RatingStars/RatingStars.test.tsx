@@ -14,33 +14,33 @@ describe('RatingStars', () => {
     expect(screen.getByText('(4)')).toBeInTheDocument();
   });
 
-  it('should call onChange when star is clicked', async () => {
+  it('should call onChange when star is clicked', () => {
     const handleChange = vi.fn();
     render(<RatingStars rating={0} onChange={handleChange} />);
 
     const stars = screen.getAllByRole('button');
-    await fireEvent.click(stars[2]); // Click 3rd star (index 2)
+    fireEvent.click(stars[2]); // Click 3rd star (index 2)
 
     expect(handleChange).toHaveBeenCalledWith(3);
   });
 
-  it('should show hover preview on mouse enter', async () => {
+  it('should show hover preview on mouse enter', () => {
     render(<RatingStars rating={0} />);
 
     const stars = screen.getAllByRole('button');
-    await fireEvent.mouseEnter(stars[2]); // Hover over 3rd star
+    fireEvent.mouseEnter(stars[2]); // Hover over 3rd star
 
     // The component should update visually - we verify the stars are rendered
     expect(stars).toHaveLength(5);
   });
 
-  it('should reset hover preview on mouse leave', async () => {
+  it('should reset hover preview on mouse leave', () => {
     const handleChange = vi.fn();
     render(<RatingStars rating={2} onChange={handleChange} />);
 
     const stars = screen.getAllByRole('button');
-    await fireEvent.mouseEnter(stars[3]);
-    await fireEvent.mouseLeave(stars[3]);
+    fireEvent.mouseEnter(stars[3]);
+    fireEvent.mouseLeave(stars[3]);
 
     // Should still have 5 stars
     expect(stars).toHaveLength(5);
@@ -60,13 +60,13 @@ describe('RatingStars', () => {
     });
   });
 
-  it('should support keyboard navigation', async () => {
+  it('should support keyboard navigation', () => {
     const handleChange = vi.fn();
     render(<RatingStars rating={0} onChange={handleChange} />);
 
     const stars = screen.getAllByRole('button');
     // Test that Enter key triggers onChange via click
-    await fireEvent.click(stars[2]);
+    fireEvent.click(stars[2]);
 
     expect(handleChange).toHaveBeenCalledWith(3);
   });

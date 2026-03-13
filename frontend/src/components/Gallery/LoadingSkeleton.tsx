@@ -15,6 +15,7 @@ export function LoadingSkeletonCards() {
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
       {Array.from({length: 8}).map((_, i) => (
         <div
+          // eslint-disable-next-line react-x/no-array-index-key
           key={i}
           className="animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"
           style={{aspectRatio: aspectRatios[i % aspectRatios.length]}}
