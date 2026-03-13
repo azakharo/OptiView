@@ -4,13 +4,8 @@
  */
 import type {components, operations} from './schema.gen';
 
-// Entity types - make lqipBase64 optional as not all images may have it
-export type Image = Omit<
-  components['schemas']['ImageResponseDto'],
-  'lqipBase64'
-> & {
-  lqipBase64?: string;
-};
+// Entity types
+export type Image = components['schemas']['ImageResponseDto'];
 
 // Genre enum - re-exported from schema
 export type Genre = components['schemas']['ImageResponseDto']['genre'];
