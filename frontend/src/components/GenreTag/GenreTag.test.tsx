@@ -24,7 +24,7 @@ describe('GenreTag', () => {
   });
 
   it('should render small size by default', () => {
-    const {container} = render(<GenreTag genre="Nature" />);
+    render(<GenreTag genre="Nature" />);
     // Badge should render the genre text
     expect(screen.getByText('Nature')).toBeInTheDocument();
   });

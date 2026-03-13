@@ -24,32 +24,32 @@ describe('ImageCard', () => {
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('should call onClick when clicked', async () => {
+  it('should call onClick when clicked', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
     const card = screen.getByRole('button');
-    await fireEvent.click(card);
+    fireEvent.click(card);
 
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should call onClick when Enter key is pressed', async () => {
+  it('should call onClick when Enter key is pressed', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
     const card = screen.getByRole('button');
-    await fireEvent.keyDown(card, {key: 'Enter'});
+    fireEvent.keyDown(card, {key: 'Enter'});
 
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should call onClick when Space key is pressed', async () => {
+  it('should call onClick when Space key is pressed', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
     const card = screen.getByRole('button');
-    await fireEvent.keyDown(card, {key: ' '});
+    fireEvent.keyDown(card, {key: ' '});
 
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
@@ -91,8 +91,6 @@ describe('ImageCard', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
-    // Footer should be in the document but hidden initially
-    const footer = document.body.querySelector('.group-hover\\:opacity-100');
     // The footer exists but has opacity-0 class initially
     expect(screen.getByText('Nature')).toBeInTheDocument();
   });

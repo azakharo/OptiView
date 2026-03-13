@@ -62,7 +62,7 @@ describe('Header', () => {
   it('should have All Genres as default option', () => {
     renderWithRouter(<Header />);
     const genreSelect = screen.getByLabelText('Genre:');
-    expect(genreSelect.value).toBe('');
+    expect(genreSelect).toHaveValue('');
     expect(
       screen.getByRole('option', {name: 'All Genres'}),
     ).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('Header', () => {
   it('should have Any Rating as default option', () => {
     renderWithRouter(<Header />);
     const ratingSelect = screen.getByLabelText('Rating:');
-    expect(ratingSelect.value).toBe('');
+    expect(ratingSelect).toHaveValue('');
     expect(
       screen.getByRole('option', {name: 'Any Rating'}),
     ).toBeInTheDocument();
@@ -96,26 +96,26 @@ describe('Header', () => {
     expect(screen.getByRole('option', {name: '3+ Stars'})).toBeInTheDocument();
   });
 
-  it('should call setGenre when genre is changed', async () => {
+  it('should call setGenre when genre is changed', () => {
     renderWithRouter(<Header />);
     const genreSelect = screen.getByLabelText('Genre:');
-    await fireEvent.change(genreSelect, {target: {value: 'Nature'}});
+    fireEvent.change(genreSelect, {target: {value: 'Nature'}});
 
     expect(mockSetGenre).toHaveBeenCalledWith('Nature');
   });
 
-  it('should call setRating when rating is changed', async () => {
+  it('should call setRating when rating is changed', () => {
     renderWithRouter(<Header />);
     const ratingSelect = screen.getByLabelText('Rating:');
-    await fireEvent.change(ratingSelect, {target: {value: '4'}});
+    fireEvent.change(ratingSelect, {target: {value: '4'}});
 
     expect(mockSetRating).toHaveBeenCalledWith(4);
   });
 
-  it('should call resetFilters when reset button is clicked', async () => {
+  it('should call resetFilters when reset button is clicked', () => {
     renderWithRouter(<Header />);
     const resetButton = screen.getByRole('button', {name: /reset/i});
-    await fireEvent.click(resetButton);
+    fireEvent.click(resetButton);
 
     expect(mockResetFilters).toHaveBeenCalled();
   });

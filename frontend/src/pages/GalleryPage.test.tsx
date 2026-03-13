@@ -2,6 +2,7 @@ import {describe, it, expect, vi} from 'vitest';
 import {render, screen, waitFor} from '@testing-library/react';
 import {BrowserRouter} from 'react-router-dom';
 import {GalleryPage} from './GalleryPage';
+import type {useImages} from '../hooks/useImages';
 
 // Mock hooks
 vi.mock('../hooks/useFilters', () => ({
@@ -55,15 +56,21 @@ const renderWithRouter = (component: React.ReactElement) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
+const createMockUseImagesResult = () =>
+  ({
+    data: {data: [], pagination: {totalItems: 0, totalPages: 0}},
+    error: null,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    isIdle: false,
+    isPending: false,
+  }) as unknown as ReturnType<typeof useImages>;
+
 describe('GalleryPage', () => {
   it('should render the page with header', async () => {
     const {useImages} = await import('../hooks/useImages');
-    vi.mocked(useImages).mockReturnValue({
-      data: {data: [], pagination: {totalItems: 0, totalPages: 0}},
-      isLoading: false,
-      isError: false,
-      error: null,
-    } as ReturnType<typeof useImages>);
+    vi.mocked(useImages).mockReturnValue(createMockUseImagesResult());
 
     renderWithRouter(<GalleryPage />);
     await waitFor(() => {
@@ -73,12 +80,7 @@ describe('GalleryPage', () => {
 
   it('should render the gallery component', async () => {
     const {useImages} = await import('../hooks/useImages');
-    vi.mocked(useImages).mockReturnValue({
-      data: {data: [], pagination: {totalItems: 0, totalPages: 0}},
-      isLoading: false,
-      isError: false,
-      error: null,
-    } as ReturnType<typeof useImages>);
+    vi.mocked(useImages).mockReturnValue(createMockUseImagesResult());
 
     renderWithRouter(<GalleryPage />);
     await waitFor(() => {
@@ -88,12 +90,7 @@ describe('GalleryPage', () => {
 
   it('should render the FAB', async () => {
     const {useImages} = await import('../hooks/useImages');
-    vi.mocked(useImages).mockReturnValue({
-      data: {data: [], pagination: {totalItems: 0, totalPages: 0}},
-      isLoading: false,
-      isError: false,
-      error: null,
-    } as ReturnType<typeof useImages>);
+    vi.mocked(useImages).mockReturnValue(createMockUseImagesResult());
 
     renderWithRouter(<GalleryPage />);
     await waitFor(() => {
@@ -103,12 +100,7 @@ describe('GalleryPage', () => {
 
   it('should have correct container classes', async () => {
     const {useImages} = await import('../hooks/useImages');
-    vi.mocked(useImages).mockReturnValue({
-      data: {data: [], pagination: {totalItems: 0, totalPages: 0}},
-      isLoading: false,
-      isError: false,
-      error: null,
-    } as ReturnType<typeof useImages>);
+    vi.mocked(useImages).mockReturnValue(createMockUseImagesResult());
 
     const {container} = renderWithRouter(<GalleryPage />);
     await waitFor(() => {
