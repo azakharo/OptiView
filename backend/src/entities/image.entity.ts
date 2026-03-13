@@ -66,9 +66,10 @@ export class Image {
   /**
    * Low-quality image placeholder (LQIP) as base64-encoded string.
    * Used for blur-up loading effect.
+   * Can be null if LQIP generation failed or hasn't been processed yet.
    */
-  @Column({ type: 'text' })
-  lqipBase64: string;
+  @Column({ type: 'text', nullable: true })
+  lqipBase64: string | null;
 
   /**
    * Width of the image in pixels.

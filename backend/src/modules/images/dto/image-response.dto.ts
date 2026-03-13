@@ -54,8 +54,10 @@ export class ImageResponseDto {
     type: String,
     description: 'Low-quality image placeholder as base64-encoded string',
     example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
+    required: false,
+    nullable: true,
   })
-  lqipBase64: string;
+  lqipBase64: string | null;
 
   @ApiProperty({
     type: Number,
