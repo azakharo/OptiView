@@ -110,7 +110,7 @@ export function Lightbox({
       <img
         src={`/api/images/${image.id}?width=1920`}
         alt={image.filename}
-        className="max-h-[85vh] max-w-full object-contain"
+        className="h-full max-h-screen w-full max-w-[100vw] object-contain"
       />
 
       {/* Navigation - Next */}
@@ -125,7 +125,7 @@ export function Lightbox({
       </button>
 
       {/* Footer: Rating, Genre, Downloads */}
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4 rounded-xl bg-black/60 p-4">
         <div className="flex items-center gap-4">
           <RatingStars
             rating={image.rating}
