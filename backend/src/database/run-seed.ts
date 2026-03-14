@@ -141,7 +141,7 @@ async function runSeed() {
     const downloadedFiles: string[] = [];
     for (let i = 1; i <= TOTAL_IMAGES; i++) {
       const imageId = 10 + i; // Start from image 11 to get varied images
-      const url = `https://picsum.photos/id/${imageId}/800/600`;
+      const url = `https://picsum.photos/id/${imageId}/1920/1080`;
       const filepath = path.join(TEMP_DIR, `seed-image-${i}.jpg`);
 
       console.log(`  Downloading image ${i}/${TOTAL_IMAGES}...`);
