@@ -62,7 +62,10 @@ export function RatingStars({
           key={star}
           type="button"
           className="focus:ring-primary-500 rounded p-0.5 transition-transform hover:scale-110 focus:ring-2 focus:outline-none"
-          onClick={() => onChange?.(star)}
+          onClick={e => {
+            e.stopPropagation();
+            onChange?.(star);
+          }}
           onMouseEnter={() => setHoverRating(star)}
           onMouseLeave={() => setHoverRating(null)}
           aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
