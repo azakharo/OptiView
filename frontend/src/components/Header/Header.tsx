@@ -23,6 +23,32 @@ const SORT_FILENAME = 'filename' as const;
 const ORDER_ASC = 'ASC' as const;
 const ORDER_DESC = 'DESC' as const;
 
+// Map (sort, sortOrder) pairs to user-friendly display labels
+function getSortLabel(
+  sort: string | undefined,
+  sortOrder: string | undefined,
+): string {
+  if (sort === SORT_CREATED_AT && sortOrder === ORDER_DESC) {
+    return 'Newest First';
+  }
+  if (sort === SORT_CREATED_AT && sortOrder === ORDER_ASC) {
+    return 'Oldest First';
+  }
+  if (sort === SORT_RATING && sortOrder === ORDER_DESC) {
+    return 'Highest Rated';
+  }
+  if (sort === SORT_RATING && sortOrder === ORDER_ASC) {
+    return 'Lowest Rated';
+  }
+  if (sort === SORT_FILENAME && sortOrder === ORDER_ASC) {
+    return 'Name (A-Z)';
+  }
+  if (sort === SORT_FILENAME && sortOrder === ORDER_DESC) {
+    return 'Name (Z-A)';
+  }
+  return `${sort ?? ''} ${sortOrder ?? ''}`.trim() || 'Sort';
+}
+
 export function Header() {
   const {
     genre,
@@ -96,7 +122,7 @@ export function Header() {
           </div>
 
           {/* Sort Dropdown */}
-          <Dropdown label={`Sort: ${sort} ${sortOrder}`} size="sm">
+          <Dropdown label={`Sort: ${getSortLabel(sort, sortOrder)}`} size="sm">
             <DropdownItem
               onClick={() => {
                 setSort(SORT_CREATED_AT);
