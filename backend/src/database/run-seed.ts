@@ -193,7 +193,11 @@ async function runSeed() {
 }
 
 // Run the seed
-runSeed().catch((error) => {
-  console.error('Seed error:', error);
-  process.exit(1);
-});
+runSeed()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Seed error:', error);
+    process.exit(1);
+  });
