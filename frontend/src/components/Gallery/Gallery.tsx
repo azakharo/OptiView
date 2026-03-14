@@ -55,7 +55,7 @@ export function Gallery({onImageClick}: GalleryProps) {
   }
 
   return (
-    <div>
+    <div className="mt-4">
       <Masonry
         columnsCountBreakPoints={{
           639: 2,
