@@ -1,5 +1,6 @@
 import {useEffect, useCallback} from 'react';
 import {createPortal} from 'react-dom';
+import {ChevronLeftIcon, ChevronRightIcon} from '@heroicons/react/24/outline';
 import {RatingStars} from '../RatingStars/RatingStars';
 import {GenreTag} from '../GenreTag/GenreTag';
 import type {Image} from '../../api/types';
@@ -98,12 +99,12 @@ export function Lightbox({
       {/* Navigation - Previous */}
       <button
         type="button"
-        className="absolute top-1/2 left-4 z-10 -translate-y-1/2 rounded-lg bg-white/80 p-3 text-2xl text-gray-800 transition hover:bg-white disabled:opacity-30"
+        className="absolute top-1/2 left-4 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gray-500 text-white transition hover:bg-gray-600 disabled:opacity-30"
         onClick={() => onNavigate('prev')}
         disabled={!hasPrev}
         aria-label="Previous image"
       >
-        ←
+        <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       {/* Main Image */}
@@ -116,12 +117,12 @@ export function Lightbox({
       {/* Navigation - Next */}
       <button
         type="button"
-        className="absolute top-1/2 right-4 z-10 -translate-y-1/2 rounded-lg bg-white/80 p-3 text-2xl text-gray-800 transition hover:bg-white disabled:opacity-30"
+        className="absolute top-1/2 right-4 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gray-500 text-white transition hover:bg-gray-600 disabled:opacity-30"
         onClick={() => onNavigate('next')}
         disabled={!hasNext}
         aria-label="Next image"
       >
-        →
+        <ChevronRightIcon className="h-5 w-5" />
       </button>
 
       {/* Footer: Rating, Genre, Downloads */}
