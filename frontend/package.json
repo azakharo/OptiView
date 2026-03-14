@@ -10,9 +10,7 @@
     "lint": "eslint . --fix",
     "ts": "tsc --build --noEmit",
     "gen": "openapi-typescript http://localhost:3000/api/docs-json -o ./src/api/schema.gen.ts",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.21",

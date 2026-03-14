@@ -21,14 +21,16 @@ describe('ImageCard', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`image-card-${mockImage.id}`),
+    ).toBeInTheDocument();
   });
 
   it('should call onClick when clicked', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
-    const card = screen.getByRole('button');
+    const card = screen.getByTestId(`image-card-${mockImage.id}`);
     fireEvent.click(card);
 
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -38,7 +40,7 @@ describe('ImageCard', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
-    const card = screen.getByRole('button');
+    const card = screen.getByTestId(`image-card-${mockImage.id}`);
     fireEvent.keyDown(card, {key: 'Enter'});
 
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -48,7 +50,7 @@ describe('ImageCard', () => {
     const handleClick = vi.fn();
     render(<ImageCard image={mockImage} onClick={handleClick} />);
 
-    const card = screen.getByRole('button');
+    const card = screen.getByTestId(`image-card-${mockImage.id}`);
     fireEvent.keyDown(card, {key: ' '});
 
     expect(handleClick).toHaveBeenCalledTimes(1);

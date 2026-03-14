@@ -16,6 +16,7 @@ export function ImageCard({image, onClick, onRatingChange}: ImageCardProps) {
 
   return (
     <div
+      data-testid={`image-card-${image.id}`}
       className="group relative w-full cursor-pointer overflow-hidden rounded-lg shadow-md transition-shadow hover:shadow-lg"
       style={{
         aspectRatio: image.aspectRatio,
