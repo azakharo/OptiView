@@ -69,7 +69,7 @@ describe('Lightbox', () => {
         onNavigate={vi.fn()}
       />,
     );
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: /close/i})).toBeInTheDocument();
   });
 
   it('should call onClose when close button is clicked', () => {

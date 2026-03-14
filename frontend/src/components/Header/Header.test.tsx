@@ -51,7 +51,7 @@ describe('Header', () => {
 
   it('should render sort dropdown', () => {
     renderWithRouter(<Header />);
-    expect(screen.getByText(/Sort: createdAt DESC/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sort: Newest First/i)).toBeInTheDocument();
   });
 
   it('should render reset button', () => {
