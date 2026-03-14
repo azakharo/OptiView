@@ -86,7 +86,7 @@ export function Header() {
               onChange={e =>
                 setRating(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="w-auto"
+              className="w-auto min-w-[130px]"
             >
               <option value="">Any Rating</option>
               <option value="5">5 Stars</option>
