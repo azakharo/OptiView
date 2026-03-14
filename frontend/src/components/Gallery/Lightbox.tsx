@@ -5,7 +5,13 @@ import {RatingStars} from '../RatingStars/RatingStars';
 import {GenreTag} from '../GenreTag/GenreTag';
 import type {Image} from '../../api/types';
 
-// Inline X icon for close button
+// Calculate optimal display width based on viewport and device pixel ratio
+// Capped at 1920 to avoid unnecessarily large images on high-res displays
+const getOptimalWidth = () => {
+  const viewportWidth = window.innerWidth * window.devicePixelRatio;
+  return Math.min(Math.round(viewportWidth), 1920);
+};
+
 const XIcon = ({className}: {className?: string}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -84,6 +90,8 @@ export function Lightbox({
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < images.length - 1;
 
+  const optimalWidth = getOptimalWidth();
+
   const lightboxContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
       {/* Close Button - Top Right */}
@@ -109,7 +117,7 @@ export function Lightbox({
 
       {/* Main Image */}
       <img
-        src={`/api/images/${image.id}?width=1920`}
+        src={`/api/images/${image.id}?width=${optimalWidth}`}
         alt={image.filename}
         className="h-full max-h-screen w-full max-w-[100vw] object-contain"
       />
@@ -142,11 +150,11 @@ export function Lightbox({
 
         <div className="flex gap-2">
           <a
-            href={`/api/images/${image.id}?width=1920`}
+            href={`/api/images/${image.id}?width=${optimalWidth}`}
             download={image.filename}
             className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-100 focus:outline-none"
           >
-            Download 1920px
+            Download {optimalWidth}px
           </a>
           <a
             href={`/api/images/${image.id}?width=1280`}
