@@ -3,7 +3,7 @@ import {Header} from '../components/Header/Header';
 import {Gallery} from '../components/Gallery/Gallery';
 import {Lightbox} from '../components/Gallery/Lightbox';
 import {FAB} from '../components/FAB/FAB';
-import {useImages} from '../hooks/useImages';
+import {useImages, useUpdateRating} from '../hooks/useImages';
 import {useFilters} from '../hooks/useFilters';
 import type {Image} from '../api/types';
 
@@ -11,6 +11,7 @@ export function GalleryPage() {
   const [lightboxImage, setLightboxImage] = useState<Image | null>(null);
   const {genre, rating, sort, sortOrder, page, pageSize} = useFilters();
   const {data} = useImages({genre, rating, sort, sortOrder, page, pageSize});
+  const updateRating = useUpdateRating();
 
   const images = useMemo(() => data?.data ?? [], [data]);
 
@@ -38,13 +39,23 @@ export function GalleryPage() {
     [lightboxImage, images],
   );
 
+  const handleRatingChange = useCallback(
+    (imageId: string, newRating: number) => {
+      updateRating.mutate({id: imageId, rating: newRating});
+    },
+    [updateRating],
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
       {/* Main content with padding for fixed header */}
       <main className="container mx-auto px-4 py-6 pt-20">
-        <Gallery onImageClick={handleImageClick} />
+        <Gallery
+          onImageClick={handleImageClick}
+          onRatingChange={handleRatingChange}
+        />
       </main>
 
       <FAB />
@@ -55,6 +66,7 @@ export function GalleryPage() {
         isOpen={!!lightboxImage}
         onClose={handleCloseLightbox}
         onNavigate={handleNavigateLightbox}
+        onRatingChange={handleRatingChange}
       />
     </div>
   );

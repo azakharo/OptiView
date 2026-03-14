@@ -8,9 +8,10 @@ import type {Image} from '../../api/types';
 
 interface GalleryProps {
   onImageClick: (image: Image) => void;
+  onRatingChange?: (imageId: string, rating: number) => void;
 }
 
-export function Gallery({onImageClick}: GalleryProps) {
+export function Gallery({onImageClick, onRatingChange}: GalleryProps) {
   const {genre, rating, sort, sortOrder, page, pageSize, setPage} =
     useFilters();
 
@@ -69,6 +70,7 @@ export function Gallery({onImageClick}: GalleryProps) {
             key={image.id}
             image={image}
             onClick={() => onImageClick(image)}
+            onRatingChange={onRatingChange}
           />
         ))}
       </Masonry>

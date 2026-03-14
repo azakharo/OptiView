@@ -10,6 +10,7 @@ interface LightboxProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (direction: 'prev' | 'next') => void;
+  onRatingChange?: (imageId: string, rating: number) => void;
 }
 
 export function Lightbox({
@@ -18,6 +19,7 @@ export function Lightbox({
   isOpen,
   onClose,
   onNavigate,
+  onRatingChange,
 }: LightboxProps) {
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -86,7 +88,15 @@ export function Lightbox({
         {/* Footer: Rating, Genre, Downloads */}
         <div className="mt-6 flex flex-col items-center gap-4">
           <div className="flex items-center gap-4">
-            <RatingStars rating={image.rating} readonly size="md" />
+            <RatingStars
+              rating={image.rating}
+              size="md"
+              onChange={
+                onRatingChange
+                  ? rating => onRatingChange(image.id, rating)
+                  : undefined
+              }
+            />
             <GenreTag genre={image.genre} size="md" />
           </div>
 

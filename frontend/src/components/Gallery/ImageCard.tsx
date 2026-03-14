@@ -6,9 +6,10 @@ import type {Image} from '../../api/types';
 interface ImageCardProps {
   image: Image;
   onClick: () => void;
+  onRatingChange?: (imageId: string, rating: number) => void;
 }
 
-export function ImageCard({image, onClick}: ImageCardProps) {
+export function ImageCard({image, onClick, onRatingChange}: ImageCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const imageUrl = `/api/images/${image.id}?width=400`;
@@ -56,7 +57,15 @@ export function ImageCard({image, onClick}: ImageCardProps) {
 
       <div className="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
         <div className="flex items-center justify-between">
-          <RatingStars rating={image.rating} readonly size="sm" />
+          <RatingStars
+            rating={image.rating}
+            size="sm"
+            onChange={
+              onRatingChange
+                ? rating => onRatingChange(image.id, rating)
+                : undefined
+            }
+          />
           <GenreTag genre={image.genre} size="sm" />
         </div>
       </div>
