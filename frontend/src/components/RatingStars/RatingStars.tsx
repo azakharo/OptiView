@@ -61,7 +61,7 @@ export function RatingStars({
         <button
           key={star}
           type="button"
-          className="focus:ring-primary-500 rounded p-0.5 transition-transform hover:scale-110 focus:ring-2 focus:outline-none"
+          className="focus-visible:ring-primary-500 rounded p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2"
           onClick={e => {
             e.stopPropagation();
             onChange?.(star);
