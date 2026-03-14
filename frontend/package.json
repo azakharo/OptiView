@@ -20,6 +20,7 @@
     "axios": "1.13.6",
     "flowbite-react": "0.12.10",
     "openapi-fetch": "0.17.0",
+    "prop-types": "15.8.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-responsive-masonry": "2.7.1",

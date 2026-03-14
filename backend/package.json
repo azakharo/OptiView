@@ -25,7 +25,8 @@
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
     "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts",
     "db:seed": "ts-node -r tsconfig-paths/register src/database/run-seed.ts",
-    "db:reset": "ts-node -r tsconfig-paths/register src/database/reset-db.ts"
+    "db:reset": "ts-node -r tsconfig-paths/register src/database/reset-db.ts",
+    "clear:uploads": "ts-node -r tsconfig-paths/register src/database/clear-uploads.ts"
   },
   "dependencies": {
     "@nestjs/common": "11.1.16",
