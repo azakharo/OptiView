@@ -43,7 +43,7 @@ async function clearFolder(folderPath: string): Promise<number> {
   return deletedCount;
 }
 
-async function clearUploads() {
+export const clearUploads = async () => {
   console.log('🧹 Clearing upload folders...\n');
 
   let totalDeleted = 0;
@@ -58,7 +58,7 @@ async function clearUploads() {
   }
 
   console.log(`✅ Total items deleted: ${totalDeleted}`);
-}
+};
 
 // Run the script
 void clearUploads();

@@ -1,5 +1,6 @@
 import { dataSourceOptions } from '../data-source';
 import { DataSource } from 'typeorm';
+import { clearUploads } from './clear-uploads';
 
 /**
  * Reset database - truncate all tables
@@ -54,6 +55,8 @@ async function resetDatabase() {
 
     // Close this connection before seed script runs
     await dataSource.destroy();
+
+    await clearUploads();
   } catch (error) {
     console.error('❌ Reset failed:', error);
     if (dataSource.isInitialized) {
