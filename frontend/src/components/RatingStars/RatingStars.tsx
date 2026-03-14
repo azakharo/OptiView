@@ -23,7 +23,9 @@ const StarIcon = ({
   return (
     <svg
       className={`${sizeClasses[size]} ${
-        filled ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+        filled
+          ? 'fill-yellow-400 text-yellow-400'
+          : 'fill-gray-300 text-gray-300'
       }`}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
