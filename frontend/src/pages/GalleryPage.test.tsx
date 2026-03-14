@@ -18,6 +18,7 @@ vi.mock('../hooks/useFilters', () => ({
 
 vi.mock('../hooks/useImages', () => ({
   useImages: vi.fn(),
+  useUpdateRating: vi.fn(),
   queryKeys: {
     images: () => ['images'],
   },

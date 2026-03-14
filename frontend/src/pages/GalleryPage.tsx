@@ -8,35 +8,44 @@ import {useFilters} from '../hooks/useFilters';
 import type {Image} from '../api/types';
 
 export function GalleryPage() {
-  const [lightboxImage, setLightboxImage] = useState<Image | null>(null);
+  const [lightboxImageId, setLightboxImageId] = useState<string | null>(null);
   const {genre, rating, sort, sortOrder, page, pageSize} = useFilters();
   const {data} = useImages({genre, rating, sort, sortOrder, page, pageSize});
   const updateRating = useUpdateRating();
 
   const images = useMemo(() => data?.data ?? [], [data]);
 
+  // Derive lightboxImage from cache - this ensures it stays in sync with query cache
+  const lightboxImage = useMemo(
+    () =>
+      lightboxImageId
+        ? (images.find(img => img.id === lightboxImageId) ?? null)
+        : null,
+    [lightboxImageId, images],
+  );
+
   const handleImageClick = useCallback((image: Image) => {
-    setLightboxImage(image);
+    setLightboxImageId(image.id);
   }, []);
 
   const handleCloseLightbox = useCallback(() => {
-    setLightboxImage(null);
+    setLightboxImageId(null);
   }, []);
 
   const handleNavigateLightbox = useCallback(
     (direction: 'prev' | 'next') => {
-      if (!lightboxImage || !images.length) return;
+      if (!lightboxImageId || !images.length) return;
 
-      const currentIndex = images.findIndex(img => img.id === lightboxImage.id);
+      const currentIndex = images.findIndex(img => img.id === lightboxImageId);
       if (currentIndex === -1) return;
 
       if (direction === 'prev' && currentIndex > 0) {
-        setLightboxImage(images[currentIndex - 1]);
+        setLightboxImageId(images[currentIndex - 1].id);
       } else if (direction === 'next' && currentIndex < images.length - 1) {
-        setLightboxImage(images[currentIndex + 1]);
+        setLightboxImageId(images[currentIndex + 1].id);
       }
     },
-    [lightboxImage, images],
+    [lightboxImageId, images],
   );
 
   const handleRatingChange = useCallback(
@@ -63,7 +72,7 @@ export function GalleryPage() {
       <Lightbox
         image={lightboxImage}
         images={images}
-        isOpen={!!lightboxImage}
+        isOpen={!!lightboxImageId}
         onClose={handleCloseLightbox}
         onNavigate={handleNavigateLightbox}
         onRatingChange={handleRatingChange}
