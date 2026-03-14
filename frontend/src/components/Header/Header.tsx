@@ -23,29 +23,25 @@ const SORT_FILENAME = 'filename' as const;
 const ORDER_ASC = 'ASC' as const;
 const ORDER_DESC = 'DESC' as const;
 
+// Sort options configuration - single source of truth for labels
+const SORT_OPTIONS = [
+  {sort: SORT_CREATED_AT, sortOrder: ORDER_DESC, label: 'Newest First'},
+  {sort: SORT_CREATED_AT, sortOrder: ORDER_ASC, label: 'Oldest First'},
+  {sort: SORT_RATING, sortOrder: ORDER_DESC, label: 'Highest Rated'},
+  {sort: SORT_RATING, sortOrder: ORDER_ASC, label: 'Lowest Rated'},
+  {sort: SORT_FILENAME, sortOrder: ORDER_ASC, label: 'Name (A-Z)'},
+  {sort: SORT_FILENAME, sortOrder: ORDER_DESC, label: 'Name (Z-A)'},
+] as const;
+
 // Map (sort, sortOrder) pairs to user-friendly display labels
 function getSortLabel(
   sort: string | undefined,
   sortOrder: string | undefined,
 ): string {
-  if (sort === SORT_CREATED_AT && sortOrder === ORDER_DESC) {
-    return 'Newest First';
-  }
-  if (sort === SORT_CREATED_AT && sortOrder === ORDER_ASC) {
-    return 'Oldest First';
-  }
-  if (sort === SORT_RATING && sortOrder === ORDER_DESC) {
-    return 'Highest Rated';
-  }
-  if (sort === SORT_RATING && sortOrder === ORDER_ASC) {
-    return 'Lowest Rated';
-  }
-  if (sort === SORT_FILENAME && sortOrder === ORDER_ASC) {
-    return 'Name (A-Z)';
-  }
-  if (sort === SORT_FILENAME && sortOrder === ORDER_DESC) {
-    return 'Name (Z-A)';
-  }
+  const option = SORT_OPTIONS.find(
+    o => o.sort === sort && o.sortOrder === sortOrder,
+  );
+  if (option) return option.label;
   return `${sort ?? ''} ${sortOrder ?? ''}`.trim() || 'Sort';
 }
 
@@ -123,54 +119,17 @@ export function Header() {
 
           {/* Sort Dropdown */}
           <Dropdown label={`Sort: ${getSortLabel(sort, sortOrder)}`} size="sm">
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_CREATED_AT);
-                setSortOrder(ORDER_DESC);
-              }}
-            >
-              Newest First
-            </DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_CREATED_AT);
-                setSortOrder(ORDER_ASC);
-              }}
-            >
-              Oldest First
-            </DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_RATING);
-                setSortOrder(ORDER_DESC);
-              }}
-            >
-              Highest Rated
-            </DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_RATING);
-                setSortOrder(ORDER_ASC);
-              }}
-            >
-              Lowest Rated
-            </DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_FILENAME);
-                setSortOrder(ORDER_ASC);
-              }}
-            >
-              Name (A-Z)
-            </DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                setSort(SORT_FILENAME);
-                setSortOrder(ORDER_DESC);
-              }}
-            >
-              Name (Z-A)
-            </DropdownItem>
+            {SORT_OPTIONS.map(option => (
+              <DropdownItem
+                key={`${option.sort}-${option.sortOrder}`}
+                onClick={() => {
+                  setSort(option.sort);
+                  setSortOrder(option.sortOrder);
+                }}
+              >
+                {getSortLabel(option.sort, option.sortOrder)}
+              </DropdownItem>
+            ))}
           </Dropdown>
 
           {/* Reset Button */}
