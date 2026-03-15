@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {Progress, Select, TextInput, Button} from 'flowbite-react';
 import {
   ClockIcon,
@@ -134,16 +134,19 @@ export function UploadItem({
   onRemove,
 }: UploadItemProps) {
   // Create thumbnail URL and cleanup on unmount
-  const thumbnailUrl = useMemo(
-    () => URL.createObjectURL(item.file),
-    [item.file],
-  );
+  // Using useState + useEffect instead of useMemo to properly handle StrictMode remounts
+  // useMemo caches the URL and doesn't recreate it on remount, but cleanup revokes it
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    const url = URL.createObjectURL(item.file);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setThumbnailUrl(url);
+
     return () => {
-      URL.revokeObjectURL(thumbnailUrl);
+      URL.revokeObjectURL(url);
     };
-  }, [thumbnailUrl]);
+  }, [item.file]);
 
   const isGenreEditable = item.status === 'waiting' || item.status === 'error';
 
