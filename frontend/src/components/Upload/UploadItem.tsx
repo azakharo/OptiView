@@ -163,7 +163,7 @@ export function UploadItem({
   return (
     <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       {/* Thumbnail */}
-      <div className="h-16 w-16 flex-shrink-0">
+      <div className="h-16 w-16 shrink-0">
         {thumbnailUrl && item.file.type.startsWith('image/') ? (
           <img
             src={thumbnailUrl}
@@ -178,7 +178,7 @@ export function UploadItem({
       </div>
 
       {/* Filename */}
-      <div className="w-32 flex-shrink-0 truncate" title={item.file.name}>
+      <div className="w-32 shrink-0 truncate" title={item.file.name}>
         <span className="text-sm font-medium text-gray-700">
           {truncatedFilename}
         </span>
@@ -210,12 +210,12 @@ export function UploadItem({
       </div>
 
       {/* Status Icon */}
-      <div className="flex-shrink-0">
+      <div className="shrink-0">
         <StatusIcon status={item.status} />
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-shrink-0 gap-2">
+      <div className="flex shrink-0 gap-2">
         {item.status === 'error' && (
           <Button size="xs" onClick={() => onRetry(item.id)}>
             Retry
