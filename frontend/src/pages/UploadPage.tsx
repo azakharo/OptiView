@@ -1,5 +1,6 @@
 import {Link} from 'react-router-dom';
 import {Button} from 'flowbite-react';
+import {ArrowLeftIcon} from '@heroicons/react/24/outline';
 import {DropZone} from '@/components/Upload/DropZone';
 import {UploadQueue} from '@/components/Upload/UploadQueue';
 import {useUploadQueue} from '@/hooks/useUploadQueue';
@@ -32,7 +33,8 @@ export function UploadPage() {
         to="/"
         className="mb-6 inline-flex items-center text-blue-600 hover:text-blue-800"
       >
-        <span>← Back to Gallery</span>
+        <ArrowLeftIcon className="mr-2 h-5 w-5" />
+        <span>Back to Gallery</span>
       </Link>
 
       <h1 className="mb-6 text-2xl font-bold">Upload Images</h1>
