@@ -74,37 +74,9 @@ graph TD
 
 ### Upload State Structure
 
-```typescript
-// Core upload item state
-interface UploadItemState {
-  id: string;                    // Unique identifier for queue management
-  file: File;                    // The file being uploaded
-  genre: Genre;                  // Selected genre
-  customGenre?: string;          // Custom genre input if applicable
-  status: UploadStatus;          // Current upload status
-  progress: number;              // Upload progress 0-100
-  error?: string;                // Error message if failed
-  result?: Image;                // Server response on success
-}
+> **Note:** Complete type definitions are provided in [Section 10: Types/Interfaces](#10-typesinterfaces). This section describes the state management approach.
 
-// Upload status enum
-type UploadStatus =
-  | 'waiting'      // In queue, not started
-  | 'uploading'    // Currently uploading
-  | 'processing'   // Server processing
-  | 'done'         // Successfully completed
-  | 'error';       // Failed with error
-```
-
-### State Location
-
-State will be managed at the `UploadPage` level using `useState`:
-
-```typescript
-// UploadPage.tsx
-const [uploadQueue, setUploadQueue] = useState<UploadItemState[]>([]);
-const [isUploading, setIsUploading] = useState(false);
-```
+State will be managed at the `UploadPage` level using `useState`. See Section 6 Step 6 for implementation details.
 
 ### State Flow Diagram
 
@@ -173,34 +145,9 @@ uploadImage({
 
 ### Step 1: Create Type Definitions
 
-Create `frontend/src/types/upload.ts`:
+Create `frontend/src/types/upload.ts` with the types defined in [Section 10: Types/Interfaces](#10-typesinterfaces).
 
-```typescript
-import type { Genre, Image } from '@/api/types';
-
-export type UploadStatus =
-  | 'waiting'
-  | 'uploading'
-  | 'processing'
-  | 'done'
-  | 'error';
-
-export interface UploadItemState {
-  id: string;
-  file: File;
-  genre: Genre;
-  customGenre?: string;
-  status: UploadStatus;
-  progress: number;
-  error?: string;
-  result?: Image;
-}
-
-export interface UploadQueueState {
-  items: UploadItemState[];
-  isUploading: boolean;
-}
-```
+> **Note:** The complete type definitions with JSDoc comments are provided in Section 10 to avoid duplication.
 
 ### Step 2: Install react-dropzone
 
@@ -222,14 +169,7 @@ npm install react-dropzone
 
 Create `frontend/src/components/Upload/DropZone.tsx`:
 
-**Props Interface:**
-
-```typescript
-interface DropZoneProps {
-  onFilesSelected: (files: File[]) => void;
-  disabled?: boolean;
-}
-```
+> **Note:** Props interface is defined in [Section 10: Types/Interfaces](#10-typesinterfaces).
 
 **Key Features:**
 
@@ -342,52 +282,22 @@ export function DropZone({ onFilesSelected, disabled = false }: DropZoneProps) {
 
 Create `frontend/src/components/Upload/UploadItem.tsx`:
 
-**Props Interface:**
-
-```typescript
-interface UploadItemProps {
-  item: UploadItemState;
-  onGenreChange: (id: string, genre: Genre) => void;
-  onCustomGenreChange: (id: string, customGenre: string) => void;
-  onRetry: (id: string) => void;
-  onRemove: (id: string) => void;
-}
-```
+> **Note:** Props interface is defined in [Section 10: Types/Interfaces](#10-typesinterfaces).
 
 **Key Features:**
 
 - Display filename (truncate if too long)
 - Genre dropdown with predefined options + custom input
 - Progress bar with percentage
-- Status indicator with icon
+- Status indicator with icon (see [Section 11: Styling Guidelines](#11-styling-guidelines) for status colors)
 - Retry button for failed uploads
 - Remove button for waiting items
-
-**Status Indicators:**
-
-| Status     | Icon             | Color  |
-|:-----------|:-----------------|:-------|
-| waiting    | ClockIcon        | gray   |
-| uploading  | ArrowUpIcon      | blue   |
-| processing | ArrowPathIcon    | yellow |
-| done       | CheckIcon        | green  |
-| error      | XMarkIcon        | red    |
 
 ### Step 5: Implement UploadQueue Component
 
 Create `frontend/src/components/Upload/UploadQueue.tsx`:
 
-**Props Interface:**
-
-```typescript
-interface UploadQueueProps {
-  items: UploadItemState[];
-  onGenreChange: (id: string, genre: Genre) => void;
-  onCustomGenreChange: (id: string, customGenre: string) => void;
-  onRetry: (id: string) => void;
-  onRemove: (id: string) => void;
-}
-```
+> **Note:** Props interface is defined in [Section 10: Types/Interfaces](#10-typesinterfaces).
 
 **Key Features:**
 
@@ -586,12 +496,7 @@ See Step 3 for the complete implementation code.
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**State:**
-
-```typescript
-const [uploadQueue, setUploadQueue] = useState<UploadItemState[]>([]);
-const [isUploading, setIsUploading] = useState(false);
-```
+> **Note:** State management implementation is shown in [Section 6 Step 6](#step-6-implement-uploadpage-component).
 
 ---
 
@@ -1190,24 +1095,7 @@ export function StatusIcon({ status }: { status: UploadStatus }) {
 }
 ```
 
-### Error Display Icon
-
-For error messages, use `ExclamationCircleIcon`:
-
-```tsx
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
-
-// In UploadItem component
-{item.status === 'error' && (
-  <div className="flex items-center gap-2 text-red-500">
-    <ExclamationCircleIcon className="h-5 w-5" />
-    <span className="text-sm">{item.error}</span>
-    <Button size="xs" onClick={() => onRetry(item.id)}>
-      Retry
-    </Button>
-  </div>
-)}
-```
+> **Note:** Error display implementation is shown in [Section 12: Error Handling](#12-error-handling).
 
 ---
 
