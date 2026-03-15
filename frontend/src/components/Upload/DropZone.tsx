@@ -92,6 +92,7 @@ export function DropZone({onFilesSelected, disabled = false}: DropZoneProps) {
         <div className="mt-4 space-y-2">
           {fileRejections.map((rejection: FileRejection) =>
             rejection.errors.map((error, index) => (
+              // eslint-disable-next-line react-x/no-array-index-key
               <Alert key={`${rejection.file.name}-${index}`} color="failure">
                 <span className="font-medium">{rejection.file.name}</span>:{' '}
                 {error.message}
