@@ -1,5 +1,5 @@
 import {useCallback} from 'react';
-import {useDropzone, FileRejection} from 'react-dropzone';
+import {useDropzone, type FileRejection} from 'react-dropzone';
 import {Alert} from 'flowbite-react';
 import type {DropZoneProps} from '@/types/upload';
 
