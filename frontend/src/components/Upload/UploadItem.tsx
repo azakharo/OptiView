@@ -78,7 +78,8 @@ function GenreSelect({
             {genre}
           </option>
         ))}
-        <option value="__custom__">Custom...</option>
+        {/* TODO Решил пока убрать эту фичу */}
+        {/* <option value="__custom__">Custom...</option> */}
       </Select>
 
       {showCustomInput && (
