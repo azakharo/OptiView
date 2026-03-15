@@ -66,14 +66,14 @@ export function UploadPage() {
               void uploadAll();
             }}
             disabled={!hasWaitingItems || isUploading}
-            color="primary"
+            color="blue"
           >
             {isUploading ? 'Uploading...' : 'Upload All'}
           </Button>
         )}
         {allDone && (
           <>
-            <Button color="success" onClick={handleUploadMore}>
+            <Button color="gray" outline onClick={handleUploadMore}>
               Upload More
             </Button>
             <Link to="/">

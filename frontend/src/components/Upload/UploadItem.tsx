@@ -226,7 +226,12 @@ export function UploadItem({
           </Button>
         )}
         {item.status === 'waiting' && (
-          <Button size="xs" color="failure" onClick={() => onRemove(item.id)}>
+          <Button
+            size="xs"
+            color="red"
+            outline
+            onClick={() => onRemove(item.id)}
+          >
             Remove
           </Button>
         )}
