@@ -37,6 +37,7 @@ Before starting implementation, ensure the following are in place:
 | FAB component                            | ✅ Complete  | Navigates to /upload              |
 | React Router /upload route               | ✅ Complete  | Placeholder exists in App.tsx     |
 | Flowbite React components                | ✅ Available | For UI consistency                |
+| react-dropzone package                   | ⬜ Required  | Install: `npm install react-dropzone` |
 
 ---
 
@@ -201,56 +202,21 @@ export interface UploadQueueState {
 }
 ```
 
-### Step 2: Create File Validation Utilities
+### Step 2: Install react-dropzone
 
-Create `frontend/src/utils/fileValidation.ts`:
+Install the react-dropzone package:
 
-```typescript
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-export interface ValidationResult {
-  valid: boolean;
-  error?: string;
-}
-
-export function validateFile(file: File): ValidationResult {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return {
-      valid: false,
-      error: `Invalid file type. Allowed: JPEG, PNG, WebP`,
-    };
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return {
-      valid: false,
-      error: `File too large. Maximum size: 10MB`,
-    };
-  }
-
-  return { valid: true };
-}
-
-export function validateFiles(files: FileList | File[]): {
-  valid: File[];
-  invalid: { file: File; error: string }[];
-} {
-  const valid: File[] = [];
-  const invalid: { file: File; error: string }[] = [];
-
-  Array.from(files).forEach(file => {
-    const result = validateFile(file);
-    if (result.valid) {
-      valid.push(file);
-    } else {
-      invalid.push({ file, error: result.error! });
-    }
-  });
-
-  return { valid, invalid };
-}
+```bash
+npm install react-dropzone
 ```
+
+**Why react-dropzone?**
+
+- Provides battle-tested drag-and-drop functionality
+- Built-in file type and size validation via `accept` and `maxSize` props
+- Handles keyboard navigation and accessibility automatically
+- Exposes visual state flags: `isDragActive`, `isDragAccept`, `isDragReject`
+- Reduces boilerplate code significantly
 
 ### Step 3: Implement DropZone Component
 
@@ -274,13 +240,103 @@ interface DropZoneProps {
 - File type and size validation with error display
 - Supported formats hint text
 
-**Implementation Notes:**
+**Implementation with react-dropzone:**
 
-- Use `useRef` for input element reference
-- Use `useState` for drag-over state
-- Handle `onDragEnter`, `onDragLeave`, `onDragOver`, `onDrop` events
-- Prevent default browser behavior for drag events
-- Display validation errors using Flowbite Alert component
+```tsx
+import { useCallback } from 'react';
+import { useDropzone, FileRejection } from 'react-dropzone';
+import { Alert } from 'flowbite-react';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export function DropZone({ onFilesSelected, disabled = false }: DropZoneProps) {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      onFilesSelected(acceptedFiles);
+    }
+  }, [onFilesSelected]);
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject,
+    fileRejections
+  } = useDropzone({
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp']
+    },
+    maxSize: MAX_FILE_SIZE,
+    multiple: true,
+    disabled,
+    onDrop
+  });
+
+  // Build dynamic className based on state
+  const getClassName = () => {
+    const baseClasses = 'border-2 rounded-lg p-8 text-center transition-colors cursor-pointer';
+
+    if (disabled) {
+      return `${baseClasses} opacity-50 cursor-not-allowed border-dashed border-gray-300 bg-gray-50`;
+    }
+    if (isDragReject) {
+      return `${baseClasses} border-solid border-red-500 bg-red-50`;
+    }
+    if (isDragAccept) {
+      return `${baseClasses} border-solid border-green-500 bg-green-50`;
+    }
+    if (isDragActive) {
+      return `${baseClasses} border-solid border-blue-500 bg-blue-50`;
+    }
+    return `${baseClasses} border-dashed border-gray-300 bg-gray-50 hover:border-gray-400`;
+  };
+
+  return (
+    <div {...getRootProps({ className: getClassName() })}>
+      <input {...getInputProps()} />
+
+      {isDragReject ? (
+        <p className="text-red-600">Some files will be rejected</p>
+      ) : isDragActive ? (
+        <p className="text-blue-600">Drop files here...</p>
+      ) : (
+        <>
+          <p className="text-gray-600">Drag and drop images here, or click to select</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Supports: JPEG, PNG, WebP • Max size: 10MB
+          </p>
+        </>
+      )}
+
+      {/* Display validation errors */}
+      {fileRejections.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {fileRejections.map(({ file, errors }: FileRejection) => (
+            <Alert key={file.name} color="failure" className="text-left">
+              <span className="font-medium">{file.name}:</span>{' '}
+              {errors.map(e => e.message).join(', ')}
+            </Alert>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+**Key react-dropzone Features Used:**
+
+| Feature | Prop/Return Value | Purpose |
+|:--------|:------------------|:--------|
+| File type restriction | `accept` prop | Restrict to JPEG, PNG, WebP |
+| File size limit | `maxSize` prop | Reject files > 10MB |
+| Multiple files | `multiple: true` | Allow multiple file selection |
+| Disabled state | `disabled` prop | Disable during uploads |
+| Visual feedback | `isDragActive`, `isDragAccept`, `isDragReject` | Style based on drag state |
+| Error handling | `fileRejections` array | Display validation errors |
 
 ### Step 4: Implement UploadItem Component
 
@@ -309,13 +365,13 @@ interface UploadItemProps {
 
 **Status Indicators:**
 
-| Status     | Icon        | Color  |
-|:-----------|:------------|:-------|
-| waiting    | ClockIcon   | gray   |
-| uploading  | ArrowUpIcon | blue   |
-| processing | SpinnerIcon | yellow |
-| done       | CheckIcon   | green  |
-| error      | XIcon       | red    |
+| Status     | Icon             | Color  |
+|:-----------|:-----------------|:-------|
+| waiting    | ClockIcon        | gray   |
+| uploading  | ArrowUpIcon      | blue   |
+| processing | ArrowPathIcon    | yellow |
+| done       | CheckIcon        | green  |
+| error      | XMarkIcon        | red    |
 
 ### Step 5: Implement UploadQueue Component
 
@@ -401,7 +457,7 @@ import {UploadPage} from './pages/UploadPage';
 frontend/src/
 ├── components/
 │   └── Upload/
-│       ├── DropZone.tsx          # Drag-and-drop component
+│       ├── DropZone.tsx          # Drag-and-drop component (uses react-dropzone)
 │       ├── DropZone.test.tsx     # DropZone tests
 │       ├── UploadQueue.tsx       # Queue list component
 │       ├── UploadQueue.test.tsx  # UploadQueue tests
@@ -410,12 +466,11 @@ frontend/src/
 ├── pages/
 │   ├── UploadPage.tsx            # Upload page (update existing)
 │   └── UploadPage.test.tsx       # Upload page tests
-├── types/
-│   └── upload.ts                 # Upload-specific types
-└── utils/
-    ├── fileValidation.ts         # File validation utilities
-    └── fileValidation.test.ts    # Validation tests
+└── types/
+    └── upload.ts                 # Upload-specific types
 ```
+
+> **Note:** File validation utilities are no longer needed as react-dropzone handles validation via its `accept` and `maxSize` props. The `fileRejections` array provides detailed error information.
 
 ---
 
@@ -435,59 +490,27 @@ frontend/src/
 **Visual States:**
 
 - Default: Dashed border, light background
-- Drag-over: Solid border, highlighted background
+- Drag-accept: Solid green border, green background
+- Drag-reject: Solid red border, red background
+- Drag-active: Solid blue border, blue background
 - Disabled: Reduced opacity, cursor not-allowed
 
-**Accessibility:**
+**Accessibility (handled by react-dropzone):**
 
 - Role: button
 - TabIndex: 0
 - Keyboard: Enter/Space opens file browser
-- ARIA label: "Drop files here or click to browse"
+- ARIA attributes: Automatically managed by react-dropzone
 
-**Example Implementation:**
+**Implementation Note:**
 
-```tsx
-export function DropZone({onFilesSelected, disabled = false}: DropZoneProps) {
-  const [isDragOver, setIsDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+The DropZone component uses `react-dropzone`'s `useDropzone` hook which handles:
+- Drag event management
+- File input handling
+- Keyboard navigation
+- ARIA attributes
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    if (disabled) return;
-
-    const {valid} = validateFiles(e.dataTransfer.files);
-    if (valid.length > 0) {
-      onFilesSelected(valid);
-    }
-  }, [disabled, onFilesSelected]);
-
-  // ... other handlers
-
-  return (
-    <div
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      className={/* styles based on isDragOver, disabled */}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onClick={() => inputRef.current?.click()}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        className="hidden"
-        onChange={handleInputChange}
-      />
-      {/* Dropzone content */}
-    </div>
-  );
-}
-```
+See Step 3 for the complete implementation code.
 
 ### 8.2 UploadItem Component
 
@@ -749,17 +772,9 @@ export interface UploadQueueProps {
   /** Remove callback */
   onRemove: (id: string) => void;
 }
-
-/**
- * File validation result
- */
-export interface ValidationResult {
-  /** Whether the file is valid */
-  valid: boolean;
-  /** Error message if invalid */
-  error?: string;
-}
 ```
+
+> **Note:** The `ValidationResult` interface is no longer needed as react-dropzone handles validation through its `accept` and `maxSize` props, with errors available via the `fileRejections` array.
 
 ---
 
@@ -840,10 +855,12 @@ shadow-sm
 ### Error Display
 
 ```tsx
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+
 // In UploadItem component
 {item.status === 'error' && (
   <div className="flex items-center gap-2 text-red-500">
-    <HiExclamationCircle className="h-5 w-5" />
+    <ExclamationCircleIcon className="h-5 w-5" />
     <span className="text-sm">{item.error}</span>
     <Button size="xs" onClick={() => onRetry(item.id)}>
       Retry
@@ -852,23 +869,23 @@ shadow-sm
 )}
 ```
 
-### Validation Error Toast
+### Validation Error Display (react-dropzone)
 
 ```tsx
-// In DropZone component
-const {valid, invalid} = validateFiles(files);
-
-if (invalid.length > 0) {
-  // Show toast with validation errors
-  invalid.forEach(({file, error}) => {
-    toast.error(`${file.name}: ${error}`);
-  });
-}
-
-if (valid.length > 0) {
-  onFilesSelected(valid);
-}
+// In DropZone component - fileRejections provided by useDropzone
+{fileRejections.length > 0 && (
+  <div className="mt-4 space-y-2">
+    {fileRejections.map(({ file, errors }: FileRejection) => (
+      <Alert key={file.name} color="failure" className="text-left">
+        <span className="font-medium">{file.name}:</span>{' '}
+        {errors.map(e => e.message).join(', ')}
+      </Alert>
+    ))}
+  </div>
+)}
 ```
+
+> **Note:** react-dropzone provides the `fileRejections` array which contains files that failed validation along with their error messages. No manual validation utilities are needed.
 
 ---
 
@@ -933,25 +950,7 @@ describe('UploadPage', () => {
 });
 ```
 
-#### File Validation Tests (`fileValidation.test.ts`)
-
-```typescript
-describe('fileValidation', () => {
-  describe('validateFile', () => {
-    it('should accept valid JPEG files', () => {});
-    it('should accept valid PNG files', () => {});
-    it('should accept valid WebP files', () => {});
-    it('should reject GIF files', () => {});
-    it('should reject files larger than 10MB', () => {});
-    it('should accept files at exactly 10MB', () => {});
-  });
-
-  describe('validateFiles', () => {
-    it('should separate valid and invalid files', () => {});
-    it('should return empty arrays for empty input', () => {});
-  });
-});
-```
+> **Note:** File validation tests are no longer needed as react-dropzone handles validation internally. The DropZone tests verify that validation works correctly through the library's `accept` and `maxSize` props.
 
 ### Integration Tests
 
@@ -985,15 +984,16 @@ describe('Upload Flow', () => {
 
 ### ARIA Attributes
 
-**DropZone:**
+**DropZone (handled by react-dropzone):**
+
+react-dropzone automatically provides proper ARIA attributes through `getRootProps()`. No manual ARIA attributes are needed:
 
 ```tsx
-<div
-  role="button"
-  tabIndex={0}
-  aria-label="Drop files here or click to browse. Supported formats: JPEG, PNG, WebP. Maximum size: 10MB"
-  aria-disabled={disabled}
->
+// react-dropzone handles these automatically:
+// - role="button"
+// - tabIndex={0}
+// - aria-label (descriptive text)
+// - aria-disabled={disabled}
 ```
 
 **Progress Bar:**
@@ -1081,8 +1081,9 @@ describe('Upload Flow', () => {
 - [ ] Unit tests for UploadItem component pass
 - [ ] Unit tests for UploadQueue component pass
 - [ ] Unit tests for UploadPage pass
-- [ ] Unit tests for file validation pass
 - [ ] Test coverage meets project standards
+
+> **Note:** File validation tests are no longer needed as react-dropzone handles validation internally.
 
 ### Accessibility
 
@@ -1164,21 +1165,48 @@ export function GenreSelect({ value, customValue, onChange, onCustomChange, disa
 
 ## Appendix B: Upload Status Icons
 
+The project uses `@heroicons/react` for icons. Import from `@heroicons/react/24/outline` for consistent styling with existing components like [`Lightbox.tsx`](frontend/src/components/Gallery/Lightbox.tsx:3).
+
 ```tsx
 // StatusIcon component
-import { HiClock, HiArrowUp, HiRefresh, HiCheck, HiX } from 'react-icons/hi';
+import {
+  ClockIcon,
+  ArrowUpIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 const statusIcons: Record<UploadStatus, React.ReactNode> = {
-  waiting: <HiClock className="h-5 w-5 text-gray-500" />,
-  uploading: <HiArrowUp className="h-5 w-5 text-blue-500 animate-bounce" />,
-  processing: <HiRefresh className="h-5 w-5 text-yellow-500 animate-spin" />,
-  done: <HiCheck className="h-5 w-5 text-green-500" />,
-  error: <HiX className="h-5 w-5 text-red-500" />,
+  waiting: <ClockIcon className="h-5 w-5 text-gray-500" />,
+  uploading: <ArrowUpIcon className="h-5 w-5 text-blue-500 animate-bounce" />,
+  processing: <ArrowPathIcon className="h-5 w-5 text-yellow-500 animate-spin" />,
+  done: <CheckIcon className="h-5 w-5 text-green-500" />,
+  error: <XMarkIcon className="h-5 w-5 text-red-500" />,
 };
 
 export function StatusIcon({ status }: { status: UploadStatus }) {
   return statusIcons[status];
 }
+```
+
+### Error Display Icon
+
+For error messages, use `ExclamationCircleIcon`:
+
+```tsx
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+
+// In UploadItem component
+{item.status === 'error' && (
+  <div className="flex items-center gap-2 text-red-500">
+    <ExclamationCircleIcon className="h-5 w-5" />
+    <span className="text-sm">{item.error}</span>
+    <Button size="xs" onClick={() => onRetry(item.id)}>
+      Retry
+    </Button>
+  </div>
+)}
 ```
 
 ---
