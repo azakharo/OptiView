@@ -40,18 +40,29 @@ describe('DropZone', () => {
     ).toBeInTheDocument();
   });
 
-  it('should accept valid file types on drop', () => {
+  it('should show green visual feedback when valid files are dragged over', () => {
+    // Mock getRootProps to return className
+    const mockGetRootProps = vi
+      .fn()
+      .mockImplementation((options: Record<string, unknown>) => ({
+        ...options,
+        'data-testid': 'dropzone',
+      }));
+
     vi.mocked(reactDropzone.useDropzone).mockReturnValue({
       ...defaultDropzoneState,
+      getRootProps: mockGetRootProps,
       isDragAccept: true,
     } as never);
 
-    render(<DropZone onFilesSelected={mockOnFilesSelected} />);
+    const {container} = render(
+      <DropZone onFilesSelected={mockOnFilesSelected} />,
+    );
 
-    // The component should render and show accept state
-    expect(
-      screen.getByText(/Drag and drop images here, or click to select/i),
-    ).toBeInTheDocument();
+    // Should show green border and background when accepting files
+    const dropzoneArea = container.querySelector('[data-testid="dropzone"]');
+    expect(dropzoneArea).toHaveClass('border-green-500');
+    expect(dropzoneArea).toHaveClass('bg-green-50');
   });
 
   it('should reject invalid file types', () => {
