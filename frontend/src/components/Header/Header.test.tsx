@@ -1,6 +1,6 @@
 import {describe, it, expect, vi} from 'vitest';
 import {render, screen, fireEvent} from '@testing-library/react';
-import {BrowserRouter} from 'react-router-dom';
+import {renderWithRouter} from '@/test/renderWithRouter';
 import {Header} from './Header';
 
 // Create mock functions at module level
@@ -24,10 +24,6 @@ vi.mock('../../hooks/useFilters', () => ({
     resetFilters: mockResetFilters,
   })),
 }));
-
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
-};
 
 describe('Header', () => {
   beforeEach(() => {

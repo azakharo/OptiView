@@ -1,6 +1,6 @@
 import {describe, it, expect, vi} from 'vitest';
-import {render, screen, waitFor} from '@testing-library/react';
-import {BrowserRouter} from 'react-router-dom';
+import {screen, waitFor} from '@testing-library/react';
+import {renderWithRouter} from '@/test/renderWithRouter';
 import {GalleryPage} from './GalleryPage';
 import type {useImages} from '../hooks/useImages';
 
@@ -52,10 +52,6 @@ vi.mock('../components/Gallery/Lightbox', () => ({
 vi.mock('../components/FAB/FAB', () => ({
   FAB: () => <div data-testid="fab">FAB</div>,
 }));
-
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
-};
 
 const createMockUseImagesResult = () =>
   ({

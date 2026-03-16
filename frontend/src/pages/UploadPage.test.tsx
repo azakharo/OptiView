@@ -1,6 +1,6 @@
 import {describe, it, expect, vi} from 'vitest';
-import {render, screen} from '@testing-library/react';
-import {BrowserRouter} from 'react-router-dom';
+import {screen} from '@testing-library/react';
+import {renderWithRouter} from '@/test/renderWithRouter';
 import {UploadPage} from './UploadPage';
 import type {UploadItemState} from '@/types/upload';
 import type {Genre} from '@/api/types';
@@ -33,10 +33,6 @@ import {useUploadQueue} from '../hooks/useUploadQueue';
 
 const mockUseUploadQueue = useUploadQueue as ReturnType<typeof vi.fn>;
 
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
-};
-
 describe('UploadPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -56,7 +52,7 @@ describe('UploadPage', () => {
   it('should render back to gallery link', () => {
     renderWithRouter(<UploadPage />);
 
-    expect(screen.getByText(/← Back to Gallery/i)).toBeInTheDocument();
+    expect(screen.getByText(/Back to Gallery/i)).toBeInTheDocument();
   });
 
   it('should render dropzone', () => {

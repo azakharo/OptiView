@@ -1,11 +1,7 @@
 import {describe, it, expect} from 'vitest';
-import {render, screen} from '@testing-library/react';
-import {BrowserRouter} from 'react-router-dom';
+import {screen} from '@testing-library/react';
+import {renderWithRouter} from '@/test/renderWithRouter';
 import {FAB} from './FAB';
-
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
-};
 
 describe('FAB', () => {
   it('should render the FAB button', () => {
