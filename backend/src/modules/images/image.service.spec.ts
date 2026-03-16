@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { ImageService } from './image.service';
 import sharp from 'sharp';
 import * as fs from 'fs/promises';
+import { Image } from '../../entities/image.entity';
 
 // Mock fs module
 jest.mock('fs/promises', () => ({
@@ -22,9 +24,30 @@ jest.mock('../../utils/storage.util', () => ({
 describe('ImageService', () => {
   let service: ImageService;
 
+  const mockImageRepository = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+    createQueryBuilder: jest.fn(() => ({
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getCount: jest.fn().mockResolvedValue(0),
+      getMany: jest.fn().mockResolvedValue([]),
+    })),
+  };
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ImageService],
+      providers: [
+        ImageService,
+        {
+          provide: getRepositoryToken(Image),
+          useValue: mockImageRepository,
+        },
+      ],
     }).compile();
 
     service = module.get<ImageService>(ImageService);

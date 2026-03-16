@@ -6,10 +6,10 @@ This document provides a detailed implementation plan for Stage 7: Integration T
 
 ### Key Decisions
 
-| Decision Point | Choice |
-|:---------------|:-------|
-| E2E Framework | Playwright |
-| CI/CD | Manual local execution only |
+| Decision Point        | Choice                      |
+|:----------------------|:----------------------------|
+| E2E Framework         | Playwright                  |
+| CI/CD                 | Manual local execution only |
 | Accessibility Testing | Out of scope for this stage |
 
 ---
