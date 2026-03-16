@@ -69,35 +69,35 @@ flowchart TB
 
 ### Frontend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.x | UI framework |
-| Vite | 7.x | Build tool and dev server |
-| React Router | 6.x | SPA routing and URL state management |
-| TanStack Query | 5.x | Server state management and caching |
-| TypeScript | 5.x | Type safety |
+| Technology     | Version | Purpose                              |
+|:---------------|:--------|:-------------------------------------|
+| React          | 19.x    | UI framework                         |
+| Vite           | 7.x     | Build tool and dev server            |
+| React Router   | 6.x     | SPA routing and URL state management |
+| TanStack Query | 5.x     | Server state management and caching  |
+| TypeScript     | 5.x     | Type safety                          |
 
 ### Backend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| NestJS | 10.x | Backend framework |
-| TypeORM | 0.3.x | Database ORM |
-| Sharp | 0.33.x | Image processing |
-| class-validator | 0.14.x | DTO validation |
-| class-transformer | 0.2.x | DTO transformation |
+| Technology        | Version | Purpose            |
+|:------------------|:--------|:-------------------|
+| NestJS            | 10.x    | Backend framework  |
+| TypeORM           | 0.3.x   | Database ORM       |
+| Sharp             | 0.33.x  | Image processing   |
+| class-validator   | 0.14.x  | DTO validation     |
+| class-transformer | 0.2.x   | DTO transformation |
 
 ### Database
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| PostgreSQL | 15.x | Primary data store |
+| Technology | Version | Purpose            |
+|:-----------|:--------|:-------------------|
+| PostgreSQL | 15.x    | Primary data store |
 
 ### Infrastructure
 
-| Technology | Purpose |
-|------------|---------|
-| Docker | Postgres containerization |
+| Technology     | Purpose                       |
+|:---------------|:------------------------------|
+| Docker         | Postgres containerization     |
 | Docker Compose | Multi-container orchestration |
 
 ---
@@ -157,14 +157,14 @@ Response:
 
 **Endpoints:**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/images` | List images with filters and pagination |
-| GET | `/api/images/:id?width=N` | Get processed image |
-| GET | `/api/images/:id/metadata` | Get image metadata |
-| POST | `/api/images/upload` | Upload new image |
-| GET | `/api/images/:id/lqip` | Get LQIP placeholder |
-| PATCH | `/api/images/:id/rating` | Update image rating |
+| Method | Endpoint                   | Description                             |
+|:-------|:---------------------------|:----------------------------------------|
+| GET    | `/api/images`              | List images with filters and pagination |
+| GET    | `/api/images/:id?width=N`  | Get processed image                     |
+| GET    | `/api/images/:id/metadata` | Get image metadata                      |
+| POST   | `/api/images/upload`       | Upload new image                        |
+| GET    | `/api/images/:id/lqip`     | Get LQIP placeholder                    |
+| PATCH  | `/api/images/:id/rating`   | Update image rating                     |
 
 **Format Priority:**
 
@@ -209,14 +209,14 @@ Validation:
 
 **Breakpoints:**
 
-| Breakpoint | Use Case |
-|------------|----------|
-| 320px | Small mobile devices |
-| 640px | Standard mobile @2x |
-| 768px | Tablet portrait |
-| 1024px | Tablet landscape / Small desktop |
-| 1280px | Standard desktop |
-| 1920px | Full HD displays |
+| Breakpoint | Use Case                         |
+|:-----------|:---------------------------------|
+| 320px      | Small mobile devices             |
+| 640px      | Standard mobile @2x              |
+| 768px      | Tablet portrait                  |
+| 1024px     | Tablet landscape / Small desktop |
+| 1280px     | Standard desktop                 |
+| 1920px     | Full HD displays                 |
 
 **Rounding Algorithm:**
 
