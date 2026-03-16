@@ -3,7 +3,9 @@
   "trailingComma": "all",
   "bracketSpacing": false,
   "arrowParens": "avoid",
-  "plugins": ["prettier-plugin-tailwindcss"],
+  "plugins": ["prettier-plugin-classnames", "prettier-plugin-tailwindcss"],
+  "endingPosition": "relative",
+  "printWidth": 80,
   "tailwindAttributes": ["theme"],
   "tailwindFunctions": ["twMerge", "createTheme"]
 }
