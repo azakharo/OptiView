@@ -26,7 +26,7 @@ import {
   ApiHeader,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import type { Multer } from 'multer';
+import type { Express } from 'express';
 import { ImageService } from './image.service';
 import { ImageFilterDto } from './dto/image-filter.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
@@ -194,7 +194,7 @@ export class ImagesController {
     description: 'Invalid file or format not supported',
   })
   async uploadImage(
-    @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Body() body: UploadImageDto,
   ): Promise<ImageResponseDto> {
     if (!file) {

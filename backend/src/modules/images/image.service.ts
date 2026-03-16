@@ -17,19 +17,8 @@ import { roundToBreakpoint } from '../../utils/breakpoint.util';
 import { Image } from '../../entities/image.entity';
 import { Genre } from '../../entities/genre.enum';
 import { ImageFilterDto, SortField, SortOrder } from './dto/image-filter.dto';
+import type { Express } from 'express';
 import { BadRequestException } from '@nestjs/common';
-
-/**
- * Interface representing a Multer uploaded file
- */
-interface UploadedFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  buffer: Buffer;
-  size: number;
-}
 
 export interface ImageMetadata {
   width: number;
@@ -445,7 +434,10 @@ export class ImageService {
    * @param genre - Optional genre classification
    * @returns Created image record
    */
-  async processUpload(file: UploadedFile, genre?: Genre): Promise<Image> {
+  async processUpload(
+    file: Express.Multer.File,
+    genre?: Genre,
+  ): Promise<Image> {
     // Generate UUID
     const uuid = randomUUID();
 

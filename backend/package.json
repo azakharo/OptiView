@@ -48,6 +48,7 @@
     "@nestjs/testing": "11.1.16",
     "@types/express": "5.0.6",
     "@types/jest": "30.0.0",
+    "@types/multer": "2.1.0",
     "@types/node": "22.19.15",
     "@types/sharp": "0.31.1",
     "@types/supertest": "6.0.3",
