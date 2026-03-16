@@ -62,12 +62,24 @@ export function DropZone({onFilesSelected, disabled = false}: DropZoneProps) {
   const getContent = () => {
     if (isDragReject) {
       return (
-        <p className="font-medium text-red-600">Some files will be rejected</p>
+        <>
+          <p className="font-medium text-red-600">
+            Some files will be rejected
+          </p>
+          <p className="mt-1 text-sm text-red-400">
+            Please check file types and size
+          </p>
+        </>
       );
     }
 
     if (isDragActive) {
-      return <p className="font-medium text-blue-600">Drop files here...</p>;
+      return (
+        <>
+          <p className="font-medium text-blue-600">Drop files here...</p>
+          <p className="mt-1 text-sm text-blue-400">Release to upload</p>
+        </>
+      );
     }
 
     return (
