@@ -7,14 +7,8 @@ import {
 } from 'flowbite-react/components/Navbar';
 import {Dropdown, DropdownItem} from 'flowbite-react/components/Dropdown';
 import {useFilters} from '../../hooks/useFilters';
+import {GENRE_OPTIONS} from '../../const';
 import type {Genre} from '../../api/types';
-
-const GENRE_OPTIONS: Genre[] = [
-  'Nature',
-  'Architecture',
-  'Portrait',
-  'Uncategorized',
-];
 
 // Sort field values as string literals (types don't have runtime values)
 const SORT_CREATED_AT = 'createdAt' as const;

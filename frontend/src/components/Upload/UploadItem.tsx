@@ -8,14 +8,8 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import type {UploadItemProps, UploadStatus} from '@/types/upload';
+import {GENRE_OPTIONS} from '@/const';
 import type {Genre} from '@/api/types';
-
-const PREDEFINED_GENRES: Genre[] = [
-  'Nature',
-  'Architecture',
-  'Portrait',
-  'Uncategorized',
-];
 
 const STATUS_COLORS: Record<UploadStatus, string> = {
   waiting: 'text-gray-500',
@@ -51,7 +45,7 @@ function GenreSelect({
   onCustomChange,
   disabled,
 }: GenreSelectProps) {
-  const isPredefinedGenre = PREDEFINED_GENRES.includes(value);
+  const isPredefinedGenre = GENRE_OPTIONS.includes(value);
   const showCustomInput = !isPredefinedGenre;
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -73,7 +67,7 @@ function GenreSelect({
         disabled={disabled}
         className="w-40"
       >
-        {PREDEFINED_GENRES.map(genre => (
+        {GENRE_OPTIONS.map(genre => (
           <option key={genre} value={genre}>
             {genre}
           </option>
