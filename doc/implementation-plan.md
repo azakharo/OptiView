@@ -5,6 +5,7 @@
 This document outlines the implementation plan for OptiView - a high-performance image delivery web application. The plan is organized into stages with clear dependencies, deliverables, and acceptance criteria.
 
 **Key Assumptions:**
+
 - Frontend template will be provided by the user
 - Backend and Frontend are developed and deployed separately
 - Local filesystem storage for MVP phase
@@ -34,16 +35,20 @@ flowchart TB
 ## Stage 0: Infrastructure Setup
 
 ### Goal
+
 Establish the foundational infrastructure for both backend and frontend development.
 
 ### Dependencies
+
 None - this is the starting point.
 
 ### Input
+
 - ADR.md documentation
 - Technology stack decisions
 
 ### Output
+
 - Working development environment
 - Docker Compose configuration
 - Database container running
@@ -86,16 +91,20 @@ None - this is the starting point.
 ## Stage 1: Backend Core - Database & Entities
 
 ### Goal
+
 Implement the database schema and TypeORM entities for image metadata storage.
 
 ### Dependencies
+
 - Stage 0: Infrastructure Setup completed
 
 ### Input
+
 - ADR-007: TypeORM entity structure
 - Image metadata fields from ADR.md
 
 ### Output
+
 - Database migrations
 - TypeORM Image entity
 - Genre enum
@@ -147,17 +156,21 @@ Implement the database schema and TypeORM entities for image metadata storage.
 ## Stage 2: Image Processing Service
 
 ### Goal
+
 Implement the core image processing capabilities using Sharp library.
 
 ### Dependencies
+
 - Stage 1: Database & Entities completed
 
 ### Input
+
 - ADR-001: Storage structure
 - ADR-003: Fixed breakpoints
 - ADR-005: LQIP strategy
 
 ### Output
+
 - ImageService with Sharp integration
 - File storage utilities
 - Metadata extraction
@@ -207,18 +220,22 @@ Implement the core image processing capabilities using Sharp library.
 ## Stage 3: REST API Endpoints
 
 ### Goal
+
 Implement all REST API endpoints for image management according to ADR-002.
 
 ### Dependencies
+
 - Stage 1: Database & Entities completed
 - Stage 2: Image Processing Service completed
 
 ### Input
+
 - ADR-002: API design and endpoints
 - ADR-004: Query parameters for filtering
 - UI.md: Upload requirements
 
 ### Output
+
 - Complete REST API
 - DTO validation
 - Error handling
@@ -289,19 +306,23 @@ Implement all REST API endpoints for image management according to ADR-002.
 ## Stage 4: Frontend Setup
 
 ### Goal
+
 Configure the frontend application using the provided template and integrate with the backend API.
 
 ### Dependencies
+
 - Stage 0: Infrastructure Setup completed
 
 **Note:** User provides initial frontend template. This stage focuses on configuration and API integration setup.
 
 ### Input
+
 - User-provided frontend template: React + Vite + TypeScript
 - ADR-004: TanStack Query integration
 - Technology stack from ADR.md
 
 ### Output
+
 - Configured frontend application
 - API client setup
 - TanStack Query configuration
@@ -356,19 +377,23 @@ Configure the frontend application using the provided template and integrate wit
 ## Stage 5: Frontend Gallery Feature
 
 ### Goal
+
 Implement the main gallery page with masonry grid, filters, sorting, and image lightbox.
 
 ### Dependencies
+
 - Stage 3: REST API Endpoints completed
 - Stage 4: Frontend Setup completed
 
 ### Input
+
 - UI.md Section 4.1: Header component
 - UI.md Section 4.2: Gallery Grid
 - UI.md Section 4.4: Lightbox/Modal
 - UI.md Section 6: Loading States
 
 ### Output
+
 - Fully functional gallery page
 - Interactive rating system
 - Image lightbox with navigation
@@ -447,17 +472,21 @@ Implement the main gallery page with masonry grid, filters, sorting, and image l
 ## Stage 6: Frontend Upload Feature
 
 ### Goal
+
 Implement the upload page with drag-and-drop, progress tracking, and genre selection.
 
 ### Dependencies
+
 - Stage 3: REST API Endpoints completed
 - Stage 4: Frontend Setup completed
 
 ### Input
+
 - UI.md Section 4.3: FAB component
 - UI.md Section 4.5: Upload Page
 
 ### Output
+
 - Fully functional upload page
 - File validation
 - Progress tracking
@@ -528,29 +557,33 @@ Implement the upload page with drag-and-drop, progress tracking, and genre selec
 ## Stage 7: Integration Testing
 
 ### Goal
+
 Validate end-to-end functionality and performance requirements.
 
 ### Dependencies
+
 - Stage 5: Frontend Gallery Feature completed
 - Stage 6: Frontend Upload Feature completed
 
 ### Input
+
 - Complete application stack
-- PRD.md success metrics: Lighthouse 90+, zero CLS
+- PRD.md success metrics: zero CLS
 
 ### Output
+
 - Integration test suite
 - Performance benchmarks
 - Bug fixes
 
 ### Artifacts
 
-| Type | Artifact | Description |
-|:-----|:---------|:------------|
-| Test | `backend/test/integration/*.e2e-spec.ts` | Backend integration tests |
-| Test | `frontend/e2e/*.spec.ts` | Frontend E2E tests with Playwright or Cypress |
-| Doc | `test-results/` | Test reports and coverage |
-| Doc | `docs/performance.md` | Performance test results |
+| Type | Artifact                                 | Description                                   |
+|:-----|:-----------------------------------------|:----------------------------------------------|
+| Test | `backend/test/integration/*.e2e-spec.ts` | Backend integration tests                     |
+| Test | `frontend/e2e/*.spec.ts`                 | Frontend E2E tests with Playwright or Cypress |
+| Doc  | `test-results/`                          | Test reports and coverage                     |
+| Doc  | `docs/performance.md`                    | Performance test results                      |
 
 ### Tasks
 
@@ -572,11 +605,11 @@ Validate end-to-end functionality and performance requirements.
 
 ### Risks
 
-| Risk | Probability | Impact | Mitigation |
-|:-----|:------------|:-------|:-----------|
-| Lighthouse score below target | Medium | High | Profile and optimize critical rendering path |
-| E2E test flakiness | Medium | Medium | Use proper wait strategies, retry configuration |
-| Cross-browser inconsistencies | Low | Medium | Test on Chrome, Firefox, Safari |
+| Risk                          | Probability | Impact | Mitigation                                      |
+|:------------------------------|:------------|:-------|:------------------------------------------------|
+| Lighthouse score below target | Medium      | High   | Profile and optimize critical rendering path    |
+| E2E test flakiness            | Medium      | Medium | Use proper wait strategies, retry configuration |
+| Cross-browser inconsistencies | Low         | Medium | Test on Chrome, Firefox, Safari                 |
 
 ### Definition of Done
 
@@ -592,16 +625,20 @@ Validate end-to-end functionality and performance requirements.
 ## Stage 8: Documentation & Deployment Preparation
 
 ### Goal
+
 Finalize documentation and prepare deployment configuration.
 
 ### Dependencies
+
 - Stage 7: Integration Testing completed
 
 ### Input
+
 - Complete tested application
 - All ADR decisions implemented
 
 ### Output
+
 - Deployment-ready application
 - Complete documentation
 - Docker production configuration
