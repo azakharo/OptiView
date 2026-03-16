@@ -141,10 +141,15 @@ async function runSeed() {
     const downloadedFiles: string[] = [];
     for (let i = 1; i <= TOTAL_IMAGES; i++) {
       const imageId = 10 + i; // Start from image 11 to get varied images
-      const url = `https://picsum.photos/id/${imageId}/1920/1080`;
+      const isHorizontal = Math.random() < 2 / 3; // 2:1 ratio (horizontal:vertical)
+      const width = isHorizontal ? 1920 : 1080;
+      const height = isHorizontal ? 1080 : 1920;
+      const url = `https://picsum.photos/id/${imageId}/${width}/${height}`;
       const filepath = path.join(TEMP_DIR, `seed-image-${i}.jpg`);
 
-      console.log(`  Downloading image ${i}/${TOTAL_IMAGES}...`);
+      console.log(
+        `  Downloading image ${i}/${TOTAL_IMAGES} (${isHorizontal ? 'horizontal' : 'vertical'})...`,
+      );
       await downloadImage(url, filepath);
       downloadedFiles.push(filepath);
     }
