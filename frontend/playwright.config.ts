@@ -7,8 +7,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
-    ['list'],                                     // Для удобства чтения человеком
-    ['json', { outputFile: 'test-results.json' }] // Для глубокого анализа агентом
+    ['list'],                                                  // Для удобства чтения человеком
+    ['json', { outputFile: 'test-results/test-results.json' }] // Для глубокого анализа агентом
   ],
   use: {
     baseURL: 'http://localhost:5173',
