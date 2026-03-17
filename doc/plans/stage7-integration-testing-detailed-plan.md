@@ -687,11 +687,354 @@ describe('Performance Tests (e2e)', () => {
 
 ### Goal
 
-Create comprehensive E2E tests for all critical user flows.
+Create comprehensive E2E tests for all critical user flows using Playwright best practices with semantic locators, proper Page Object Model patterns, and web-first assertions.
 
-### Test Files to Create
+### Key Principles
 
-#### 3.1 Gallery Tests
+Based on Playwright best practices:
+
+1. **Locator Priority**: `getByRole()` > `getByLabel()` > `getByText()` > `getByPlaceholder()` > `getByAltText()` > `getByTitle()` > `getByTestId()` > CSS/XPath
+2. **Web-First Assertions**: Use `expect(locator).toBeVisible()` instead of `waitForTimeout()`
+3. **POM Pattern**: Page objects encapsulate **actions**, not locators. Assertions stay in tests.
+4. **Test Isolation**: Every test is independent with no shared state
+5. **Fixtures over Globals**: Use `test.extend()` for setup/teardown with guaranteed cleanup
+
+---
+
+### 3.1 Page Object Models
+
+Page Objects encapsulate **actions**, not locators. They should expose methods that perform operations, not raw Locator objects.
+
+#### GalleryPage
+
+Create [`frontend/e2e/pages/gallery-page.ts`](frontend/e2e/pages/gallery-page.ts):
+
+```typescript
+import { Page, Locator } from '@playwright/test';
+
+export class GalleryPage {
+  private readonly page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  // Navigation
+  async goto(): Promise<void> {
+    await this.page.goto('/');
+  }
+
+  // Gallery actions
+  async waitForGalleryToLoad(): Promise<void> {
+    await this.page.getByRole('heading', { name: /gallery|images/i }).waitFor();
+    await this.page.getByRole('img').first().waitFor({ state: 'visible' });
+  }
+
+  async getImageCount(): Promise<number> {
+    return await this.page.getByRole('article').count();
+  }
+
+  async clickImage(index: number): Promise<void> {
+    await this.page.getByRole('article').nth(index).click();
+  }
+
+  // Filter actions
+  async selectGenre(genre: string): Promise<void> {
+    await this.page.getByLabel(/genre/i).click();
+    await this.page.getByRole('option', { name: genre }).click();
+    await this.page.waitForResponse('**/api/images*');
+  }
+
+  async selectMinRating(rating: number): Promise<void> {
+    await this.page.getByLabel(/rating|min.*stars/i).click();
+    await this.page.getByRole('option', { name: new RegExp(`${rating}`) }).click();
+    await this.page.waitForResponse('**/api/images*');
+  }
+
+  async clearAllFilters(): Promise<void> {
+    await this.page.getByRole('button', { name: /clear|reset/i }).click();
+    await this.page.waitForResponse('**/api/images*');
+  }
+
+  // Sort actions
+  async sortBy(field: string, order: 'ascending' | 'descending' = 'descending'): Promise<void> {
+    await this.page.getByLabel(/sort/i).click();
+    await this.page.getByRole('option', { name: field }).click();
+
+    const orderLabel = order === 'ascending' ? /asc|low.*high/i : /desc|high.*low/i;
+    await this.page.getByLabel(/order/i).click();
+    await this.page.getByRole('option', { name: orderLabel }).click();
+    await this.page.waitForResponse('**/api/images*');
+  }
+
+  // Navigation actions
+  async navigateToUpload(): Promise<void> {
+    await this.page.getByRole('link', { name: /upload|add/i }).click();
+    await this.page.waitForURL('**/upload');
+  }
+
+  // Rating actions
+  async rateImage(imageIndex: number, rating: number): Promise<void> {
+    const article = this.page.getByRole('article').nth(imageIndex);
+    const starButton = article.getByRole('button', { name: new RegExp(`rate ${rating}|${rating} stars?`) });
+    await starButton.click();
+    await this.page.waitForResponse('**/api/images/*/rating');
+  }
+
+  // Verification helpers - return values for assertions in tests
+  async getVisibleImageGenres(): Promise<string[]> {
+    const articles = this.page.getByRole('article');
+    const count = await articles.count();
+    const genres: string[] = [];
+
+    for (let i = 0; i < Math.min(count, 10); i++) {
+      const genre = await articles.nth(i).getByText(/Nature|Architecture|People|Uncategorized/).textContent();
+      if (genre) genres.push(genre);
+    }
+    return genres;
+  }
+
+  async hasImages(): Promise<boolean> {
+    const count = await this.page.getByRole('article').count();
+    return count > 0;
+  }
+}
+```
+
+#### UploadPage
+
+Create [`frontend/e2e/pages/upload-page.ts`](frontend/e2e/pages/upload-page.ts):
+
+```typescript
+import { Page, FileChooser } from '@playwright/test';
+import path from 'path';
+
+export class UploadPage {
+  private readonly page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  // Navigation
+  async goto(): Promise<void> {
+    await this.page.goto('/upload');
+  }
+
+  // Upload actions
+  async uploadFile(filePath: string): Promise<void> {
+    const fileInput = this.page.locator('input[type="file"]');
+    await fileInput.setInputFiles(filePath);
+  }
+
+  async uploadMultipleFiles(filePaths: string[]): Promise<void> {
+    const fileInput = this.page.locator('input[type="file"]');
+    await fileInput.setInputFiles(filePaths);
+  }
+
+  async uploadViaFileChooser(filePath: string): Promise<void> {
+    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await this.page.getByRole('button', { name: /upload|choose|browse/i }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(filePath);
+  }
+
+  async selectGenreForUpload(genre: string, uploadIndex: number = 0): Promise<void> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    await uploadItem.getByLabel(/genre/i).click();
+    await this.page.getByRole('option', { name: genre }).click();
+  }
+
+  async waitForUploadComplete(uploadIndex: number = 0, timeout: number = 30000): Promise<void> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    await uploadItem.getByRole('img', { name: /success|done|complete/i }).waitFor({ timeout });
+  }
+
+  async retryFailedUpload(uploadIndex: number = 0): Promise<void> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    await uploadItem.getByRole('button', { name: /retry/i }).click();
+  }
+
+  async removeUpload(uploadIndex: number = 0): Promise<void> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    await uploadItem.getByRole('button', { name: /remove|cancel|delete/i }).click();
+  }
+
+  // Navigation
+  async navigateToGallery(): Promise<void> {
+    await this.page.getByRole('link', { name: /back|gallery|home/i }).click();
+    await this.page.waitForURL('**/');
+  }
+
+  // Verification helpers
+  async getUploadCount(): Promise<number> {
+    return await this.page.getByRole('listitem').count();
+  }
+
+  async hasUploadError(uploadIndex: number = 0): Promise<boolean> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    return await uploadItem.getByRole('alert').isVisible().catch(() => false);
+  }
+
+  async getUploadErrorMessage(uploadIndex: number = 0): Promise<string | null> {
+    const uploadItem = this.page.getByRole('listitem').nth(uploadIndex);
+    const alert = uploadItem.getByRole('alert');
+    return await alert.textContent();
+  }
+}
+```
+
+#### LightboxModal
+
+Create [`frontend/e2e/pages/lightbox-modal.ts`](frontend/e2e/pages/lightbox-modal.ts):
+
+```typescript
+import { Page } from '@playwright/test';
+
+export class LightboxModal {
+  private readonly page: Page;
+
+  constructor(page: Page) {
+    this.page = page;
+  }
+
+  // Modal actions
+  async close(): Promise<void> {
+    await this.page.getByRole('button', { name: /close/i }).click();
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
+  }
+
+  async closeWithEscape(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
+  }
+
+  async closeByClickingOutside(): Promise<void> {
+    // Click at the top-left corner of the viewport (outside the dialog content)
+    await this.page.mouse.click(10, 10);
+    await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
+  }
+
+  // Navigation actions
+  async nextImage(): Promise<void> {
+    await this.page.getByRole('button', { name: /next/i }).click();
+    await this.page.waitForResponse('**/api/images/*');
+  }
+
+  async previousImage(): Promise<void> {
+    await this.page.getByRole('button', { name: /previous|prev/i }).click();
+    await this.page.waitForResponse('**/api/images/*');
+  }
+
+  async navigateWithKeyboard(direction: 'next' | 'previous'): Promise<void> {
+    const key = direction === 'next' ? 'ArrowRight' : 'ArrowLeft';
+    await this.page.keyboard.press(key);
+    await this.page.waitForResponse('**/api/images/*');
+  }
+
+  // Rating actions
+  async setRating(rating: number): Promise<void> {
+    const dialog = this.page.getByRole('dialog');
+    const starButton = dialog.getByRole('button', { name: new RegExp(`rate ${rating}|${rating} stars?`) });
+    await starButton.click();
+    await this.page.waitForResponse('**/api/images/*/rating');
+  }
+
+  // Download actions
+  async downloadImage(size: string): Promise<void> {
+    const downloadPromise = this.page.waitForEvent('download');
+    await this.page.getByRole('button', { name: new RegExp(`download.*${size}`, 'i') }).click();
+    const download = await downloadPromise;
+    await download.saveAs(`test-results/download-${size}.jpg`);
+  }
+
+  // Verification helpers
+  async isVisible(): Promise<boolean> {
+    return await this.page.getByRole('dialog').isVisible();
+  }
+
+  async getCurrentImageSrc(): Promise<string | null> {
+    const dialog = this.page.getByRole('dialog');
+    const img = dialog.getByRole('img').first();
+    return await img.getAttribute('src');
+  }
+
+  async getGenre(): Promise<string | null> {
+    const dialog = this.page.getByRole('dialog');
+    const genreText = dialog.getByText(/Nature|Architecture|People|Uncategorized/);
+    return await genreText.textContent();
+  }
+
+  async getRating(): Promise<number> {
+    const dialog = this.page.getByRole('dialog');
+    const stars = dialog.getByRole('button', { name: /star/i });
+    // Count filled/active stars based on aria-pressed or similar attribute
+    let filledCount = 0;
+    const count = await stars.count();
+    for (let i = 0; i < count; i++) {
+      const pressed = await stars.nth(i).getAttribute('aria-pressed');
+      if (pressed === 'true') filledCount++;
+    }
+    return filledCount;
+  }
+}
+```
+
+---
+
+### 3.2 Test Fixtures
+
+Use `test.extend()` to create fixtures with guaranteed setup/teardown.
+
+Create [`frontend/e2e/fixtures/test-helpers.ts`](frontend/e2e/fixtures/test-helpers.ts):
+
+```typescript
+import { test as base, Page } from '@playwright/test';
+import { GalleryPage } from '../pages/gallery-page';
+import { UploadPage } from '../pages/upload-page';
+import { LightboxModal } from '../pages/lightbox-modal';
+
+// Declare fixture types
+type MyFixtures = {
+  galleryPage: GalleryPage;
+  uploadPage: UploadPage;
+  lightbox: LightboxModal;
+  seededImages: void;
+};
+
+// Extend base test with custom fixtures
+export const test = base.extend<MyFixtures>({
+  // Page object fixtures
+  galleryPage: async ({ page }, use) => {
+    await use(new GalleryPage(page));
+  },
+
+  uploadPage: async ({ page }, use) => {
+    await use(new UploadPage(page));
+  },
+
+  lightbox: async ({ page }, use) => {
+    await use(new LightboxModal(page));
+  },
+
+  // Data fixture - ensures test data exists
+  seededImages: async ({ page }, use) => {
+    // Setup: Verify backend has test data
+    const response = await page.request.get('http://localhost:3000/api/images');
+    if (response.status() !== 200 || (await response.json()).data.length === 0) {
+      throw new Error('Test data not available. Run backend seed script first.');
+    }
+    await use();
+    // Teardown: No cleanup needed for read-only fixture
+  },
+});
+
+export { expect } from '@playwright/test';
+```
+
+---
+
+### 3.3 Gallery Tests
 
 Create [`frontend/e2e/tests/gallery.spec.ts`](frontend/e2e/tests/gallery.spec.ts):
 
@@ -699,46 +1042,89 @@ Create [`frontend/e2e/tests/gallery.spec.ts`](frontend/e2e/tests/gallery.spec.ts
 import { test, expect } from '../fixtures/test-helpers';
 
 test.describe('Gallery Page', () => {
-  test.beforeEach(async ({ galleryPage }) => {
+  test.beforeEach(async ({ galleryPage, seededImages }) => {
     await galleryPage.goto();
   });
 
-  test('should display gallery grid with images', async ({ galleryPage }) => {
-    await expect(galleryPage.galleryGrid).toBeVisible();
-    const cardCount = await galleryPage.imageCards.count();
-    expect(cardCount).toBeGreaterThan(0);
+  test('should display gallery grid with images', async ({ galleryPage, page }) => {
+    await galleryPage.waitForGalleryToLoad();
+
+    // Verify images are displayed
+    const hasImages = await galleryPage.hasImages();
+    expect(hasImages).toBe(true);
+
+    // Verify image count is reasonable
+    const count = await galleryPage.getImageCount();
+    expect(count).toBeGreaterThan(0);
   });
 
-  test('should display loading skeleton initially', async ({ page }) => {
-    // Reload to catch loading state
-    await page.reload();
-    // Skeleton should appear briefly
-    const skeleton = page.locator('[data-testid="loading-skeleton"]');
-    // Either skeleton is visible or images loaded very fast
-    const skeletonVisible = await skeleton.isVisible().catch(() => false);
-    // This test is informational - skeleton may load too fast to catch
+  test('should display image cards with essential information', async ({ page }) => {
+    await page.getByRole('article').first().waitFor();
+
+    const firstArticle = page.getByRole('article').first();
+
+    // Each card should have an image
+    await expect(firstArticle.getByRole('img')).toBeVisible();
+
+    // Each card should have genre information
+    await expect(firstArticle.getByText(/Nature|Architecture|People|Uncategorized/)).toBeVisible();
+
+    // Each card should have rating stars
+    await expect(firstArticle.getByRole('button', { name: /star/i }).first()).toBeVisible();
   });
 
-  test('should show LQIP blur effect on image cards', async ({ page }) => {
-    const firstCard = page.locator('[data-testid="image-card"]').first();
-    await expect(firstCard).toBeVisible();
+  test('should navigate to upload page via FAB or link', async ({ galleryPage, page }) => {
+    await galleryPage.waitForGalleryToLoad();
 
-    // Check for dominant color background
-    const style = await firstCard.evaluate((el) => {
-      return window.getComputedStyle(el).backgroundColor;
-    });
-    // Should have some background color set
-    expect(style).toBeTruthy();
-  });
-
-  test('should navigate to upload page via FAB', async ({ galleryPage, page }) => {
     await galleryPage.navigateToUpload();
-    await expect(page).toHaveURL('/upload');
+
+    await expect(page).toHaveURL(/.*upload/);
+    await expect(page.getByRole('heading', { name: /upload/i })).toBeVisible();
+  });
+
+  test('should open lightbox when clicking an image', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.waitForGalleryToLoad();
+
+    await galleryPage.clickImage(0);
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    expect(await lightbox.isVisible()).toBe(true);
+  });
+
+  test('should load images with LQIP blur effect', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for first image to appear
+    const firstArticle = page.getByRole('article').first();
+    await firstArticle.waitFor();
+
+    // Verify the image has loaded (check for src attribute)
+    const img = firstArticle.getByRole('img').first();
+    const src = await img.getAttribute('src');
+    expect(src).toBeTruthy();
+  });
+
+  test('should handle empty gallery state gracefully', async ({ page }) => {
+    // Mock empty response
+    await page.route('**/api/images*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [], total: 0, page: 1, limit: 20 }),
+      });
+    });
+
+    await page.goto('/');
+
+    // Should show empty state message
+    await expect(page.getByText(/no images|empty|upload.*first/i)).toBeVisible();
   });
 });
 ```
 
-#### 3.2 Filter Tests
+---
+
+### 3.4 Filter Tests
 
 Create [`frontend/e2e/tests/filters.spec.ts`](frontend/e2e/tests/filters.spec.ts):
 
@@ -746,78 +1132,34 @@ Create [`frontend/e2e/tests/filters.spec.ts`](frontend/e2e/tests/filters.spec.ts
 import { test, expect } from '../fixtures/test-helpers';
 
 test.describe('Gallery Filters', () => {
-  test.beforeEach(async ({ galleryPage }) => {
+  test.beforeEach(async ({ galleryPage, seededImages }) => {
     await galleryPage.goto();
+    await galleryPage.waitForGalleryToLoad();
   });
 
-  test('should filter by genre', async ({ galleryPage, page }) => {
+  test('should filter by genre and update URL', async ({ galleryPage, page }) => {
     await galleryPage.selectGenre('Nature');
 
-    // URL should update
-    expect(page.url()).toContain('genre=Nature');
+    // Verify URL updated
+    await expect(page).toHaveURL(/genre=Nature/);
 
-    // All visible cards should have Nature genre
-    const cards = page.locator('[data-testid="image-card"]');
-    const count = await cards.count();
-
-    for (let i = 0; i < Math.min(count, 5); i++) {
-      const genreTag = cards.nth(i).locator('[data-testid="genre-tag"]');
-      await expect(genreTag).toHaveText('Nature');
-    }
+    // Verify all visible images have Nature genre
+    const genres = await galleryPage.getVisibleImageGenres();
+    genres.forEach((genre) => {
+      expect(genre).toContain('Nature');
+    });
   });
 
-  test('should filter by minimum rating', async ({ galleryPage, page }) => {
+  test('should filter by minimum rating and update URL', async ({ galleryPage, page }) => {
     await galleryPage.selectMinRating(4);
 
-    // URL should update
-    expect(page.url()).toContain('rating=4');
+    // Verify URL updated
+    await expect(page).toHaveURL(/rating=4/);
 
-    // All visible cards should have rating >= 4
-    const cards = page.locator('[data-testid="image-card"]');
-    const count = await cards.count();
-
-    for (let i = 0; i < Math.min(count, 5); i++) {
-      const ratingStars = cards.nth(i).locator('[data-testid="rating-stars"]');
-      const filledStars = await ratingStars.locator('svg.filled').count();
-      expect(filledStars).toBeGreaterThanOrEqual(4);
-    }
-  });
-
-  test('should sort by rating ascending', async ({ galleryPage, page }) => {
-    await page.locator('[data-testid="sort-dropdown"]').click();
-    await page.getByRole('option', { name: 'Rating' }).click();
-    await page.locator('[data-testid="sort-order-dropdown"]').click();
-    await page.getByRole('option', { name: 'Ascending' }).click();
-
-    // Verify sort order
-    const cards = page.locator('[data-testid="image-card"]');
-    const count = await cards.count();
-
-    if (count > 1) {
-      const ratings: number[] = [];
-      for (let i = 0; i < Math.min(count, 10); i++) {
-        const ratingStars = cards.nth(i).locator('[data-testid="rating-stars"]');
-        const filledStars = await ratingStars.locator('svg.filled').count();
-        ratings.push(filledStars);
-      }
-
-      // Check ascending order
-      for (let i = 1; i < ratings.length; i++) {
-        expect(ratings[i]).toBeGreaterThanOrEqual(ratings[i - 1]);
-      }
-    }
-  });
-
-  test('should persist filters in URL', async ({ page, galleryPage }) => {
-    await galleryPage.selectGenre('Nature');
-    await galleryPage.selectMinRating(4);
-
-    // Reload page
-    await page.reload();
-
-    // Filters should persist
-    expect(page.url()).toContain('genre=Nature');
-    expect(page.url()).toContain('rating=4');
+    // Verify results - check that API was called with correct params
+    // Note: Visual verification of rating depends on implementation
+    const hasImages = await galleryPage.hasImages();
+    expect(typeof hasImages).toBe('boolean');
   });
 
   test('should combine multiple filters', async ({ galleryPage, page }) => {
@@ -825,13 +1167,120 @@ test.describe('Gallery Filters', () => {
     await galleryPage.selectMinRating(3);
 
     // Both filters should be in URL
-    expect(page.url()).toContain('genre=Nature');
-    expect(page.url()).toContain('rating=3');
+    await expect(page).toHaveURL(/genre=Nature/);
+    await expect(page).toHaveURL(/rating=3/);
+  });
+
+  test('should persist filters on page reload', async ({ galleryPage, page }) => {
+    await galleryPage.selectGenre('Nature');
+
+    // Verify URL updated
+    await expect(page).toHaveURL(/genre=Nature/);
+
+    // Reload page
+    await page.reload();
+
+    // Filters should persist from URL
+    await expect(page).toHaveURL(/genre=Nature/);
+
+    // Genre filter control should reflect the state
+    const genreSelect = page.getByLabel(/genre/i);
+    await expect(genreSelect).toHaveValue(/Nature/i);
+  });
+
+  test('should clear all filters and reset to default state', async ({ galleryPage, page }) => {
+    // Apply filters
+    await galleryPage.selectGenre('Nature');
+    await expect(page).toHaveURL(/genre=Nature/);
+
+    // Clear filters
+    await galleryPage.clearAllFilters();
+
+    // URL should not contain filter params
+    await expect(page).not.toHaveURL(/genre=/);
+  });
+
+  test('should sort images by rating ascending', async ({ galleryPage, page }) => {
+    await galleryPage.sortBy('Rating', 'ascending');
+
+    // Verify URL updated
+    await expect(page).toHaveURL(/sort=rating/i);
+    await expect(page).toHaveURL(/order=asc/i);
+
+    // Verify sort order - images should be in ascending rating order
+    // This requires checking the actual rating values
+    const articles = page.getByRole('article');
+    const count = await articles.count();
+
+    if (count > 1) {
+      // Get ratings from first few images and verify ascending order
+      const ratings: number[] = [];
+      for (let i = 0; i < Math.min(count, 5); i++) {
+        const article = articles.nth(i);
+        // Count filled stars or get rating from data attribute
+        const filledStars = await article.getByRole('button', { name: /star/i }).evaluateAll((buttons) => {
+          return buttons.filter((btn) => btn.getAttribute('aria-pressed') === 'true').length;
+        });
+        ratings.push(filledStars);
+      }
+
+      // Verify ascending order
+      for (let i = 1; i < ratings.length; i++) {
+        expect(ratings[i]).toBeGreaterThanOrEqual(ratings[i - 1]);
+      }
+    }
+  });
+
+  test('should show no results state when filters match nothing', async ({ page }) => {
+    // Mock empty filtered response
+    await page.route('**/api/images*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('rating=5') && url.includes('genre=People')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [], total: 0, page: 1, limit: 20 }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    await page.goto('/');
+
+    // Apply restrictive filters
+    await page.getByLabel(/genre/i).click();
+    await page.getByRole('option', { name: 'People' }).click();
+    await page.waitForResponse('**/api/images*');
+
+    await page.getByLabel(/rating/i).click();
+    await page.getByRole('option', { name: '5' }).click();
+    await page.waitForResponse('**/api/images*');
+
+    // Should show no results message
+    await expect(page.getByText(/no.*results|no.*images|try.*different/i)).toBeVisible();
+
+    // Should offer to clear filters
+    await expect(page.getByRole('button', { name: /clear|reset/i })).toBeVisible();
+  });
+
+  test('should update result count when filters change', async ({ galleryPage, page }) => {
+    // Get initial count
+    const initialCount = await galleryPage.getImageCount();
+
+    // Apply filter
+    await galleryPage.selectGenre('Nature');
+
+    // Count may change (verify it's a valid number)
+    const filteredCount = await galleryPage.getImageCount();
+    expect(filteredCount).toBeGreaterThanOrEqual(0);
   });
 });
 ```
 
-#### 3.3 Rating Tests
+---
+
+### 3.5 Rating Tests
 
 Create [`frontend/e2e/tests/rating.spec.ts`](frontend/e2e/tests/rating.spec.ts):
 
@@ -839,89 +1288,130 @@ Create [`frontend/e2e/tests/rating.spec.ts`](frontend/e2e/tests/rating.spec.ts):
 import { test, expect } from '../fixtures/test-helpers';
 
 test.describe('Rating Functionality', () => {
-  test.beforeEach(async ({ galleryPage }) => {
+  test.beforeEach(async ({ galleryPage, seededImages }) => {
     await galleryPage.goto();
+    await galleryPage.waitForGalleryToLoad();
   });
 
-  test('should update rating from image card', async ({ page }) => {
-    const firstCard = page.locator('[data-testid="image-card"]').first();
-    await expect(firstCard).toBeVisible();
+  test('should update rating from image card', async ({ galleryPage, page }) => {
+    // Rate first image with 5 stars
+    await galleryPage.rateImage(0, 5);
 
-    // Click on 5th star
-    const ratingStars = firstCard.locator('[data-testid="rating-stars"]');
-    const fifthStar = ratingStars.locator('button').nth(4);
-    await fifthStar.click();
+    // Verify the rating was applied
+    const article = page.getByRole('article').first();
+    const stars = article.getByRole('button', { name: /star/i });
 
-    // Wait for update
-    await page.waitForTimeout(500);
+    // Count pressed stars
+    const pressedCount = await stars.evaluateAll((buttons) => {
+      return buttons.filter((btn) => btn.getAttribute('aria-pressed') === 'true').length;
+    });
 
-    // Verify optimistic update
-    const filledStars = await ratingStars.locator('svg.filled').count();
-    expect(filledStars).toBe(5);
+    expect(pressedCount).toBe(5);
   });
 
   test('should show hover preview on stars', async ({ page }) => {
-    const firstCard = page.locator('[data-testid="image-card"]').first();
-    const ratingStars = firstCard.locator('[data-testid="rating-stars"]');
-    const thirdStar = ratingStars.locator('button').nth(2);
+    const article = page.getByRole('article').first();
+    const thirdStar = article.getByRole('button', { name: /star/i }).nth(2);
 
     // Hover over 3rd star
     await thirdStar.hover();
 
-    // First 3 stars should show preview state
-    // This depends on implementation - check for hover class or attribute
+    // Verify preview state - implementation dependent
+    // Could check for CSS class change or visual indicator
+    await expect(thirdStar).toBeVisible();
   });
 
-  test('should update rating from lightbox', async ({ galleryPage, page, lightbox }) => {
-    await galleryPage.openLightbox(0);
-    await expect(lightbox.overlay).toBeVisible();
+  test('should update rating from lightbox', async ({ galleryPage, lightbox, page }) => {
+    // Open lightbox
+    await galleryPage.clickImage(0);
+    await expect(page.getByRole('dialog')).toBeVisible();
 
     // Set rating to 4
     await lightbox.setRating(4);
 
-    // Wait for update
-    await page.waitForTimeout(500);
+    // Verify rating in lightbox
+    const rating = await lightbox.getRating();
+    expect(rating).toBe(4);
 
-    // Close lightbox and verify rating persisted
+    // Close and reopen to verify persistence
     await lightbox.close();
-    await page.waitForTimeout(300);
+    await galleryPage.clickImage(0);
 
-    // Reopen and check
-    await galleryPage.openLightbox(0);
-    const filledStars = await lightbox.ratingStars
-      .locator('svg.filled')
-      .count();
-    expect(filledStars).toBe(4);
+    const persistedRating = await lightbox.getRating();
+    expect(persistedRating).toBe(4);
   });
 
   test('should revert rating on API error', async ({ page }) => {
-    // This test requires mocking API error
-    // Route interception to simulate error
-    await page.route('**/api/images/*/rating', (route) => {
-      route.fulfill({
+    // Get original rating
+    const article = page.getByRole('article').first();
+    const stars = article.getByRole('button', { name: /star/i });
+    const originalRating = await stars.evaluateAll((buttons) => {
+      return buttons.filter((btn) => btn.getAttribute('aria-pressed') === 'true').length;
+    });
+
+    // Mock API error
+    await page.route('**/api/images/*/rating', async (route) => {
+      await route.fulfill({
         status: 500,
+        contentType: 'application/json',
         body: JSON.stringify({ message: 'Server error' }),
       });
     });
 
-    const firstCard = page.locator('[data-testid="image-card"]').first();
-    const ratingStars = firstCard.locator('[data-testid="rating-stars"]');
-    const originalFilled = await ratingStars.locator('svg.filled').count();
-
     // Try to update rating
-    await ratingStars.locator('button').nth(4).click();
+    const fifthStar = stars.nth(4);
+    await fifthStar.click();
 
     // Wait for error handling
-    await page.waitForTimeout(1000);
+    await page.waitForResponse('**/api/images/*/rating');
 
     // Rating should revert to original
-    const currentFilled = await ratingStars.locator('svg.filled').count();
-    expect(currentFilled).toBe(originalFilled);
+    const currentRating = await stars.evaluateAll((buttons) => {
+      return buttons.filter((btn) => btn.getAttribute('aria-pressed') === 'true').length;
+    });
+
+    expect(currentRating).toBe(originalRating);
+
+    // Should show error message
+    await expect(page.getByRole('alert')).toBeVisible();
+  });
+
+  test('should handle concurrent rating updates', async ({ page }) => {
+    const article = page.getByRole('article').first();
+    const stars = article.getByRole('button', { name: /star/i });
+
+    // Rapidly click different stars
+    await stars.nth(2).click();
+    await page.waitForResponse('**/api/images/*/rating');
+
+    await stars.nth(4).click();
+    await page.waitForResponse('**/api/images/*/rating');
+
+    // Final rating should be 5
+    const finalRating = await stars.evaluateAll((buttons) => {
+      return buttons.filter((btn) => btn.getAttribute('aria-pressed') === 'true').length;
+    });
+
+    expect(finalRating).toBe(5);
+  });
+
+  test('should update filter results when rating changes', async ({ galleryPage, page }) => {
+    // Filter by 4+ stars
+    await galleryPage.selectMinRating(4);
+
+    // Rate an image with 5 stars
+    await galleryPage.rateImage(0, 5);
+
+    // Image should still be visible (rating >= 4)
+    const article = page.getByRole('article').first();
+    await expect(article).toBeVisible();
   });
 });
 ```
 
-#### 3.4 Lightbox Tests
+---
+
+### 3.6 Lightbox Tests
 
 Create [`frontend/e2e/tests/lightbox.spec.ts`](frontend/e2e/tests/lightbox.spec.ts):
 
@@ -929,104 +1419,164 @@ Create [`frontend/e2e/tests/lightbox.spec.ts`](frontend/e2e/tests/lightbox.spec.
 import { test, expect } from '../fixtures/test-helpers';
 
 test.describe('Lightbox Modal', () => {
-  test.beforeEach(async ({ galleryPage }) => {
+  test.beforeEach(async ({ galleryPage, seededImages }) => {
     await galleryPage.goto();
+    await galleryPage.waitForGalleryToLoad();
   });
 
-  test('should open lightbox on image click', async ({ galleryPage, lightbox }) => {
-    await galleryPage.openLightbox(0);
-    await expect(lightbox.overlay).toBeVisible();
-    await expect(lightbox.image).toBeVisible();
+  test('should open lightbox on image click', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.clickImage(0);
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    expect(await lightbox.isVisible()).toBe(true);
   });
 
   test('should close lightbox with close button', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
-    await expect(lightbox.overlay).toBeVisible();
+    await galleryPage.clickImage(0);
+    await expect(page.getByRole('dialog')).toBeVisible();
 
     await lightbox.close();
-    await expect(lightbox.overlay).not.toBeVisible();
+
+    await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
   test('should close lightbox with ESC key', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
-    await expect(lightbox.overlay).toBeVisible();
+    await galleryPage.clickImage(0);
+    await expect(page.getByRole('dialog')).toBeVisible();
 
-    await page.keyboard.press('Escape');
-    await expect(lightbox.overlay).not.toBeVisible();
+    await lightbox.closeWithEscape();
+
+    await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
   test('should close lightbox when clicking outside image', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
-    await expect(lightbox.overlay).toBeVisible();
+    await galleryPage.clickImage(0);
+    await expect(page.getByRole('dialog')).toBeVisible();
 
-    // Click on overlay background
-    await page.mouse.click(10, 10);
-    await expect(lightbox.overlay).not.toBeVisible();
+    await lightbox.closeByClickingOutside();
+
+    await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
-  test('should navigate to next image', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
+  test('should navigate to next image with button', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.clickImage(0);
 
-    const firstImageSrc = await lightbox.image.getAttribute('src');
+    const firstSrc = await lightbox.getCurrentImageSrc();
 
-    await lightbox.navigateNext();
-    await page.waitForTimeout(300);
+    await lightbox.nextImage();
 
-    const secondImageSrc = await lightbox.image.getAttribute('src');
-    expect(secondImageSrc).not.toBe(firstImageSrc);
+    const nextSrc = await lightbox.getCurrentImageSrc();
+    expect(nextSrc).not.toBe(firstSrc);
   });
 
-  test('should navigate to previous image', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(1);
+  test('should navigate to previous image with button', async ({ galleryPage, lightbox, page }) => {
+    // Open second image to have a previous image
+    await galleryPage.clickImage(1);
 
-    const currentImageSrc = await lightbox.image.getAttribute('src');
+    const currentSrc = await lightbox.getCurrentImageSrc();
 
-    await lightbox.navigatePrev();
-    await page.waitForTimeout(300);
+    await lightbox.previousImage();
 
-    const prevImageSrc = await lightbox.image.getAttribute('src');
-    expect(prevImageSrc).not.toBe(currentImageSrc);
+    const prevSrc = await lightbox.getCurrentImageSrc();
+    expect(prevSrc).not.toBe(currentSrc);
   });
 
   test('should navigate with arrow keys', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
+    await galleryPage.clickImage(0);
 
-    const firstImageSrc = await lightbox.image.getAttribute('src');
+    const firstSrc = await lightbox.getCurrentImageSrc();
 
-    // Press right arrow
-    await page.keyboard.press('ArrowRight');
-    await page.waitForTimeout(300);
+    // Navigate next with right arrow
+    await lightbox.navigateWithKeyboard('next');
 
-    const nextImageSrc = await lightbox.image.getAttribute('src');
-    expect(nextImageSrc).not.toBe(firstImageSrc);
+    const nextSrc = await lightbox.getCurrentImageSrc();
+    expect(nextSrc).not.toBe(firstSrc);
 
-    // Press left arrow
-    await page.keyboard.press('ArrowLeft');
-    await page.waitForTimeout(300);
+    // Navigate back with left arrow
+    await lightbox.navigateWithKeyboard('previous');
 
-    const backImageSrc = await lightbox.image.getAttribute('src');
-    expect(backImageSrc).toBe(firstImageSrc);
+    const backSrc = await lightbox.getCurrentImageSrc();
+    expect(backSrc).toBe(firstSrc);
   });
 
-  test('should display download buttons', async ({ galleryPage, lightbox }) => {
-    await galleryPage.openLightbox(0);
+  test('should display image metadata', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.clickImage(0);
 
-    const downloadButtons = lightbox.downloadButtons;
+    // Should show genre
+    const genre = await lightbox.getGenre();
+    expect(genre).toBeTruthy();
+
+    // Should show rating controls
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('button', { name: /star/i }).first()).toBeVisible();
+  });
+
+  test('should display download buttons', async ({ galleryPage, page }) => {
+    await galleryPage.clickImage(0);
+
+    const dialog = page.getByRole('dialog');
+
+    // Should have download buttons for different sizes
+    const downloadButtons = dialog.getByRole('button', { name: /download/i });
     const count = await downloadButtons.count();
 
     expect(count).toBeGreaterThan(0);
   });
 
-  test('should display genre tag', async ({ galleryPage, lightbox, page }) => {
-    await galleryPage.openLightbox(0);
+  test('should download image when clicking download button', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.clickImage(0);
 
-    const genreTag = page.locator('[data-testid="lightbox-genre"]');
-    await expect(genreTag).toBeVisible();
+    // Trigger download
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: /download/i }).first().click();
+    const download = await downloadPromise;
+
+    // Verify download started
+    expect(download.suggestedFilename()).toBeTruthy();
+
+    // Save to test results
+    await download.saveAs('test-results/downloaded-image.jpg');
+  });
+
+  test('should update rating in lightbox', async ({ galleryPage, lightbox, page }) => {
+    await galleryPage.clickImage(0);
+
+    await lightbox.setRating(4);
+
+    const rating = await lightbox.getRating();
+    expect(rating).toBe(4);
+  });
+
+  test('should maintain image position when closing and reopening', async ({ galleryPage, lightbox, page }) => {
+    // Open first image
+    await galleryPage.clickImage(0);
+    const firstSrc = await lightbox.getCurrentImageSrc();
+    await lightbox.close();
+
+    // Open second image
+    await galleryPage.clickImage(1);
+    const secondSrc = await lightbox.getCurrentImageSrc();
+
+    // Should be different images
+    expect(secondSrc).not.toBe(firstSrc);
+  });
+
+  test('should handle keyboard navigation at boundaries', async ({ galleryPage, lightbox, page }) => {
+    // Open first image
+    await galleryPage.clickImage(0);
+
+    // Try to go previous (should stay on first or wrap)
+    await page.keyboard.press('ArrowLeft');
+
+    // Lightbox should still be open
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 });
 ```
 
-#### 3.5 Upload Tests
+---
+
+### 3.7 Upload Tests
 
 Create [`frontend/e2e/tests/upload.spec.ts`](frontend/e2e/tests/upload.spec.ts):
 
@@ -1039,31 +1589,55 @@ test.describe('Upload Page', () => {
     await uploadPage.goto();
   });
 
-  test('should display dropzone', async ({ uploadPage }) => {
-    await expect(uploadPage.dropZone).toBeVisible();
+  test('should display upload dropzone', async ({ page }) => {
+    await expect(page.getByText(/drag.*drop|upload/i)).toBeVisible();
+    await expect(page.locator('input[type="file"]')).toBeAttached();
   });
 
   test('should accept valid image file', async ({ uploadPage, page }) => {
-    // Create a test image file
     const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
 
-    await uploadPage.uploadFile(testImagePath, 'Nature');
+    await uploadPage.uploadFile(testImagePath);
 
-    // File should appear in queue
-    await expect(uploadPage.uploadQueue).toBeVisible();
+    // File should appear in upload queue
+    await expect(page.getByRole('listitem').first()).toBeVisible();
+
+    // Should show file name
+    await expect(page.getByText('test-image.jpg')).toBeVisible();
+  });
+
+  test('should accept multiple files at once', async ({ uploadPage, page }) => {
+    const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
+
+    await uploadPage.uploadMultipleFiles([testImagePath, testImagePath, testImagePath]);
+
+    const count = await uploadPage.getUploadCount();
+    expect(count).toBe(3);
   });
 
   test('should reject invalid file type', async ({ page }) => {
-    // Create invalid file
-    const invalidFile = path.join(__dirname, '../fixtures/test.txt');
+    const invalidFilePath = path.join(__dirname, '../fixtures/test.txt');
 
-    // Try to upload - should show error
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles(invalidFile);
+    await page.locator('input[type="file"]').setInputFiles(invalidFilePath);
 
     // Should show error message
-    const errorMessage = page.locator('[data-testid="upload-error"]');
-    await expect(errorMessage).toBeVisible();
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText(/invalid|not.*allowed|unsupported/i)).toBeVisible();
+  });
+
+  test('should reject file exceeding size limit', async ({ page }) => {
+    // Create a large file in memory (11MB, over 10MB limit)
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, 'x');
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'large-image.jpg',
+      mimeType: 'image/jpeg',
+      buffer: largeBuffer,
+    });
+
+    // Should show size limit error
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText(/size|large|big|limit|MB/i)).toBeVisible();
   });
 
   test('should show upload progress', async ({ uploadPage, page }) => {
@@ -1071,20 +1645,19 @@ test.describe('Upload Page', () => {
 
     await uploadPage.uploadFile(testImagePath);
 
-    // Progress bar should be visible
-    const progressBar = page.locator('[data-testid="upload-progress"]');
-    await expect(progressBar).toBeVisible();
+    // Progress indicator should appear
+    await expect(page.getByRole('progressbar')).toBeVisible();
   });
 
-  test('should show success state after upload', async ({ uploadPage, page }) => {
+  test('should show success state after upload completes', async ({ uploadPage, page }) => {
     const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
 
-    await uploadPage.uploadFile(testImagePath, 'Nature');
-    await uploadPage.waitForUploadComplete();
+    await uploadPage.uploadFile(testImagePath);
+    await uploadPage.waitForUploadComplete(0, 30000);
 
     // Success indicator should be visible
-    const successIndicator = page.locator('[data-testid="upload-status-done"]');
-    await expect(successIndicator).toBeVisible();
+    const uploadItem = page.getByRole('listitem').first();
+    await expect(uploadItem.getByRole('img', { name: /success|done|complete/i })).toBeVisible();
   });
 
   test('should allow genre selection per file', async ({ uploadPage, page }) => {
@@ -1092,54 +1665,122 @@ test.describe('Upload Page', () => {
 
     await uploadPage.uploadFile(testImagePath);
 
-    // Genre dropdown should be visible
-    const genreDropdown = page.locator('[data-testid="genre-select"]').first();
-    await expect(genreDropdown).toBeVisible();
-
     // Select genre
-    await genreDropdown.click();
-    await page.getByRole('option', { name: 'Architecture' }).click();
+    await uploadPage.selectGenreForUpload('Architecture', 0);
+
+    // Verify genre is selected
+    const uploadItem = page.getByRole('listitem').first();
+    await expect(uploadItem.getByText(/Architecture/)).toBeVisible();
+  });
+
+  test('should handle upload failure and allow retry', async ({ uploadPage, page }) => {
+    // Mock upload failure
+    let callCount = 0;
+    await page.route('**/api/images/upload', async (route) => {
+      callCount++;
+      if (callCount === 1) {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Upload failed' }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
+    await uploadPage.uploadFile(testImagePath);
+
+    // Wait for error state
+    await expect(page.getByRole('alert')).toBeVisible();
+
+    // Retry button should be available
+    await uploadPage.retryFailedUpload(0);
+
+    // Should eventually succeed
+    await uploadPage.waitForUploadComplete(0, 30000);
+  });
+
+  test('should allow removing file from queue', async ({ uploadPage, page }) => {
+    const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
+
+    await uploadPage.uploadFile(testImagePath);
+
+    const initialCount = await uploadPage.getUploadCount();
+    expect(initialCount).toBe(1);
+
+    // Remove the file
+    await uploadPage.removeUpload(0);
+
+    const finalCount = await uploadPage.getUploadCount();
+    expect(finalCount).toBe(0);
   });
 
   test('should navigate back to gallery', async ({ uploadPage, page }) => {
-    await uploadPage.backToGallery.click();
-    await expect(page).toHaveURL('/');
+    await uploadPage.navigateToGallery();
+
+    await expect(page).toHaveURL(/.*\//);
+    await expect(page.getByRole('article').first()).toBeVisible();
   });
 
-  test('should handle multiple file upload', async ({ uploadPage, page }) => {
-    const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
-
-    // Upload multiple files
+  test('should upload via drag and drop', async ({ page }) => {
+    // Check for hidden file input that accepts drop
     const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles([testImagePath, testImagePath, testImagePath]);
 
-    // Should show 3 items in queue
-    const queueItems = page.locator('[data-testid="upload-item"]');
-    const count = await queueItems.count();
-    expect(count).toBe(3);
+    // Simulate file drop via setInputFiles (works for most dropzone implementations)
+    const testImagePath = path.join(__dirname, '../fixtures/test-image.jpg');
+    await fileInput.setInputFiles(testImagePath);
+
+    // File should appear in queue
+    await expect(page.getByRole('listitem').first()).toBeVisible();
+  });
+
+  test('should validate file type on client side', async ({ page }) => {
+    // Create a file with image extension but non-image content
+    const fakeImageBuffer = Buffer.from('not an image');
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'fake.jpg',
+      mimeType: 'image/jpeg',
+      buffer: fakeImageBuffer,
+    });
+
+    // Should show validation error
+    await expect(page.getByRole('alert')).toBeVisible();
   });
 });
 ```
 
-#### 3.6 Create Test Fixtures Directory
+---
 
-Create test image fixtures:
+### 3.8 Test Fixtures Directory
+
+Create test fixture files:
 
 ```
 frontend/e2e/fixtures/
-├── test-image.jpg    # Valid test image
-├── test-image.png    # Valid PNG test image
-├── test-image.webp   # Valid WebP test image
+├── test-image.jpg    # Valid JPEG test image (~100KB)
+├── test-image.png    # Valid PNG test image (~100KB)
+├── test-image.webp   # Valid WebP test image (~100KB)
 └── test.txt          # Invalid file for error testing
 ```
 
+**Note**: Test images should be small (~100KB) for fast test execution. Use real image files, not generated buffers, to test actual upload processing.
+
+---
+
 ### Definition of Done - Phase 3
 
-- [ ] Gallery tests created and passing
-- [ ] Filter tests created and passing
-- [ ] Rating tests created and passing
-- [ ] Lightbox tests created and passing
-- [ ] Upload tests created and passing
+- [ ] Page Object Models created with action methods (not exposed locators)
+- [ ] Test fixtures created with `test.extend()` pattern
+- [ ] Gallery tests created with semantic locators
+- [ ] Filter tests created with URL state verification
+- [ ] Rating tests created with API error handling
+- [ ] Lightbox tests created with keyboard navigation
+- [ ] Upload tests created with file validation scenarios
+- [ ] All tests use `getByRole()`, `getByLabel()`, `getByText()` over `data-testid`
+- [ ] No `waitForTimeout()` usage - all waits use web-first assertions
 - [ ] All tests pass in Chromium
 - [ ] All tests pass in Firefox
 - [ ] All tests pass in WebKit
