@@ -14,7 +14,7 @@ export class GalleryPage {
     this.page = page;
     this.header = page.locator('header');
     this.galleryGrid = page.locator('[data-testid="gallery-grid"]');
-    this.imageCards = page.locator('[data-testid="image-card"]');
+    this.imageCards = page.locator('[data-testid^="image-card-"]');
     this.genreFilter = page.locator('[data-testid="genre-filter"]');
     this.ratingFilter = page.locator('[data-testid="rating-filter"]');
     this.sortDropdown = page.locator('[data-testid="sort-dropdown"]');

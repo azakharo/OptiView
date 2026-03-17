@@ -5,8 +5,10 @@ test.describe('Gallery Page', () => {
     await galleryPage.goto();
   });
 
-  test('should display gallery grid with images', async ({ galleryPage }) => {
+  test('should display gallery grid with images', async ({ galleryPage, page }) => {
     await expect(galleryPage.galleryGrid).toBeVisible();
+    // Wait for images to load
+    await page.waitForSelector('[data-testid^="image-card-"]', { state: 'visible' });
     const cardCount = await galleryPage.imageCards.count();
     expect(cardCount).toBeGreaterThan(0);
   });
