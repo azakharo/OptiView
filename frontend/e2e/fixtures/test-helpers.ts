@@ -60,6 +60,43 @@ export const test = base.extend<TestFixtures>({
 });
 
 /**
+ * Custom matchers for URL parameter testing.
+ * Handles URL-encoded values from state-in-url library.
+ *
+ * Usage:
+ *   await expect(page).toHaveURL(urlMatcher({ genre: 'Nature' }));
+ *   await expect(page).toHaveURL(urlMatcher({ rating: 4, sort: 'createdAt' }));
+ */
+export function urlMatcher(params: Record<string, string | number | undefined>): RegExp {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      // The state-in-url library wraps string values in quotes (e.g., 'Nature')
+      // This is then URL-encoded (%27Nature%27)
+      // We need to match the encoded version
+      if (typeof value === 'string') {
+        // Encode the quoted string: 'Nature' -> '%27Nature%27'
+        searchParams.append(key, `'${value}'`);
+      } else {
+        // Numbers are not quoted in JSON, so no encoding needed
+        searchParams.append(key, value.toString());
+      }
+    }
+  }
+
+  // Build a regex that matches the URL with these encoded parameters
+  const queryString = searchParams.toString();
+  if (!queryString) {
+    return /./; // Match anything if no params
+  }
+
+  // Escape special regex characters in the query string
+  const escapedParams = queryString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escapedParams);
+}
+
+/**
  * Export expect for use in test files.
  */
 export {expect, type Page};

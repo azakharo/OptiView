@@ -1,5 +1,6 @@
 import {test, expect} from '@playwright/test';
 import {GalleryPage} from '../pages/gallery-page';
+import {urlMatcher} from '../fixtures/test-helpers';
 
 test.describe('Filter Functionality', () => {
   test.beforeEach(async ({page}) => {
@@ -20,8 +21,8 @@ test.describe('Filter Functionality', () => {
     // Select a genre filter
     await galleryPage.selectGenre('Nature');
 
-    // Verify URL was updated with genre parameter
-    await expect(page).toHaveURL(/genre=Nature/);
+    // Verify URL was updated with genre parameter (URL-encoded)
+    await expect(page).toHaveURL(urlMatcher({genre: 'Nature'}));
 
     // Verify filtered results
     const genres = await galleryPage.getVisibleImageGenres();
@@ -43,8 +44,8 @@ test.describe('Filter Functionality', () => {
     // Select minimum rating filter
     await galleryPage.selectMinRating(4);
 
-    // Verify URL was updated with rating parameter
-    await expect(page).toHaveURL(/rating=4/);
+    // Verify URL was updated with rating parameter (URL-encoded)
+    await expect(page).toHaveURL(urlMatcher({rating: 4}));
 
     // Verify filtered results have rating >= 4
     // (This would require more complex DOM inspection or API testing)
@@ -63,9 +64,9 @@ test.describe('Filter Functionality', () => {
     // Apply rating filter
     await galleryPage.selectMinRating(3);
 
-    // Verify both filters are in URL
-    await expect(page).toHaveURL(/genre=Nature/);
-    await expect(page).toHaveURL(/rating=3/);
+    // Verify both filters are in URL (URL-encoded)
+    await expect(page).toHaveURL(urlMatcher({genre: 'Nature'}));
+    await expect(page).toHaveURL(urlMatcher({rating: 3}));
   });
 
   test('should persist filters on page reload', async ({page}) => {
@@ -109,18 +110,18 @@ test.describe('Filter Functionality', () => {
     const initialCount = await galleryPage.getImageCount();
     test.skip(initialCount === 0, 'No images to test sorting');
 
-    // Sort by newest first
-    await galleryPage.sortBy('createdAt', 'DESC');
+    // Sort by oldest first (non-default: ASC instead of DESC)
+    // Note: 'createdAt' is default sort field, so only sortOrder appears in URL
+    await galleryPage.sortBy('createdAt', 'ASC');
 
-    // Verify URL was updated
-    await expect(page).toHaveURL(/sort=createdAt/);
-    await expect(page).toHaveURL(/sortOrder=DESC/);
+    // Verify URL was updated with non-default sortOrder (URL-encoded)
+    await expect(page).toHaveURL(urlMatcher({sortOrder: 'ASC'}));
 
-    // Sort by rating highest
+    // Sort by rating highest (non-default sort field)
     await galleryPage.sortBy('rating', 'DESC');
 
-    // Verify URL was updated
-    await expect(page).toHaveURL(/sort=rating/);
+    // Verify URL was updated with non-default sort field (URL-encoded)
+    await expect(page).toHaveURL(urlMatcher({sort: 'rating'}));
   });
 
   test('should show no results state when filters match nothing', async ({page}) => {
