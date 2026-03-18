@@ -42,7 +42,7 @@ interface UseFiltersReturn {
 }
 
 export function useFilters(): UseFiltersReturn {
-  const {urlState, setUrl, reset} = useUrlState(defaultFilters, {
+  const {urlState, setUrl} = useUrlState(defaultFilters, {
     replace: true, // Don't create history entries for filter changes
   });
 
@@ -69,7 +69,7 @@ export function useFilters(): UseFiltersReturn {
     setSortOrder,
     setPage,
     setPageSize,
-    // Reset
-    resetFilters: () => reset({replace: true}),
+    // Reset - use setUrl to clear both state AND URL parameters
+    resetFilters: () => setUrl((_curr, initial) => initial),
   };
 }
