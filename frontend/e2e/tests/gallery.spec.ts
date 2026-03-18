@@ -123,23 +123,25 @@ test.describe('Gallery Page', () => {
   });
 
   test('should display error state on API failure', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
+    // Mock the API to return an error response
+    await page.route('**/localhost:3000/api/images*', async route => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 500,
+          message: 'Internal server error',
+          error: 'Internal Server Error',
+        }),
+      });
+    });
 
-    // Navigate to gallery
+    const galleryPage = new GalleryPage(page);
     await galleryPage.goto();
 
-    // The error state would show if the API fails
-    // We can't easily trigger an error in normal tests, but we verify
-    // the error state element exists in the component
-    await galleryPage.waitForGalleryToLoad();
-
-    // Either images load or we see empty state, not error state in normal flow
-    const hasImages = await galleryPage.hasImages();
-    const emptyVisible = await galleryPage.emptyState.isVisible();
-    const errorVisible = await galleryPage.errorState.isVisible();
-
-    // At least one of these should be true
-    expect(hasImages || emptyVisible || errorVisible).toBe(true);
+    // Verify error state is shown
+    await expect(galleryPage.errorState).toBeVisible();
+    expect(await galleryPage.getImageCount()).toBe(0);
   });
 
   test('should show FAB for uploading', async ({page}) => {

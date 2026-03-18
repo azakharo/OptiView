@@ -31,7 +31,7 @@ export class GalleryPage {
     this.galleryGrid = page.locator('[data-testid="gallery-grid"]');
 
     // Empty state - shown when no images match filters
-    this.emptyState = page.locator('[data-testid="empty-gallery-state"]');
+    this.emptyState = page.getByText('No images found');
 
     // Error state - shown when API fails
     this.errorState = page.getByText('Error loading images');

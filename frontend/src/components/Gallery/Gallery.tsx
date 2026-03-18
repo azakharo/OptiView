@@ -30,7 +30,10 @@ export function Gallery({onImageClick, onRatingChange}: GalleryProps) {
 
   if (isError) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center text-red-500">
+      <div
+        data-testid="error-gallery-state"
+        className="flex min-h-[400px] flex-col items-center justify-center text-red-500"
+      >
         <p className="text-lg font-medium">Error loading images</p>
         <p className="text-sm text-gray-500">
           {error?.message || 'Unknown error'}
