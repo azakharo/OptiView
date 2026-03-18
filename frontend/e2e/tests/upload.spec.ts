@@ -83,7 +83,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Get progress
     const progress = await uploadPage.getUploadProgress(0);
@@ -97,7 +97,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Click upload button
     await uploadPage.clickUploadAll();
@@ -113,7 +113,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Select genre
     await uploadPage.selectGenreForUpload('Nature', 0);
@@ -135,7 +135,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Verify file is in queue
     let uploadCount = await uploadPage.getUploadCount();
@@ -177,7 +177,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Try uploading invalid file type
-    await uploadPage.uploadFile('./e2e/fixtures/test.txt');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test.txt');
 
     // Error alert should appear
     const errorAlert = page.locator('[role="alert"]');
@@ -199,7 +199,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file first
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Check genre select options
     const uploadItems = page.locator('[data-testid^="upload-item-"]');
@@ -225,7 +225,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Get filename
     const filename = await uploadPage.getUploadFilename(0);
@@ -239,7 +239,7 @@ test.describe('Upload Page', () => {
     const galleryPage = new GalleryPage(page);
 
     // Add files
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Select genre
     await uploadPage.selectGenreForUpload('Nature', 0);
@@ -268,7 +268,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Add a file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Click upload
     await uploadPage.clickUploadAll();
