@@ -11,7 +11,7 @@ export default defineConfig({
     ['json', { outputFile: 'test-results/test-results.json' }] // Для глубокого анализа агентом
   ],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -38,10 +38,9 @@ export default defineConfig({
     // },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: false, // !process.env.CI,
+    url: 'http://localhost:4173',
+    reuseExistingServer: true, // !process.env.CI,
     timeout: 10 * 1000,
   },
-  timeout: 10000, // just for easy debugging
+  timeout: 5000, // just for easy debugging
 });
