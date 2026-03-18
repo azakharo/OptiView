@@ -1,3 +1,9 @@
 @import "tailwindcss";
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
+
+/* Move agentation to diff pos  */
+[data-feedback-toolbar] {
+  bottom: auto !important;
+  top: 64px !important;
+}

@@ -24,6 +24,7 @@ export function FAB() {
 
   return (
     <Button
+      data-testid="fab-upload"
       className="fixed right-6 bottom-6 h-14 w-14 rounded-full p-0 shadow-lg transition-transform hover:scale-105"
       color="blue"
       onClick={() => void navigate('/upload')}
