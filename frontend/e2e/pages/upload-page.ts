@@ -65,11 +65,24 @@ export class UploadPage {
   }
 
   /**
-   * Upload a single file.
+   * Add a file to the upload queue (without starting upload).
+   * @param filePath - Absolute or relative path to the file
+   */
+  async addFileToQueue(filePath: string): Promise<void> {
+    await this.dropZoneInput.setInputFiles(filePath);
+    // Wait for React to process the file and add to queue
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Upload a single file and wait for completion.
+   * This adds the file to queue and starts the upload process.
    * @param filePath - Absolute or relative path to the file
    */
   async uploadFile(filePath: string): Promise<void> {
     await this.dropZoneInput.setInputFiles(filePath);
+    // Click Upload All to start the upload
+    await this.clickUploadAll();
     await this.waitForUploadComplete(0);
   }
 
@@ -148,8 +161,12 @@ export class UploadPage {
    * Get the count of items in the upload queue.
    */
   async getUploadCount(): Promise<number> {
-    const uploadItems = this.page.locator('[data-testid^="upload-item-"]');
-    return uploadItems.count();
+    // Wait for upload items to appear in the DOM
+    await this.page.waitForSelector('button:has-text("Remove")', {state: 'visible'}).catch(() => {});
+    // Use a more reliable selector - find buttons with "Remove" text
+    // Each upload item has a Remove button
+    const removeButtons = this.page.locator('button:has-text("Remove")');
+    return removeButtons.count();
   }
 
   /**

@@ -18,8 +18,8 @@ test.describe('Upload Page', () => {
   test('should accept valid image file', async ({page}) => {
     const uploadPage = new UploadPage(page);
 
-    // Upload a valid image file
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    // Add a valid image file to the queue
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // Verify file appears in upload queue
     const uploadCount = await uploadPage.getUploadCount();
@@ -46,8 +46,8 @@ test.describe('Upload Page', () => {
   test('should reject invalid file type', async ({page}) => {
     const uploadPage = new UploadPage(page);
 
-    // Try to upload a non-image file
-    await uploadPage.uploadFile('./e2e/fixtures/test.txt');
+    // Try to add a non-image file (client-side validation)
+    await uploadPage.addFileToQueue('./e2e/fixtures/test.txt');
 
     // Verify error alert appears
     const errorAlert = page.locator('[role="alert"]');
