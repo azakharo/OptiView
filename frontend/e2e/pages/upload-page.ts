@@ -244,11 +244,14 @@ export class UploadPage {
    * @param index - Index of the upload item (zero-based)
    */
   async getUploadProgress(index: number): Promise<number> {
-    const uploadItems = this.page.locator('[data-testid^="upload-item-"]');
+    // Find upload items by the progress bar container
+    const uploadItems = this.page.locator('[role="progressbar"]').locator('..').locator('..').locator('..');
     const item = uploadItems.nth(index);
 
-    const progressText = item.locator('[class*="text-gray-500"]').last();
-    const text = await progressText.textContent();
+    // Look for the percentage text next to progress bar (e.g., "0%", "50%", "100%")
+    const progressContainer = item.locator('[role="progressbar"]').locator('..');
+    const progressText = progressContainer.locator('*').filter({hasText: /^\d+%$/}).first();
+    const text = await progressText.textContent({timeout: 5000});
     const match = text?.match(/(\d+)%/);
     return match ? parseInt(match[1], 10) : 0;
   }

@@ -82,8 +82,14 @@ test.describe('Upload Page', () => {
   test('should show upload progress', async ({page}) => {
     const uploadPage = new UploadPage(page);
 
-    // Add a file
+    // Add a file to queue
     await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
+
+    // Start the upload
+    await uploadPage.clickUploadAll();
+
+    // Wait for upload to start and progress to update
+    await page.waitForTimeout(500);
 
     // Get progress
     const progress = await uploadPage.getUploadProgress(0);

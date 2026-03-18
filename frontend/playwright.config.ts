@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false, // true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  forbidOnly: false, // !!process.env.CI,
+  retries: 0, // process.env.CI ? 2 : 0,
   workers: 1, // process.env.CI ? 1 : undefined,
   reporter: [
     ['list'],                                                  // Для удобства чтения человеком
@@ -43,5 +43,5 @@ export default defineConfig({
     reuseExistingServer: false, // !process.env.CI,
     timeout: 10 * 1000,
   },
-  timeout: process.env.CI ? undefined : 5000, // just for easy debugging
+  // timeout: 5000, // just for easy debugging
 });
