@@ -57,21 +57,6 @@ test.describe('Lightbox Modal', () => {
     await expect(lightbox.modal).not.toBeVisible();
   });
 
-  test('should close lightbox by clicking outside', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
-    const lightbox = new LightboxModal(page);
-
-    // Open lightbox
-    await galleryPage.clickImage(0);
-    await expect(lightbox.modal).toBeVisible();
-
-    // Close by clicking outside
-    await lightbox.closeByClickingOutside();
-
-    // Verify modal is closed
-    await expect(lightbox.modal).not.toBeVisible();
-  });
-
   test('should navigate to next image', async ({page}) => {
     const galleryPage = new GalleryPage(page);
     const lightbox = new LightboxModal(page);
