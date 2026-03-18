@@ -67,18 +67,30 @@ test.describe('Gallery Page', () => {
   test.skip('should load images with LQIP (low-quality image placeholder)', () => {});
 
   test('should handle empty gallery state', async ({page}) => {
+    // Mock the API to return empty list
+    // The API client uses http://localhost:3000 as base URL (see src/api/client.ts)
+    await page.route('**/localhost:3000/api/images*', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [],
+          pagination: {
+            currentPage: 1,
+            totalPages: 0,
+            totalItems: 0,
+            pageSize: 20,
+          },
+        }),
+      });
+    });
+
     const galleryPage = new GalleryPage(page);
-
-    // Navigate to gallery - it may or may not have images
     await galleryPage.goto();
-    await galleryPage.waitForGalleryToLoad();
 
-    // Either we have images or we have empty state
-    const hasImages = await galleryPage.hasImages();
-    const emptyVisible = await galleryPage.emptyState.isVisible();
-
-    // Verify at least one state is shown
-    expect(hasImages || emptyVisible).toBe(true);
+    // Verify empty state is shown
+    await expect(galleryPage.emptyState).toBeVisible();
+    expect(await galleryPage.getImageCount()).toBe(0);
   });
 
   test('should display header with filters', async ({page}) => {

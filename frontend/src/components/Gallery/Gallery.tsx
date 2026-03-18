@@ -46,7 +46,10 @@ export function Gallery({onImageClick, onRatingChange}: GalleryProps) {
 
   if (!items?.length) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center text-gray-500">
+      <div
+        data-testid="empty-gallery-state"
+        className="flex min-h-[400px] flex-col items-center justify-center text-gray-500"
+      >
         <p className="text-lg font-medium">No images found</p>
         <p className="text-sm">
           Try adjusting your filters or upload some images

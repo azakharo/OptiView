@@ -31,7 +31,7 @@ export class GalleryPage {
     this.galleryGrid = page.locator('[data-testid="gallery-grid"]');
 
     // Empty state - shown when no images match filters
-    this.emptyState = page.getByText('No images found');
+    this.emptyState = page.locator('[data-testid="empty-gallery-state"]');
 
     // Error state - shown when API fails
     this.errorState = page.getByText('Error loading images');
@@ -63,12 +63,11 @@ export class GalleryPage {
    */
   async waitForGalleryToLoad(): Promise<void> {
     await this.page.waitForLoadState('networkidle');
-    // Wait for either gallery grid or empty/error state
-    await Promise.race([
-      this.galleryGrid.waitFor({state: 'visible', timeout: 10000}),
-      this.emptyState.waitFor({state: 'visible', timeout: 10000}),
-      this.errorState.waitFor({state: 'visible', timeout: 10000}),
-    ]);
+    // Wait for either gallery grid or empty/error state using locator.or()
+    await this.galleryGrid
+      .or(this.emptyState)
+      .or(this.errorState)
+      .waitFor({state: 'visible', timeout: 10000});
   }
 
   /**
