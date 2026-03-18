@@ -257,9 +257,9 @@ test.describe('Upload Page', () => {
     // Verify gallery page shows uploaded image
     await galleryPage.waitForGalleryToLoad();
 
-    // There should be at least one image now (or the test image was already there)
-    const hasImages = await galleryPage.hasImages();
-    expect(hasImages).toBe(true);
+    // Verify the uploaded file appears in the gallery
+    const uploadedFileInGallery = await galleryPage.hasImageWithFilename('test-image.png');
+    expect(uploadedFileInGallery).toBe(true);
   });
 
   test('should show upload button text during upload', async ({page}) => {

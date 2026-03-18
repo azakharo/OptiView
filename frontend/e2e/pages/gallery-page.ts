@@ -90,6 +90,36 @@ export class GalleryPage {
   }
 
   /**
+   * Get the filenames of all visible images in the gallery.
+   * Returns an array of filename strings.
+   */
+  async getVisibleImageFilenames(): Promise<string[]> {
+    const filenames: string[] = [];
+    const count = await this.imageCards.count();
+
+    for (let i = 0; i < count; i++) {
+      const card = this.imageCards.nth(i);
+      // Filename is stored in the alt attribute of the image
+      const img = card.locator('img');
+      const altText = await img.getAttribute('alt');
+      if (altText) {
+        filenames.push(altText);
+      }
+    }
+
+    return filenames;
+  }
+
+  /**
+   * Check if an image with a specific filename exists in the gallery.
+   * @param filename - The filename to search for
+   */
+  async hasImageWithFilename(filename: string): Promise<boolean> {
+    const filenames = await this.getVisibleImageFilenames();
+    return filenames.includes(filename);
+  }
+
+  /**
    * Click an image by its index in the gallery.
    * @param index - Zero-based index of the image to click
    */
