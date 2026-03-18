@@ -30,7 +30,7 @@ test.describe('Upload Page', () => {
     const uploadPage = new UploadPage(page);
 
     // Upload multiple files
-    await uploadPage.uploadMultipleFiles([
+    await uploadPage.addMultipleFilesToQueue([
       './e2e/fixtures/test-image.png',
       './e2e/fixtures/test-image.jpg',
     ]);
@@ -62,7 +62,7 @@ test.describe('Upload Page', () => {
     // For now, we verify the error handling exists
 
     // Try uploading any file and check for validation
-    await uploadPage.uploadFile('./e2e/fixtures/test-image.png');
+    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
 
     // File should be accepted (test image is small)
     const uploadCount = await uploadPage.getUploadCount();

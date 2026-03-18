@@ -90,7 +90,7 @@ export class UploadPage {
    * Upload multiple files.
    * @param filePaths - Array of file paths
    */
-  async uploadMultipleFiles(filePaths: string[]): Promise<void> {
+  async addMultipleFilesToQueue(filePaths: string[]): Promise<void> {
     await this.dropZoneInput.setInputFiles(filePaths);
   }
 
