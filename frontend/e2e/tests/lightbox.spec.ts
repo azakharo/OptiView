@@ -230,9 +230,6 @@ test.describe('Lightbox Modal', () => {
 
     await galleryPage.clickImage(0);
 
-    // Tab should move through focusable elements in lightbox
-    await page.keyboard.press('Tab');
-
     // Focus should be on close button (first focusable element)
     const closeFocused = await page.evaluate(() => {
       const active = document.activeElement;

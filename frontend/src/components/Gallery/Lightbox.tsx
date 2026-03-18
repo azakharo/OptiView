@@ -96,6 +96,7 @@ export function Lightbox({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
       {/* Close Button - Top Right */}
       <button
+        autoFocus
         type="button"
         className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-gray-500 text-white transition hover:bg-gray-600 focus:ring-2 focus:ring-gray-300 focus:outline-none"
         onClick={onClose}
