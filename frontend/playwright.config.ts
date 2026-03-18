@@ -38,10 +38,10 @@ export default defineConfig({
     // },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: false, // !process.env.CI,
-    timeout: 10 * 1000,
+    command: 'npm run e2e-server',
+    url: 'http://localhost:4173',
+    reuseExistingServer: true, // Критично для VS Code на Windows
+    // stdout: 'ignore', // Скроет лишний лог в консоли
   },
   timeout: process.env.CI ? undefined : 5000, // just for easy debugging
 });
