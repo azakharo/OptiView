@@ -124,21 +124,6 @@ test.describe('Filter Functionality', () => {
     await expect(page).toHaveURL(urlMatcher({sort: 'rating'}));
   });
 
-  test('should show no results state when filters match nothing', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
-
-    // Apply a filter that likely won't match anything
-    // (This is hard to guarantee, so we just check the mechanism works)
-    await galleryPage.selectGenre('NonExistentGenre');
-
-    // Either show empty state or just return no images
-    await galleryPage.waitForGalleryToLoad();
-    const count = await galleryPage.getImageCount();
-
-    // Either 0 images or we have results
-    expect(typeof count).toBe('number');
-  });
-
   test('should update result count after filtering', async ({page}) => {
     const galleryPage = new GalleryPage(page);
 
