@@ -19,5 +19,9 @@ export default defineConfig(() => ({
         changeOrigin: true,
       },
     },
+    watch: {
+      // Use glob patterns to ignore test files
+      ignored: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    },
   },
 }));
