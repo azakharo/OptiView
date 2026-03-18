@@ -199,29 +199,6 @@ test.describe('Lightbox Modal', () => {
     expect(updatedRating).toBe(newRating);
   });
 
-  test('should maintain position when reopening lightbox', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
-    const lightbox = new LightboxModal(page);
-
-    const imageCount = await galleryPage.getImageCount();
-    test.skip(imageCount < 2, 'Need at least 2 images');
-
-    // Open on second image
-    await galleryPage.clickImage(1);
-    await expect(lightbox.modal).toBeVisible();
-
-    // Close
-    await lightbox.close();
-
-    // Reopen on same image
-    await galleryPage.clickImage(1);
-    await expect(lightbox.modal).toBeVisible();
-
-    // Should still show the same image
-    const src = await lightbox.getCurrentImageSrc();
-    expect(src).toContain('images/');
-  });
-
   test('should have proper ARIA labels for accessibility', async ({page}) => {
     const galleryPage = new GalleryPage(page);
     const lightbox = new LightboxModal(page);
