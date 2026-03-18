@@ -49,6 +49,7 @@ test.describe('Filter Functionality', () => {
 
     // Verify filtered results have rating >= 4
     // (This would require more complex DOM inspection or API testing)
+    // TODO check the displayed cards for proper rating
   });
 
   test('should combine multiple filters', async ({page}) => {
@@ -67,6 +68,7 @@ test.describe('Filter Functionality', () => {
     // Verify both filters are in URL (URL-encoded)
     await expect(page).toHaveURL(urlMatcher({genre: 'Nature'}));
     await expect(page).toHaveURL(urlMatcher({rating: 3}));
+    // TODO check the displayed cards for proper filters
   });
 
   test('should persist filters on page reload', async ({page}) => {
@@ -122,6 +124,7 @@ test.describe('Filter Functionality', () => {
 
     // Verify URL was updated with non-default sort field (URL-encoded)
     await expect(page).toHaveURL(urlMatcher({sort: 'rating'}));
+    // TODO need to check the displayed results (cards), not the URL
   });
 
   test('should update result count after filtering', async ({page}) => {
@@ -142,6 +145,7 @@ test.describe('Filter Functionality', () => {
 
     // The count should be <= initial count (filtered results)
     expect(newCount).toBeLessThanOrEqual(initialCount);
+    // TODO need to check that the results have been changed not their count
   });
 
   test('should have genre filter with all genre options', async ({page}) => {
