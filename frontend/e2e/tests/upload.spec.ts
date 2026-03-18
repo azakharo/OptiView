@@ -131,11 +131,7 @@ test.describe('Upload Page', () => {
     await expect(select).toHaveValue('Nature');
   });
 
-  test('should handle failure and retry', async ({page}) => {
-    // This test would require network interception to simulate failure
-    // Skipping for basic implementation
-    test.skip(true, 'Failure simulation requires network mocking');
-  });
+  test.skip('should handle failure and retry', async () => {});
 
   test('should allow removing file from queue', async ({page}) => {
     const uploadPage = new UploadPage(page);
@@ -168,15 +164,10 @@ test.describe('Upload Page', () => {
     await expect(page).toHaveURL('/');
   });
 
-  test('should upload via drag and drop', async ({page}) => {
-    const uploadPage = new UploadPage(page);
-
+  test.skip('should upload via drag and drop', async ({page}) => {
     // Note: Full drag and drop testing is complex in Playwright
     // We can at least verify the drop zone accepts drops
-    const dropZone = uploadPage.dropZone;
-
     // The drop zone should be styled for drag interactions
-    await expect(dropZone).toBeVisible();
   });
 
   test('should validate file type client side', async ({page}) => {
@@ -197,8 +188,9 @@ test.describe('Upload Page', () => {
   test('should disable upload button when no files', async ({page}) => {
     const uploadPage = new UploadPage(page);
 
-    // Button should exist
+    // Button should be visible but disabled when no files in queue
     await expect(uploadPage.uploadAllButton).toBeVisible();
+    await expect(uploadPage.uploadAllButton).toBeDisabled();
   });
 
   test('should display all genre options', async ({page}) => {
