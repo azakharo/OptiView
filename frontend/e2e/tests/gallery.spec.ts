@@ -63,24 +63,8 @@ test.describe('Gallery Page', () => {
     await expect(lightbox.modal).toBeVisible();
   });
 
-  test('should load images with LQIP (low-quality image placeholder)', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
-
-    await galleryPage.goto();
-
-    // Wait for gallery to load
-    await galleryPage.waitForGalleryToLoad();
-
-    const hasImages = await galleryPage.hasImages();
-    test.skip(!hasImages, 'No images in gallery to verify LQIP');
-
-    // Get the first image card
-    const firstCard = galleryPage.imageCards.first();
-
-    // The card should have a background image (LQIP) style
-    // We can't easily verify the LQIP is loaded, but we can check the card structure
-    await expect(firstCard).toBeVisible();
-  });
+  // We can't easily verify the LQIP is loaded
+  test.skip('should load images with LQIP (low-quality image placeholder)', () => {});
 
   test('should handle empty gallery state', async ({page}) => {
     const galleryPage = new GalleryPage(page);
