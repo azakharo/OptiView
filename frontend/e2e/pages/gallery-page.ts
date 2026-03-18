@@ -11,6 +11,7 @@ export class GalleryPage {
   readonly galleryGrid: Locator;
   readonly emptyState: Locator;
   readonly errorState: Locator;
+  readonly loadingSkeleton: Locator;
 
   // Header elements
   readonly genreFilter: Locator;
@@ -35,6 +36,9 @@ export class GalleryPage {
 
     // Error state - shown when API fails
     this.errorState = page.getByText('Error loading images');
+
+    // Loading skeleton - shown while fetching images
+    this.loadingSkeleton = page.locator('.animate-pulse');
 
     // Header filter elements
     this.genreFilter = page.locator('#genre-filter');

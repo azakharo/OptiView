@@ -106,20 +106,30 @@ test.describe('Gallery Page', () => {
   });
 
   test('should show loading state while fetching images', async ({page}) => {
+    // Mock the API to delay response (simulate slow network)
+    await page.route('**/localhost:3000/api/images*', async route => {
+      // Delay the response by 2 seconds to show loading state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [],
+          pagination: {
+            currentPage: 1,
+            totalPages: 0,
+            totalItems: 0,
+            pageSize: 20,
+          },
+        }),
+      });
+    });
+
     const galleryPage = new GalleryPage(page);
+    await page.goto('/');
 
-    // Start navigation but don't wait for it to complete
-    const navigationPromise = page.goto('/');
-
-    // Wait a brief moment for loading to start
-    await page.waitForTimeout(100);
-
-    // The page should still be loading (we're not checking for loading skeleton specifically
-    // since it's hard to catch, but we verify the page loads successfully)
-    await navigationPromise;
-
-    // Verify page loaded
-    await expect(galleryPage.galleryGrid).toBeVisible();
+    // Verify loading skeleton is visible while fetching
+    await expect(galleryPage.loadingSkeleton).toBeVisible();
   });
 
   test('should display error state on API failure', async ({page}) => {
