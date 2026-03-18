@@ -57,16 +57,26 @@ test.describe('Upload Page', () => {
   test('should reject file exceeding size limit', async ({page}) => {
     const uploadPage = new UploadPage(page);
 
-    // The dropzone has a 10MB limit
-    // This test would require creating a large file
-    // For now, we verify the error handling exists
+    // Create a file larger than 10MB limit (11MB)
+    const oversizedBuffer = Buffer.alloc(11 * 1024 * 1024, 'x');
 
-    // Try uploading any file and check for validation
-    await uploadPage.addFileToQueue('./e2e/fixtures/test-image.png');
+    // Upload the oversized file via the file input
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: 'huge-image.png',
+      mimeType: 'image/png',
+      buffer: oversizedBuffer,
+    });
 
-    // File should be accepted (test image is small)
+    // Verify error alert appears with file size error message
+    const errorAlert = page.locator('[role="alert"]');
+    await expect(errorAlert).toBeVisible();
+    const errorText = await errorAlert.textContent();
+    expect(errorText).toMatch(/file.*too large|exceeds.*10 ?MB|larger than/i);
+
+    // File should NOT be added to the upload queue
     const uploadCount = await uploadPage.getUploadCount();
-    expect(uploadCount).toBe(1);
+    expect(uploadCount).toBe(0);
   });
 
   test('should show upload progress', async ({page}) => {

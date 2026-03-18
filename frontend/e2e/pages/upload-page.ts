@@ -161,11 +161,12 @@ export class UploadPage {
    * Get the count of items in the upload queue.
    */
   async getUploadCount(): Promise<number> {
-    // Wait for upload items to appear in the DOM
-    await this.page.waitForSelector('button:has-text("Remove")', {state: 'visible'}).catch(() => {});
-    // Use a more reliable selector - find buttons with "Remove" text
-    // Each upload item has a Remove button
     const removeButtons = this.page.locator('button:has-text("Remove")');
+
+    // Wait briefly for at least one remove button to be attached (if any exist)
+    // Use short timeout to avoid delays when no files are in queue
+    await removeButtons.first().waitFor({state: 'attached', timeout: 500}).catch(() => {});
+
     return removeButtons.count();
   }
 
