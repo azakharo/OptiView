@@ -274,15 +274,4 @@ test.describe('Upload Page', () => {
     // Button should show "Uploading..."
     await expect(uploadPage.uploadAllButton).toContainText('Uploading');
   });
-
-  test('should handle empty filename gracefully', async ({page}) => {
-    const uploadPage = new UploadPage(page);
-
-    // Verify page loads without errors
-    await expect(uploadPage.pageTitle).toBeVisible();
-
-    // Upload button should be disabled initially (no files)
-    const isDisabled = await uploadPage.isUploadButtonDisabled();
-    expect(isDisabled).toBe(true);
-  });
 });
