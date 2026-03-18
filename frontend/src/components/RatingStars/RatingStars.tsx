@@ -69,6 +69,7 @@ export function RatingStars({
           onMouseEnter={() => setHoverRating(star)}
           onMouseLeave={() => setHoverRating(null)}
           aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+          aria-pressed={(hoverRating ?? rating) >= star}
         >
           <StarIcon filled={(hoverRating ?? rating) >= star} size={size} />
         </button>
