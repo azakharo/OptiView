@@ -39,11 +39,11 @@ export class LightboxModal {
     // Main image in the lightbox
     this.image = this.modal.locator('img').first();
 
-    // Rating stars in footer
-    this.ratingStars = this.modal.locator('[class*="bottom-4"]').locator('button');
+    // Rating stars in footer - use semantic role-based locator
+    this.ratingStars = this.modal.getByRole('group', {name: 'Rating'});
 
-    // Genre tag
-    this.genreTag = this.modal.locator('[class*="bottom-4"]').locator('span').first();
+    // Genre tag - use test id for semantic access
+    this.genreTag = this.modal.getByTestId('genre-tag');
 
     // Download buttons
     this.downloadButtons = this.modal.locator('a:has-text("Download")');
@@ -117,7 +117,8 @@ export class LightboxModal {
    */
   async setRating(rating: number): Promise<void> {
     // Click on the star button at the specified rating position
-    const starButton = this.ratingStars.nth(rating - 1);
+    // The rating stars are buttons inside the group
+    const starButton = this.ratingStars.locator('button').nth(rating - 1);
     await starButton.click();
     await this.page.waitForTimeout(300);
   }
@@ -165,8 +166,9 @@ export class LightboxModal {
    * Get the current rating of the image.
    */
   async getRating(): Promise<number> {
-    // Count how many stars are filled (have some specific class or are clicked)
-    const stars = this.ratingStars;
+    // Count how many stars are filled (have aria-pressed="true")
+    // The rating stars are buttons inside the group
+    const stars = this.ratingStars.locator('button');
     const count = await stars.count();
 
     let filledCount = 0;

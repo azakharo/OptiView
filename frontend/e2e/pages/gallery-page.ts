@@ -222,6 +222,44 @@ export class GalleryPage {
   }
 
   /**
+   * Get the genre of a specific image card by index.
+   * @param index - Zero-based index of the image card
+   */
+  async getImageGenre(index: number): Promise<string> {
+    const card = this.imageCards.nth(index);
+    // Genre is displayed in a span element (the Badge component)
+    const genreSpan = card.locator('span').last();
+    const genreText = await genreSpan.textContent();
+    return genreText?.trim() || '';
+  }
+
+  /**
+   * Get the rating of a specific image card by index.
+   * Counts the number of filled (yellow) stars.
+   * @param index - Zero-based index of the image card
+   */
+  async getImageRating(index: number): Promise<number> {
+    const card = this.imageCards.nth(index);
+    // First hover to reveal the rating section (if not already visible)
+    await card.hover();
+
+    // Get all star buttons and count filled ones
+    const stars = card.locator('button');
+    const count = await stars.count();
+
+    let filledCount = 0;
+    for (let i = 0; i < count; i++) {
+      const star = stars.nth(i);
+      const ariaPressed = await star.getAttribute('aria-pressed');
+      if (ariaPressed === 'true') {
+        filledCount++;
+      }
+    }
+
+    return filledCount;
+  }
+
+  /**
    * Wait for pagination to appear (when there are many images).
    */
   async waitForPagination(): Promise<void> {

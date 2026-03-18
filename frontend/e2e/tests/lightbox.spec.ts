@@ -147,13 +147,21 @@ test.describe('Lightbox Modal', () => {
     const galleryPage = new GalleryPage(page);
     const lightbox = new LightboxModal(page);
 
+    // Get expected metadata from gallery before clicking
+    const expectedGenre = await galleryPage.getImageGenre(0);
+    const expectedRating = await galleryPage.getImageRating(0);
+
     await galleryPage.clickImage(0);
 
-    // Check genre tag is visible
+    // Check genre tag is visible and contains correct genre
     await expect(lightbox.genreTag).toBeVisible();
+    const actualGenre = await lightbox.getGenre();
+    expect(actualGenre).toBe(expectedGenre);
 
-    // Check rating is visible
+    // Check rating is visible and contains correct rating
     await expect(lightbox.ratingStars).toBeVisible();
+    const actualRating = await lightbox.getRating();
+    expect(actualRating).toBe(expectedRating);
   });
 
   test('should display download buttons', async ({page}) => {

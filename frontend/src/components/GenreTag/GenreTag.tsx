@@ -18,7 +18,7 @@ const GENRE_COLORS: Record<
 
 export function GenreTag({genre, size = 'sm'}: GenreTagProps) {
   return (
-    <Badge color={GENRE_COLORS[genre]} size={size}>
+    <Badge color={GENRE_COLORS[genre]} size={size} data-testid="genre-tag">
       {genre}
     </Badge>
   );
