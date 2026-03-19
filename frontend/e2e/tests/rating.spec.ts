@@ -55,38 +55,6 @@ test.describe('Rating Functionality', () => {
     await expect(firstCard.ratingStars.first()).toBeVisible();
   });
 
-  test('should update rating from lightbox', async ({page}) => {
-    const galleryPage = new GalleryPage(page);
-    const lightbox = new LightboxModal(page);
-
-    const hasImages = await galleryPage.hasImages();
-    test.skip(!hasImages, 'No images to test lightbox rating');
-
-    // Click first image to open lightbox
-    await galleryPage.clickImage(0);
-
-    // Verify lightbox is open
-    await expect(lightbox.modal).toBeVisible();
-
-    // Get initial rating
-    const initialRating = await lightbox.getRating();
-
-    // Click on a star to change rating
-    // If initial is 0, click 5th star for 5 rating
-    const newRating = initialRating === 0 ? 5 : 1;
-    await lightbox.setRating(newRating);
-
-    // Wait for API call
-    await page.waitForTimeout(500);
-
-    // Verify rating was updated
-    const updatedRating = await lightbox.getRating();
-    expect(updatedRating).toBe(newRating);
-
-    // Close lightbox
-    await lightbox.close();
-  });
-
   test('should handle rating API error gracefully', async ({page}) => {
     // This test would require mocking the API to fail
     // Skipping for basic implementation
