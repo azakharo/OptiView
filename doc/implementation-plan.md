@@ -622,11 +622,11 @@ Validate end-to-end functionality and performance requirements.
 
 ---
 
-## Stage 8: Documentation & Deployment Preparation
+## Stage 8: Deployment Preparation
 
 ### Goal
 
-Finalize documentation and prepare deployment configuration.
+Prepare deployment configuration.
 
 ### Dependencies
 
@@ -645,13 +645,11 @@ Finalize documentation and prepare deployment configuration.
 
 ### Artifacts
 
-| Type | Artifact | Description |
-|:-----|:---------|:------------|
-| Config | `backend/Dockerfile` | Production Docker image |
-| Config | `docker-compose.prod.yml` | Production compose file |
-| Doc | `README.md` | Project overview and quick start |
-| Doc | `docs/deployment.md` | Deployment guide |
-| Doc | `docs/api.md` | Complete API documentation |
+| Type   | Artifact                  | Description                      |
+|:-------|:--------------------------|:---------------------------------|
+| Config | `backend/Dockerfile`      | Production Docker image          |
+| Config | `docker-compose.prod.yml` | Production compose file          |
+| Doc    | `docs/deployment.md`      | Deployment guide                 |
 
 ### Tasks
 
@@ -668,32 +666,19 @@ Finalize documentation and prepare deployment configuration.
   - Environment setup
   - Deployment steps
   - Monitoring and logging
-- [ ] Complete API documentation:
-  - All endpoints with examples
-  - Error response formats
-  - Authentication if applicable - currently none per ADR
-- [ ] Update main README with:
-  - Project description
-  - Quick start guide
-  - Technology stack
-  - Links to detailed documentation
-- [ ] Create sample data or seed script for demo purposes
 
 ### Risks
 
-| Risk | Probability | Impact | Mitigation |
-|:-----|:------------|:-------|:-----------|
-| Production config drift from development | Low | Medium | Use environment-specific overrides |
-| Missing deployment documentation | Low | Medium | Follow documentation checklist |
+| Risk                                     | Probability | Impact | Mitigation                         |
+|:-----------------------------------------|:------------|:-------|:-----------------------------------|
+| Production config drift from development | Low         | Medium | Use environment-specific overrides |
+| Missing deployment documentation         | Low         | Medium | Follow documentation checklist     |
 
 ### Definition of Done
 
 - [ ] Docker production build completes successfully
 - [ ] Application runs from production Docker image
 - [ ] Deployment guide allows fresh deployment in under 30 minutes
-- [ ] API documentation covers all endpoints
-- [ ] README provides clear project overview
-- [ ] All documentation reviewed for accuracy
 
 ---
 
