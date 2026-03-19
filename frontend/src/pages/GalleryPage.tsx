@@ -3,7 +3,7 @@ import {Header} from '../components/Header/Header';
 import {Gallery} from '../components/Gallery/Gallery';
 import {Lightbox} from '../components/Gallery/Lightbox';
 import {FAB} from '../components/FAB/FAB';
-import {useImages, useUpdateRating} from '../hooks/useImages';
+import {useImages, useUpdateRating, useImageMetadata} from '../hooks/useImages';
 import {useFilters} from '../hooks/useFilters';
 import type {Image} from '../api/types';
 
@@ -12,17 +12,23 @@ export function GalleryPage() {
   const {genre, rating, sort, sortOrder, page, pageSize} = useFilters();
   const {data} = useImages({genre, rating, sort, sortOrder, page, pageSize});
   const updateRating = useUpdateRating();
+  const {data: lightboxImageData} = useImageMetadata(lightboxImageId ?? '');
 
   const images = useMemo(() => data?.data ?? [], [data]);
 
-  // Derive lightboxImage from cache - this ensures it stays in sync with query cache
-  const lightboxImage = useMemo(
-    () =>
-      lightboxImageId
-        ? (images.find(img => img.id === lightboxImageId) ?? null)
-        : null,
-    [lightboxImageId, images],
-  );
+  // Derive lightboxImage from metadata cache - this keeps it reactive to rating updates
+  // Use metadata cache first (reactive), fall back to filtered images for navigation
+  const lightboxImage: Image | null = useMemo(() => {
+    if (!lightboxImageId) return null;
+
+    // Use cached metadata if available (this is reactive to optimistic updates)
+    if (lightboxImageData) {
+      return lightboxImageData;
+    }
+
+    // Fall back to filtered images for initial load or navigation
+    return images.find(img => img.id === lightboxImageId) ?? null;
+  }, [lightboxImageId, lightboxImageData, images]);
 
   const handleImageClick = useCallback((image: Image) => {
     setLightboxImageId(image.id);
