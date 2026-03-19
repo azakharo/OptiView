@@ -129,7 +129,7 @@ test.describe('Gallery Page', () => {
     await page.goto('/');
 
     // Verify loading skeleton is visible while fetching
-    await expect(galleryPage.loadingSkeleton).toBeVisible();
+    await expect(galleryPage.loadingSkeleton.first()).toBeVisible();
   });
 
   test('should display error state on API failure', async ({page}) => {
