@@ -85,7 +85,7 @@ export function useUpdateRating() {
           context.previousImage,
         );
       }
-      console.error('Failed to update rating:', err);
+      alert(`Failed to update rating: ${err.message}`);
     },
 
     // Refetch after settling

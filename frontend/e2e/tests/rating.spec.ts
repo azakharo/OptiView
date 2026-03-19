@@ -55,10 +55,7 @@ test.describe('Rating Functionality', () => {
     await expect(firstCard.ratingStars.first()).toBeVisible();
   });
 
-  test('should handle rating API error gracefully', async ({page}) => {
-    // This test would require mocking the API to fail
-    // Skipping for basic implementation
-    test.skip(true, 'API error handling requires API mocking');
+  test.skip('should handle rating API error gracefully', async () => {
   });
 
   test('should handle concurrent rating updates', async ({page}) => {
