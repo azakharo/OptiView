@@ -37,8 +37,10 @@ export default defineConfig({
     //   use: { ...devices['iPhone 12'] },
     // },
   ],
+  // The command is empty because the server (vite run build && vite preview) is run by hand
+  // @ts-ignore
   webServer: {
-    command: '',
+    command: undefined,
     url: 'http://localhost:4173',
     reuseExistingServer: true, // !process.env.CI,
     timeout: 10 * 1000,
