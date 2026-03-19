@@ -7,8 +7,6 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
 
     await galleryPage.goto();
-
-    // Check gallery grid is visible
     await expect(galleryPage.galleryGrid).toBeVisible();
   });
 
@@ -16,18 +14,12 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
 
     await galleryPage.goto();
-
-    // Wait for images to load if any exist
     await galleryPage.waitForGalleryToLoad();
 
     const imageCount = await galleryPage.getImageCount();
-
-    // If images exist, verify cards are present
     if (imageCount > 0) {
       const firstCard = galleryPage.imageCards.first();
       await expect(firstCard).toBeVisible();
-
-      // Check that image has role="button" for accessibility
       await expect(firstCard).toHaveAttribute('role', 'button');
     }
   });
@@ -36,11 +28,8 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
 
     await galleryPage.goto();
-
-    // Click the upload button (FAB)
     await galleryPage.navigateToUpload();
 
-    // Verify we're on the upload page
     await expect(page).toHaveURL(/\/upload/);
   });
 
@@ -49,26 +38,18 @@ test.describe('Gallery Page', () => {
     const lightbox = new LightboxModal(page);
 
     await galleryPage.goto();
-
-    // Wait for images to load
     await galleryPage.waitForGalleryToLoad();
 
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images in gallery to test lightbox');
 
-    // Click the first image
     await galleryPage.clickImage(0);
-
-    // Verify lightbox is visible
     await expect(lightbox.modal).toBeVisible();
   });
 
-  // We can't easily verify the LQIP is loaded
   test.skip('should load images with LQIP (low-quality image placeholder)', () => {});
 
   test('should handle empty gallery state', async ({page}) => {
-    // Mock the API to return empty list
-    // The API client uses http://localhost:3000 as base URL (see src/api/client.ts)
     await page.route('**/localhost:3000/api/images*', async route => {
       await route.fulfill({
         status: 200,
@@ -88,7 +69,6 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
     await galleryPage.goto();
 
-    // Verify empty state is shown
     await expect(galleryPage.emptyState).toBeVisible();
     expect(await galleryPage.getImageCount()).toBe(0);
   });
@@ -98,7 +78,6 @@ test.describe('Gallery Page', () => {
 
     await galleryPage.goto();
 
-    // Verify filter elements are present
     await expect(galleryPage.genreFilter).toBeVisible();
     await expect(galleryPage.ratingFilter).toBeVisible();
     await expect(galleryPage.sortDropdown).toBeVisible();
@@ -106,9 +85,7 @@ test.describe('Gallery Page', () => {
   });
 
   test('should show loading state while fetching images', async ({page}) => {
-    // Mock the API to delay response (simulate slow network)
     await page.route('**/localhost:3000/api/images*', async route => {
-      // Delay the response by 2 seconds to show loading state
       await new Promise(resolve => setTimeout(resolve, 2000));
       await route.fulfill({
         status: 200,
@@ -128,12 +105,10 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
     await page.goto('/');
 
-    // Verify loading skeleton is visible while fetching
     await expect(galleryPage.loadingSkeleton.first()).toBeVisible();
   });
 
   test('should display error state on API failure', async ({page}) => {
-    // Mock the API to return an error response
     await page.route('**/localhost:3000/api/images*', async route => {
       await route.fulfill({
         status: 500,
@@ -149,7 +124,6 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
     await galleryPage.goto();
 
-    // Verify error state is shown
     await expect(galleryPage.errorState).toBeVisible();
     expect(await galleryPage.getImageCount()).toBe(0);
   });
@@ -158,8 +132,6 @@ test.describe('Gallery Page', () => {
     const galleryPage = new GalleryPage(page);
 
     await galleryPage.goto();
-
-    // Check FAB is visible
     await expect(galleryPage.uploadButton).toBeVisible();
   });
 });
