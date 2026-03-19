@@ -1,4 +1,5 @@
 import type {Locator} from '@playwright/test';
+import {RatingComponent} from './rating.component';
 
 /**
  * Page Object Model for an individual Image Card component.
@@ -16,6 +17,7 @@ export class ImageCardComponent {
   readonly root: Locator;
   readonly ratingStars: Locator;
   readonly genreTag: Locator;
+  private readonly rating: RatingComponent;
 
   constructor(root: Locator) {
     this.root = root;
@@ -26,6 +28,9 @@ export class ImageCardComponent {
 
     // Genre tag - span element containing genre text
     this.genreTag = root.locator('span').last();
+
+    // Shared rating component
+    this.rating = new RatingComponent(root.locator('button'));
   }
 
   /**
@@ -52,13 +57,8 @@ export class ImageCardComponent {
    * @param rating - Rating to set (1-5)
    */
   async setRating(rating: number): Promise<void> {
-    // Ensure overlay is visible before interacting
     await this.waitForRatingOverlayVisible();
-
-    // Click the star button at the given position
-    // aria-label is "Rate {n} stars"
-    const starButton = this.root.getByRole('button', {name: `Rate ${rating} star${rating > 1 ? 's' : ''}`});
-    await starButton.click();
+    await this.rating.setRating(rating);
   }
 
   /**
@@ -68,20 +68,7 @@ export class ImageCardComponent {
    */
   async getRating(): Promise<number> {
     await this.waitForRatingOverlayVisible();
-
-    const buttons = this.ratingStars;
-    const count = await buttons.count();
-
-    let filledCount = 0;
-    for (let i = 0; i < count; i++) {
-      const button = buttons.nth(i);
-      const ariaPressed = await button.getAttribute('aria-pressed');
-      if (ariaPressed === 'true') {
-        filledCount++;
-      }
-    }
-
-    return filledCount;
+    return this.rating.getRating();
   }
 
   /**

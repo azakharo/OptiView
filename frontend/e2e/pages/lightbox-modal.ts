@@ -1,4 +1,5 @@
 import type {Page, Locator} from '@playwright/test';
+import {RatingComponent} from '../components/rating.component';
 
 /**
  * Page Object Model for the Lightbox modal.
@@ -22,6 +23,7 @@ export class LightboxModal {
   readonly ratingStars: Locator;
   readonly genreTag: Locator;
   readonly downloadButtons: Locator;
+  private readonly rating: RatingComponent;
 
   constructor(page: Page) {
     this.page = page;
@@ -47,6 +49,9 @@ export class LightboxModal {
 
     // Download buttons
     this.downloadButtons = this.modal.locator('a:has-text("Download")');
+
+    // Shared rating component
+    this.rating = new RatingComponent(this.ratingStars.locator('button'));
   }
 
   /**
@@ -116,11 +121,7 @@ export class LightboxModal {
    * @param rating - Rating to set (1-5)
    */
   async setRating(rating: number): Promise<void> {
-    // Click on the star button at the specified rating position
-    // The rating stars are buttons inside the group
-    const starButton = this.ratingStars.locator('button').nth(rating - 1);
-    await starButton.click();
-    await this.page.waitForTimeout(300);
+    await this.rating.setRating(rating);
   }
 
   /**
@@ -166,21 +167,7 @@ export class LightboxModal {
    * Get the current rating of the image.
    */
   async getRating(): Promise<number> {
-    // Count how many stars are filled (have aria-pressed="true")
-    // The rating stars are buttons inside the group
-    const stars = this.ratingStars.locator('button');
-    const count = await stars.count();
-
-    let filledCount = 0;
-    for (let i = 0; i < count; i++) {
-      const star = stars.nth(i);
-      const ariaPressed = await star.getAttribute('aria-pressed');
-      if (ariaPressed === 'true') {
-        filledCount++;
-      }
-    }
-
-    return filledCount;
+    return this.rating.getRating();
   }
 
   /**
