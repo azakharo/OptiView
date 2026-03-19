@@ -2,7 +2,7 @@ import {describe, it, expect, vi} from 'vitest';
 import {screen, waitFor} from '@testing-library/react';
 import {renderWithRouter} from '@/test/renderWithRouter';
 import {GalleryPage} from './GalleryPage';
-import type {useImages} from '../hooks/useImages';
+import {useImages} from '../hooks/useImages';
 
 // Mock hooks
 vi.mock('../hooks/useFilters', () => ({
@@ -18,7 +18,11 @@ vi.mock('../hooks/useFilters', () => ({
 
 vi.mock('../hooks/useImages', () => ({
   useImages: vi.fn(),
+  useImageMetadata: vi.fn(() => ({
+    data: null,
+  })),
   useUpdateRating: vi.fn(),
+  useUploadImage: vi.fn(),
   queryKeys: {
     images: () => ['images'],
   },

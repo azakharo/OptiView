@@ -38,6 +38,7 @@ export default defineConfig({
     // },
   ],
   webServer: {
+    command: '',
     url: 'http://localhost:4173',
     reuseExistingServer: true, // !process.env.CI,
     timeout: 10 * 1000,
