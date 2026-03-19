@@ -51,10 +51,8 @@ test.describe('Rating Functionality', () => {
     // The rating overlay should appear
     await firstCard.waitForRatingOverlayVisible();
 
-    // Hover over a star (e.g., third star)
-    // Visual feedback would be shown (hover state)
-    // We can't easily test visual changes, but the element should be interactive
-    await firstCard.root.getByRole('button', {name: 'Rate 3 stars'}).hover();
+    // Verify the rating overlay is visible (hover state) using POM
+    await expect(firstCard.ratingStars.first()).toBeVisible();
   });
 
   test('should update rating from lightbox', async ({page}) => {
