@@ -11,6 +11,7 @@ This document provides a detailed implementation plan for Stage 8: Deployment Pr
 **Description:** Deploy all services (frontend, backend, database, nginx) as Docker containers on a single VPS.
 
 **Why this approach:**
+
 - Simple setup and maintenance
 - Cost-effective for small to medium traffic
 - Full control over the environment
@@ -18,6 +19,7 @@ This document provides a detailed implementation plan for Stage 8: Deployment Pr
 - All services in one place
 
 **Trade-offs:**
+
 - Single point of failure (acceptable for MVP)
 - Limited horizontal scaling (can migrate to orchestration later)
 - Requires basic server management skills
@@ -25,6 +27,7 @@ This document provides a detailed implementation plan for Stage 8: Deployment Pr
 **Recommended VPS Providers:** DigitalOcean Droplet, AWS EC2, Hetzner Cloud, Linode, Vultr
 
 **Minimum VPS Requirements:**
+
 - 2 GB RAM
 - 1 vCPU
 - 20 GB SSD storage
@@ -69,6 +72,7 @@ flowchart TB
 **Purpose:** Multi-stage production Docker image for NestJS backend
 
 **Key Features:**
+
 - Multi-stage build for smaller image size
 - Node.js 22 Alpine base image
 - Non-root user for security
@@ -126,6 +130,7 @@ CMD ["node", "dist/main.js"]
 **Purpose:** Multi-stage production Docker image for React frontend
 
 **Key Features:**
+
 - Build stage with Node.js
 - Production stage with nginx for static file serving
 - Build-time environment variable injection
@@ -161,6 +166,7 @@ COPY --from=build /app/dist ./dist
 **Purpose:** Reverse proxy configuration with SSL termination and static file caching
 
 **Key Features:**
+
 - SSL/TLS termination with modern cipher suites
 - Gzip compression for text-based assets
 - Aggressive caching for static assets (JS, CSS, images)
@@ -282,6 +288,7 @@ server {
 **Purpose:** Internal nginx configuration for serving React static files
 
 **Key Features:**
+
 - Serve static files from /usr/share/nginx/html
 - SPA fallback to index.html
 - Aggressive caching for hashed assets
@@ -333,6 +340,7 @@ server {
 **Purpose:** Production orchestration of all services
 
 **Key Features:**
+
 - All services in one network
 - Persistent volumes for database and uploads
 - Environment variable management
@@ -485,6 +493,7 @@ VITE_API_URL=/api
 **Purpose:** Complete deployment guide
 
 **Contents:**
+
 1. Prerequisites
 2. Server setup
 3. SSL certificate configuration
@@ -502,20 +511,20 @@ VITE_API_URL=/api
 
 ### Frontend Static Assets
 
-| Asset Type | Cache Duration | Cache-Control Header |
-|------------|----------------|----------------------|
-| JS/CSS with hash | 1 year | `public, immutable` |
-| Images (PNG, JPG, SVG) | 1 year | `public, immutable` |
-| Fonts (WOFF, WOFF2) | 1 year | `public, immutable` |
-| index.html | No cache | `no-store, no-cache, must-revalidate` |
+| Asset Type             | Cache Duration | Cache-Control Header                  |
+|:-----------------------|:---------------|:--------------------------------------|
+| JS/CSS with hash       | 1 year         | `public, immutable`                   |
+| Images (PNG, JPG, SVG) | 1 year         | `public, immutable`                   |
+| Fonts (WOFF, WOFF2)    | 1 year         | `public, immutable`                   |
+| index.html             | No cache       | `no-store, no-cache, must-revalidate` |
 
 ### Backend Image Delivery
 
-| Image Type | Cache Duration | Notes |
-|------------|----------------|-------|
-| Original images | 1 year | Processed images are immutable by ID |
-| LQIP images | 1 year | Small placeholders, rarely change |
-| API responses | No cache | Dynamic data |
+| Image Type      | Cache Duration | Notes                                |
+|:----------------|:---------------|:-------------------------------------|
+| Original images | 1 year         | Processed images are immutable by ID |
+| LQIP images     | 1 year         | Small placeholders, rarely change    |
+| API responses   | No cache       | Dynamic data                         |
 
 ### Implementation Notes
 
@@ -550,7 +559,6 @@ VITE_API_URL=/api
 - [ ] Environment variables for secrets
 - [ ] No secrets in Docker images
 - [ ] Database credentials from environment
-- [ ] CORS configuration for production
 
 ---
 
@@ -644,30 +652,28 @@ optiview/
 
 ---
 
-## 10. Questions for Clarification
+## 10. Clarifications
 
-Before proceeding with implementation, please confirm:
-
-1. **SSL Certificates:** Will you use Let's Encrypt (certbot) or provide your own certificates?
-2. **Domain Name:** Do you have a domain name ready for the deployment?
-3. **VPS Provider:** Which provider will you use (affects some configuration details)?
-4. **Database Backups:** Do you want automated backup scripts included in this stage?
+1. **SSL Certificates:** Will use Let's Encrypt (certbot)
+2. **Domain Name:** I haven't have a domain name ready for the deployment.
+3. **VPS Provider:** Unknown yet.
+4. **Database Backups:** automated backup scripts is not needed at this stage.
 
 ---
 
 ## 11. Docker Volume Strategies for Persistent Data
 
-Docker has three main types of volumes for managing persistent data:
-
-### Named Volumes (Recommended for Production)
+Named Volumes will be used.
 
 **How it works:**
+
 - Docker manages the volume lifecycle
 - Stored in `/var/lib/docker/volumes/` on the host
 - Can be easily backed up, shared, and migrated
 - Named volumes persist even after containers are removed
 
 **Example in docker-compose.prod.yml:**
+
 ```yaml
 volumes:
   postgres_data:    # Database data - managed by Docker
@@ -680,6 +686,7 @@ services:
 ```
 
 **Pros:**
+
 - ✅ Portable between hosts
 - ✅ Easy to backup with `docker volume inspect`
 - ✅ Works well with Docker's backup mechanisms
@@ -687,77 +694,35 @@ services:
 - ✅ Can be shared between containers
 
 **Cons:**
+
 - Slightly harder to access from host for debugging
-
----
-
-### Bind Mounts (Not Recommended for Production)
-
-**How it works:**
-- Maps a host directory directly into the container
-- Files are stored in a specified location on the host
-- Directly accessible from the host machine
-
-**Example:**
-```yaml
-services:
-  backend:
-    volumes:
-      - ./uploads:/app/uploads  # Bind mount - maps local directory
-```
-
-**Pros:**
-- Easy to access files from host
-- Simple to understand
-
-**Cons:**
-- ❌ Host-dependent (breaks portability)
-- ❌ File ownership issues (root in container vs host user)
-- ❌ Requires specific directory structure on host
-- ❌ Can cause permission issues
-
----
-
-### Anonymous Volumes (Used for node_modules protection)
-
-**How it works:**
-- No specific name, managed by Docker per-container
-- Used to prevent host files from overwriting container files
-
-**Best used for:** Development only (protecting node_modules when using bind mounts)
-
----
-
-### Recommendation for OptiView
-
-For production deployment, **Named Volumes** are recommended because:
-1. Portability - Moving to a new server is easy
-2. Backup - Use `docker run --rm -v postgres_data:/backup alpine tar cvfzpf - /backup` to backup
-3. Isolation - Data is isolated from host OS differences
-4. Docker can manage storage more efficiently
 
 ---
 
 ## 12. SSL Certificate Setup (Let's Encrypt)
 
 ### Prerequisites
+
 - Valid domain name pointing to server IP
 - Port 80 and 443 accessible from internet
 
 ### Setup Steps
 
 1. **Install certbot on host:**
+
 ```bash
 sudo apt update
 sudo apt install certbot python3-certbot-nginx
 ```
 
-2. **Generate certificates:**
+1. **Generate certificates:**
+
 ```bash
 sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
 ```
 
-3. **Copy certificates to project:**
+1. **Copy certificates to project:**
+
 ```bash
 mkdir -p nginx/ssl
 sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem nginx/ssl/cert.pem
@@ -765,7 +730,8 @@ sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem nginx/ssl/key.pem
 sudo chown -R $USER:$USER nginx/ssl
 ```
 
-4. **Set up auto-renewal:**
+1. **Set up auto-renewal:**
+
 ```bash
 # Create renewal script
 cat > scripts/renew-ssl.sh << 'EOF'
@@ -783,6 +749,7 @@ chmod +x scripts/renew-ssl.sh
 ```
 
 ### Certificate Locations in Container
+
 - Certificate: `/etc/nginx/ssl/cert.pem`
 - Private key: `/etc/nginx/ssl/key.pem`
 
@@ -805,6 +772,7 @@ find $BACKUP_DIR -name "optiview_*.sql.gz" -mtime +7 -delete
 ```
 
 **Run via Docker:**
+
 ```yaml
 backup:
   image: postgres:15-alpine
@@ -815,8 +783,3 @@ backup:
     PGPASSWORD: ${DB_PASSWORD}
   command: sh -c "pg_dump -U postgres optiview | gzip > /backups/backup_$(date +%Y%m%d).sql.gz"
 ```
-
-### Backup Schedule Recommendations
-- **Daily:** Full database backup
-- **Weekly:** Uploads directory backup
-- **Monthly:** Test restore procedure
