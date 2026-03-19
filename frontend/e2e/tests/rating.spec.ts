@@ -132,7 +132,7 @@ test.describe('Rating Functionality', () => {
     await firstCard.waitForRatingOverlayVisible();
 
     // Should have 5 star buttons
-    const starButtons = firstCard.root.getByRole('group', {name: 'Rating'}).getByRole('button');
+    const starButtons = firstCard.ratingStars;
     expect(await starButtons.count()).toBe(5);
   });
 
