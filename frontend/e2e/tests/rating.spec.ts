@@ -31,6 +31,10 @@ test.describe('Rating Functionality', () => {
 
     // Wait for API call to complete
     await page.waitForTimeout(500);
+
+    // Verify rating was updated
+    const updatedRating = await firstCard.getRating();
+    expect(updatedRating).toBe(5);
   });
 
   test('should show hover preview on rating stars', async ({page}) => {

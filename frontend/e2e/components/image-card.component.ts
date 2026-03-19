@@ -14,7 +14,6 @@ import type {Locator} from '@playwright/test';
  */
 export class ImageCardComponent {
   readonly root: Locator;
-  readonly ratingOverlay: Locator;
   readonly ratingStars: Locator;
   readonly genreTag: Locator;
 
@@ -22,11 +21,8 @@ export class ImageCardComponent {
     this.root = root;
 
     // Rating overlay - revealed on hover via group-hover:opacity-100
-    // Uses semantic structure: div with RatingStars and GenreTag
-    this.ratingOverlay = root.locator('div').filter({has: root.getByRole('group', {name: 'Rating'})});
-
-    // Rating stars - buttons with aria-label like "Rate 1 star"
-    this.ratingStars = root.getByRole('group', {name: 'Rating'}).getByRole('button');
+    // Use direct locator for star buttons inside the card
+    this.ratingStars = root.locator('button');
 
     // Genre tag - span element containing genre text
     this.genreTag = root.locator('span').last();
@@ -40,11 +36,14 @@ export class ImageCardComponent {
   }
 
   /**
-   * Check if the rating overlay is visible.
-   * The overlay is revealed on hover via opacity transition.
+   * Wait for rating stars to be visible/hoverable.
+   * The overlay is revealed on hover via CSS opacity transition.
    */
   async waitForRatingOverlayVisible(): Promise<void> {
-    await this.ratingOverlay.waitFor({state: 'visible'});
+    // Wait for star buttons to be attached and ready
+    await this.ratingStars.first().waitFor();
+    // Small delay to allow CSS transition to complete
+    await this.root.page().waitForTimeout(100);
   }
 
   /**
