@@ -1,6 +1,7 @@
 import {test, expect} from '@playwright/test';
 import {GalleryPage} from '../pages/gallery-page';
 import {LightboxModal} from '../pages/lightbox-modal';
+import {ImageCardComponent} from '../components/image-card.component';
 
 test.describe('Rating Functionality', () => {
   test.beforeEach(async ({page}) => {
@@ -16,24 +17,20 @@ test.describe('Rating Functionality', () => {
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to test rating');
 
-    // Get the first image card
-    const firstCard = galleryPage.imageCards.first();
+    // Get the first image card using POM
+    const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
 
     // Hover to reveal rating stars
     await firstCard.hover();
 
-    // The rating stars should now be visible (in the overlay)
-    const ratingOverlay = firstCard.locator('.absolute.right-0.bottom-0');
-    await expect(ratingOverlay).toBeVisible();
+    // The rating overlay should now be visible (revealed via opacity transition)
+    await firstCard.waitForRatingOverlayVisible();
 
     // Click on a star to rate (e.g., 5th star = 5 rating)
-    const starButtons = ratingOverlay.locator('button');
-    await starButtons.nth(4).click(); // 5 stars
+    await firstCard.setRating(5);
 
     // Wait for API call to complete
     await page.waitForTimeout(500);
-
-    // The rating should be updated (we can't easily verify this without API)
   });
 
   test('should show hover preview on rating stars', async ({page}) => {
@@ -42,21 +39,18 @@ test.describe('Rating Functionality', () => {
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to test rating hover');
 
-    const firstCard = galleryPage.imageCards.first();
+    const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
 
     // Hover over the card to reveal the rating section
     await firstCard.hover();
 
     // The rating overlay should appear
-    const ratingOverlay = firstCard.locator('.absolute.right-0.bottom-0');
-    await expect(ratingOverlay).toBeVisible();
+    await firstCard.waitForRatingOverlayVisible();
 
     // Hover over a star (e.g., third star)
-    const starButtons = ratingOverlay.locator('button');
-    await starButtons.nth(2).hover();
-
     // Visual feedback would be shown (hover state)
     // We can't easily test visual changes, but the element should be interactive
+    await firstCard.root.getByRole('button', {name: 'Rate 3 stars'}).hover();
   });
 
   test('should update rating from lightbox', async ({page}) => {
@@ -103,20 +97,18 @@ test.describe('Rating Functionality', () => {
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to test concurrent rating');
 
-    const firstCard = galleryPage.imageCards.first();
-    const secondCard = galleryPage.imageCards.nth(1);
+    const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
+    const secondCard = new ImageCardComponent(galleryPage.imageCards.nth(1));
 
     // Hover and rate first image
     await firstCard.hover();
     await page.waitForTimeout(100);
-    const stars1 = firstCard.locator('.absolute.right-0.bottom-0').locator('button');
-    await stars1.nth(4).click();
+    await firstCard.setRating(5);
 
     // Quickly rate second image
     await secondCard.hover();
     await page.waitForTimeout(100);
-    const stars2 = secondCard.locator('.absolute.right-0.bottom-0').locator('button');
-    await stars2.nth(3).click();
+    await secondCard.setRating(4);
 
     // Both updates should process without errors
     await page.waitForTimeout(1000);
@@ -161,17 +153,16 @@ test.describe('Rating Functionality', () => {
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to verify rating display');
 
-    const firstCard = galleryPage.imageCards.first();
+    const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
 
     // Hover to reveal rating
     await firstCard.hover();
 
-    // Check that rating section contains star elements
-    const ratingSection = firstCard.locator('.absolute.right-0.bottom-0');
-    await expect(ratingSection).toBeVisible();
+    // Check that rating overlay is visible
+    await firstCard.waitForRatingOverlayVisible();
 
     // Should have 5 star buttons
-    const starButtons = ratingSection.locator('button');
+    const starButtons = firstCard.root.getByRole('group', {name: 'Rating'}).getByRole('button');
     expect(await starButtons.count()).toBe(5);
   });
 
@@ -181,17 +172,15 @@ test.describe('Rating Functionality', () => {
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to verify genre tag');
 
-    const firstCard = galleryPage.imageCards.first();
+    const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
 
     // Hover to reveal info overlay
     await firstCard.hover();
 
     // Both genre and rating should be visible in the overlay
-    const overlay = firstCard.locator('.absolute.right-0.bottom-0');
-    await expect(overlay).toBeVisible();
+    await firstCard.waitForRatingOverlayVisible();
 
-    // Check for genre tag (span element)
-    const genreTag = overlay.locator('span').last();
-    await expect(genreTag).toBeVisible();
+    // Check for genre tag
+    await expect(firstCard.genreTag).toBeVisible();
   });
 });
