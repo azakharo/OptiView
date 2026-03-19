@@ -61,24 +61,40 @@ test.describe('Rating Functionality', () => {
   test('should handle concurrent rating updates', async ({page}) => {
     const galleryPage = new GalleryPage(page);
 
+    // Ensure gallery is fully loaded first
+    await galleryPage.goto();
+
     const hasImages = await galleryPage.hasImages();
     test.skip(!hasImages, 'No images to test concurrent rating');
 
     const firstCard = new ImageCardComponent(galleryPage.imageCards.first());
     const secondCard = new ImageCardComponent(galleryPage.imageCards.nth(1));
 
-    // Hover and rate first image
+    // Hover and rate first image - ensure overlay is visible
     await firstCard.hover();
-    await page.waitForTimeout(100);
+    await firstCard.waitForRatingOverlayVisible();
     await firstCard.setRating(5);
 
     // Quickly rate second image
     await secondCard.hover();
-    await page.waitForTimeout(100);
+    await secondCard.waitForRatingOverlayVisible();
     await secondCard.setRating(4);
 
-    // Both updates should process without errors
-    await page.waitForTimeout(1000);
+    // Wait for API to process
+    await page.waitForTimeout(500);
+
+    // Both updates should process without errors - verify ratings were applied
+    // Use force:true to ensure hover triggers the overlay
+    await firstCard.hover();
+    await firstCard.waitForRatingOverlayVisible();
+    const firstRating = await firstCard.getRating();
+    expect(firstRating).toBe(5);
+
+    // Hover second card with force:true
+    await secondCard.hover();
+    await secondCard.waitForRatingOverlayVisible();
+    const secondRating = await secondCard.getRating();
+    expect(secondRating).toBe(4);
   });
 
   test('should update filter results when rating changes', async ({page}) => {
@@ -114,7 +130,7 @@ test.describe('Rating Functionality', () => {
     expect(newCount).toBeLessThanOrEqual(initialCount);
   });
 
-  test('should display rating stars correctly on image cards', async ({page}) => {
+  test('should display 5 rating stars on image cards', async ({page}) => {
     const galleryPage = new GalleryPage(page);
 
     const hasImages = await galleryPage.hasImages();

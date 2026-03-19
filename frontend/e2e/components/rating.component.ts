@@ -4,8 +4,6 @@ import type {Locator, Page} from '@playwright/test';
  * Reusable component for interacting with star rating controls.
  * Encapsulates common rating logic used across multiple page objects.
  *
- * The rating component uses semantic aria-labels in the format "Rate N star(s)"
- * which is consistent across all usages in the application.
  */
 export class RatingComponent {
   readonly starsLocator: Locator;
@@ -36,13 +34,12 @@ export class RatingComponent {
   }
 
   /**
-   * Set rating by clicking a star using its aria-label.
-   * Uses semantic aria-label: "Rate N star" or "Rate N stars"
+   * Set rating by clicking a star using its index (0-based).
    * @param rating - Rating to set (1-5)
    */
   async setRating(rating: number): Promise<void> {
-    const label = `Rate ${rating} star${rating > 1 ? 's' : ''}`;
-    const starButton = this.starsLocator.getByRole('button', {name: label});
+    // Click the button at the rating position (0-indexed)
+    const starButton = this.starsLocator.nth(rating - 1);
     await starButton.click();
     await this.page.waitForTimeout(300);
   }
