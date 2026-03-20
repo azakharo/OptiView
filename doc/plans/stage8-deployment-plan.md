@@ -46,8 +46,8 @@ flowchart TB
     subgraph VPS [VPS/Cloud VM]
         subgraph Docker [Docker Network]
             Nginx[nginx container<br/>Port 80/443]
-            Frontend[frontend container<br/>Port 3000 internal]
-            Backend[backend container<br/>Port 3001 internal]
+            Frontend[frontend container<br/>Port 3001 internal]
+            Backend[backend container<br/>Port 3000 internal]
             DB[(postgres container<br/>Port 5432 internal)]
         end
 
@@ -185,7 +185,7 @@ limit_req_zone $binary_remote_addr zone=upload:10m rate=2r/s;
 
 # Upstream definitions
 upstream frontend {
-    server frontend:3000;
+    server frontend:3001;
 }
 
 upstream backend {
@@ -300,7 +300,7 @@ server {
 # frontend/nginx/default.conf
 
 server {
-    listen 3000;
+    listen 3001;
     server_name localhost;
     root /usr/share/nginx/html;
     index index.html;
@@ -386,11 +386,11 @@ services:
     container_name: optiview_frontend
     restart: always
     expose:
-      - "3000"
+      - "3001"
     networks:
       - optiview-network
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
       interval: 30s
       timeout: 10s
       retries: 3
