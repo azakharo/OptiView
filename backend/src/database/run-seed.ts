@@ -2,8 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import * as http from 'http';
-import { DataSource } from 'typeorm';
-import { dataSourceOptions } from '../data-source';
 import { Genre } from '../entities/genre.enum';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
@@ -84,13 +82,18 @@ async function uploadImage(filepath: string, genre: Genre): Promise<unknown> {
 
   const url = new URL(`${BACKEND_URL}/api/images/upload`);
 
-  const response = await fetch(url, {
+  const fetchOptions: RequestInit = {
     method: 'POST',
     headers: {
       'Content-Type': `multipart/form-data; boundary=${boundary}`,
     },
     body,
-  });
+  };
+
+  // Note: For self-signed certificates, use NODE_TLS_REJECT_UNAUTHORIZED=0 environment variable
+  // when running the seed script: NODE_TLS_REJECT_UNAUTHORIZED=0 BACKEND_URL=https://... npm run db:seed
+
+  const response = await fetch(url, fetchOptions);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -124,9 +127,6 @@ function cleanupTempDir(): void {
  * Seed script to populate database with initial test images
  */
 async function runSeed() {
-  const dataSource = new DataSource(dataSourceOptions);
-  await dataSource.initialize();
-
   try {
     console.log('🌱 Starting seed...');
 
@@ -175,10 +175,12 @@ async function runSeed() {
         );
         successCount++;
       } catch (error) {
-        console.error(
-          `    ✗ Failed to upload:`,
-          error instanceof Error ? error.message : error,
-        );
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorCause =
+          error instanceof Error && error.cause ? error.cause : 'unknown';
+        console.error(`    ✗ Failed to upload:`, errorMessage);
+        console.error(`    ✗ Error cause:`, errorCause);
       }
     }
 
@@ -192,8 +194,6 @@ async function runSeed() {
     // Cleanup temp files
     console.log('🧹 Cleaning up temporary files...');
     cleanupTempDir();
-
-    await dataSource.destroy();
   }
 }
 

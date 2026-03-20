@@ -420,14 +420,23 @@ npm run migration:show
 
 ### Seeding Test Data
 
-Seed data is for testing/demo purposes only. Run it from your local machine pointing to the production API:
+Seed data is for testing/demo purposes only. Run it from your local machine pointing to the production API.
+
+The seed script uploads 20 test images from picsum.photos to your database via the API.
 
 ```bash
-# From your local machine, pointing to production
-BACKEND_URL=https://your-server.com/api npm run db:seed
+# From your local machine, pointing to production (Linux/Mac)
+BACKEND_URL=https://your-server.com NODE_TLS_REJECT_UNAUTHORIZED=0 npm run db:seed
+
+# From your local machine, pointing to production (Windows PowerShell)
+$env:BACKEND_URL="https://your-server.com"; $env:NODE_TLS_REJECT_UNAUTHORIZED="0"; npm run db:seed
 ```
 
-**Note:** Ensure your server firewall allows uploads and the API is accessible.
+**Important:**
+- `BACKEND_URL` should NOT include `/api` at the end - the script adds it automatically
+- `NODE_TLS_REJECT_UNAUTHORIZED=0` is only required for self-signed certificates (development/testing)
+- For production with Let's Encrypt certificates, you don't need this variable
+- Ensure your server firewall allows access to port 443 (HTTPS)
 
 ### Backup Considerations
 
