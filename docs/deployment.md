@@ -23,20 +23,12 @@ This guide covers the complete deployment process for OptiView using Docker Comp
 
 ### VPS Requirements
 
-| Resource | Minimum | Recommended |
-|:---------|:--------|:------------|
-| RAM      | 2 GB    | 4 GB        |
-| CPU      | 1 vCPU  | 2 vCPU      |
-| Storage  | 20 GB SSD | 40 GB SSD |
+| Resource | Minimum          | Recommended      |
+|:---------|:-----------------|:-----------------|
+| RAM      | 2 GB             | 4 GB             |
+| CPU      | 1 vCPU           | 2 vCPU           |
+| Storage  | 20 GB SSD        | 40 GB SSD        |
 | OS       | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
-
-### Recommended VPS Providers
-
-- DigitalOcean Droplet
-- AWS EC2 (t3.small or larger)
-- Hetzner Cloud
-- Linode
-- Vultr
 
 ### Required Software
 
@@ -376,12 +368,12 @@ chmod +x scripts/renew-ssl.sh
 
 ## 5. Environment Variables Reference
 
-| Variable | Required | Default | Description |
-|:---------|:---------|:--------|:------------|
-| `DB_USERNAME` | No | `postgres` | PostgreSQL database username |
-| `DB_PASSWORD` | **Yes** | - | PostgreSQL database password (required) |
-| `DB_DATABASE` | No | `optiview` | PostgreSQL database name |
-| `VITE_API_URL` | No | `/api` | API URL for frontend (use `/api` for same-origin) |
+| Variable       | Required | Default    | Description                                       |
+|:---------------|:---------|:-----------|:--------------------------------------------------|
+| `DB_USERNAME`  | No       | `postgres` | PostgreSQL database username                      |
+| `DB_PASSWORD`  | **Yes**  | -          | PostgreSQL database password (required)           |
+| `DB_DATABASE`  | No       | `optiview` | PostgreSQL database name                          |
+| `VITE_API_URL` | No       | `/api`     | API URL for frontend (use `/api` for same-origin) |
 
 ### Configuration Examples
 
@@ -478,11 +470,11 @@ docker compose -f docker-compose.prod.yml logs --tail=100 backend
 
 ### Health Check Endpoints
 
-| Service | Endpoint | Description |
-|:--------|:---------|:------------|
-| Nginx | `/health` | Returns `ok` if nginx is running |
-| Backend | `/health` | Returns `ok` if backend is healthy |
-| API Docs | `/api/docs` | Swagger UI for API documentation |
+| Service  | Endpoint    | Description                        |
+|:---------|:------------|:-----------------------------------|
+| Nginx    | `/health`   | Returns `ok` if nginx is running   |
+| Backend  | `/health`   | Returns `ok` if backend is healthy |
+| API Docs | `/api/docs` | Swagger UI for API documentation   |
 
 Test health endpoints:
 
@@ -770,11 +762,11 @@ OptiView uses a multi-container Docker architecture orchestrated by Docker Compo
 
 ### Container Responsibilities
 
-| Container | Image | Purpose |
-|:----------|:------|:--------|
-| `nginx` | Custom (node + nginx) | Serves frontend static files, reverse proxy to backend, SSL termination |
-| `backend` | Custom (node-alpine) | NestJS API server, image processing |
-| `postgres` | postgres:15-alpine | PostgreSQL database |
+| Container  | Image                 | Purpose                                                                 |
+|:-----------|:----------------------|:------------------------------------------------------------------------|
+| `nginx`    | Custom (node + nginx) | Serves frontend static files, reverse proxy to backend, SSL termination |
+| `backend`  | Custom (node-alpine)  | NestJS API server, image processing                                     |
+| `postgres` | postgres:15-alpine    | PostgreSQL database                                                     |
 
 ### Network Configuration
 
@@ -812,26 +804,26 @@ OptiView uses a multi-container Docker architecture orchestrated by Docker Compo
 
 ### Volume Configuration
 
-| Volume | Purpose | Persistence |
-|:-------|:--------|:------------|
-| `postgres_data` | PostgreSQL data files | Persists database across restarts |
-| `uploads_data` | Uploaded and processed images | Persists user uploads across restarts |
+| Volume          | Purpose                       | Persistence                           |
+|:----------------|:------------------------------|:--------------------------------------|
+| `postgres_data` | PostgreSQL data files         | Persists database across restarts     |
+| `uploads_data`  | Uploaded and processed images | Persists user uploads across restarts |
 
 ### Static File Caching Strategy
 
-| Asset Type | Cache Duration | Cache-Control Header |
-|:-----------|:---------------|:---------------------|
-| JS/CSS with hash | 1 year | `public, immutable` |
-| Images (PNG, JPG, SVG) | 1 year | `public, immutable` |
-| Fonts (WOFF, WOFF2) | 1 year | `public, immutable` |
-| index.html | No cache | `no-store, no-cache, must-revalidate` |
+| Asset Type             | Cache Duration | Cache-Control Header                  |
+|:-----------------------|:---------------|:--------------------------------------|
+| JS/CSS with hash       | 1 year         | `public, immutable`                   |
+| Images (PNG, JPG, SVG) | 1 year         | `public, immutable`                   |
+| Fonts (WOFF, WOFF2)    | 1 year         | `public, immutable`                   |
+| index.html             | No cache       | `no-store, no-cache, must-revalidate` |
 
 ### Rate Limiting
 
-| Endpoint | Rate Limit | Burst |
-|:---------|:-----------|:------|
-| API endpoints (`/api/*`) | 10 req/s | 20 |
-| Upload endpoint (`/api/images/upload`) | 2 req/s | 5 |
+| Endpoint                               | Rate Limit | Burst |
+|:---------------------------------------|:-----------|:------|
+| API endpoints (`/api/*`)               | 10 req/s   | 20    |
+| Upload endpoint (`/api/images/upload`) | 2 req/s    | 5     |
 
 ---
 
@@ -861,12 +853,12 @@ docker compose -f docker-compose.prod.yml restart nginx
 
 ### File Locations
 
-| File | Purpose |
-|:-----|:--------|
-| [`docker-compose.prod.yml`](../docker-compose.prod.yml) | Production Docker Compose configuration |
-| [`.env.production`](../.env.production) | Production environment variables |
-| [`nginx/nginx.conf`](../nginx/nginx.conf) | Nginx configuration |
-| [`nginx/ssl/`](../nginx/ssl/) | SSL certificates directory |
-| [`scripts/generate-dev-certs.sh`](../scripts/generate-dev-certs.sh) | Self-signed certificate generation |
-| [`backend/Dockerfile`](../backend/Dockerfile) | Backend container definition |
-| [`nginx/Dockerfile`](../nginx/Dockerfile) | Nginx + frontend container definition |
+| File                                                                | Purpose                                 |
+|:--------------------------------------------------------------------|:----------------------------------------|
+| [`docker-compose.prod.yml`](../docker-compose.prod.yml)             | Production Docker Compose configuration |
+| [`.env.production`](../.env.production)                             | Production environment variables        |
+| [`nginx/nginx.conf`](../nginx/nginx.conf)                           | Nginx configuration                     |
+| [`nginx/ssl/`](../nginx/ssl/)                                       | SSL certificates directory              |
+| [`scripts/generate-dev-certs.sh`](../scripts/generate-dev-certs.sh) | Self-signed certificate generation      |
+| [`backend/Dockerfile`](../backend/Dockerfile)                       | Backend container definition            |
+| [`nginx/Dockerfile`](../nginx/Dockerfile)                           | Nginx + frontend container definition   |
