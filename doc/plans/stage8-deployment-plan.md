@@ -445,7 +445,17 @@ VITE_API_URL=/api
 
 ---
 
-## 4. Static File Caching Strategy
+## 4. API Documentation (Swagger)
+
+**Endpoint:** `/api/docs`
+
+**Availability:** Swagger UI is enabled in production for API documentation and testing purposes.
+
+**Note:** In a future release, consider adding authentication to protect this endpoint if the application becomes public-facing.
+
+---
+
+## 5. Static File Caching Strategy
 
 ### Frontend Static Assets
 
@@ -473,7 +483,7 @@ VITE_API_URL=/api
 
 ---
 
-## 5. Security Considerations
+## 6. Security Considerations
 
 ### Docker Security
 
@@ -500,7 +510,7 @@ VITE_API_URL=/api
 
 ---
 
-## 6. Tasks Breakdown
+## 7. Tasks Breakdown
 
 ### Phase 1: Docker Configuration
 
@@ -538,7 +548,7 @@ VITE_API_URL=/api
 
 ---
 
-## 7. Definition of Done
+## 8. Definition of Done
 
 - [ ] Docker production build completes successfully for all services
 - [ ] Application runs from production Docker images
@@ -552,7 +562,7 @@ VITE_API_URL=/api
 
 ---
 
-## 8. File Structure After Implementation
+## 9. File Structure After Implementation
 
 ```
 optiview/
@@ -576,7 +586,7 @@ optiview/
 
 ---
 
-## 9. Next Steps
+## 10. Next Steps
 
 1. Review and approve this plan
 2. Switch to Code mode for implementation
@@ -586,7 +596,7 @@ optiview/
 
 ---
 
-## 10. Clarifications
+## 11. Clarifications
 
 1. **SSL Certificates:** Will use Let's Encrypt (certbot)
 2. **Domain Name:** I haven't have a domain name ready for the deployment.
@@ -595,7 +605,7 @@ optiview/
 
 ---
 
-## 11. Docker Volume Strategies for Persistent Data
+## 12. Docker Volume Strategies for Persistent Data
 
 Named Volumes will be used.
 
@@ -633,7 +643,7 @@ services:
 
 ---
 
-## 12. SSL Certificate Setup (Let's Encrypt)
+## 13. SSL Certificate Setup (Let's Encrypt)
 
 ### Prerequisites
 
@@ -689,7 +699,7 @@ chmod +x scripts/renew-ssl.sh
 
 ---
 
-## 13. Database Backup Strategy
+## 14. Database Backup Strategy
 
 ### Recommended: Automated Backup Script
 
