@@ -2,10 +2,6 @@
 node_modules/
 dist/
 
-# Environment
-.env
-.env.production
-
 # Uploads
 uploads/originals/*
 uploads/processed/*
@@ -25,3 +21,4 @@ uploads/lqip/*
 *.swo
 
 nginx/ssl/*
+/.env.production

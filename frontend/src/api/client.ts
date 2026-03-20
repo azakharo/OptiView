@@ -7,7 +7,7 @@ import type {paths} from './schema.gen';
 import type {ApiErrorResponse} from './types';
 
 export const API_BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:3000';
+  (import.meta.env.VITE_API_BASE_URL as string) || '';
 
 /**
  * Middleware to handle HTTP errors globally.
