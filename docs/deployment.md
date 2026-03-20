@@ -224,13 +224,13 @@ For production with a domain name, see [SSL Certificate Configuration](#4-ssl-ce
 1. Build and start all services:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
 2. Wait for all services to become healthy:
 
 ```bash
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 ```
 
 All services should show `healthy` in the status column.
@@ -240,7 +240,7 @@ All services should show `healthy` in the status column.
 1. Check container logs:
 
 ```bash
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f
 ```
 
 2. Test the health endpoint:
@@ -305,7 +305,7 @@ sudo apt install certbot
 1. Stop the nginx container temporarily:
 
 ```bash
-docker compose -f docker-compose.prod.yml stop nginx
+docker compose -f docker-compose.prod.yml --env-file .env.production stop nginx
 ```
 
 2. Generate certificates using certbot standalone mode:
@@ -327,7 +327,7 @@ sudo chown -R $USER:$USER nginx/ssl
 5. Restart the nginx container:
 
 ```bash
-docker compose -f docker-compose.prod.yml start nginx
+docker compose -f docker-compose.prod.yml --env-file .env.production start nginx
 ```
 
 #### Auto-Renewal Setup
@@ -435,10 +435,10 @@ Automated backup scripts are not included in this phase. For manual backups:
 
 ```bash
 # Create a backup
-docker compose -f docker-compose.prod.yml exec postgres pg_dump -U postgres optiview > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.prod.yml --env-file .env.production exec postgres pg_dump -U postgres optiview > backup_$(date +%Y%m%d).sql
 
 # Restore from backup
-cat backup_20260320.sql | docker compose -f docker-compose.prod.yml exec -T postgres psql -U postgres optiview
+cat backup_20260320.sql | docker compose -f docker-compose.prod.yml --env-file .env.production exec -T postgres psql -U postgres optiview
 ```
 
 **Important:** Implement regular backup procedures before deploying to production.
@@ -452,26 +452,26 @@ cat backup_20260320.sql | docker compose -f docker-compose.prod.yml exec -T post
 View all service logs:
 
 ```bash
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f
 ```
 
 View logs for a specific service:
 
 ```bash
 # Nginx logs
-docker compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f nginx
 
 # Backend logs
-docker compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f backend
 
 # Postgres logs
-docker compose -f docker-compose.prod.yml logs -f postgres
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f postgres
 ```
 
 View last 100 lines:
 
 ```bash
-docker compose -f docker-compose.prod.yml logs --tail=100 backend
+docker compose -f docker-compose.prod.yml --env-file .env.production logs --tail=100 backend
 ```
 
 ### Health Check Endpoints
@@ -500,7 +500,7 @@ curl -k https://your_server_ip/api/docs
 Check container health status:
 
 ```bash
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 ```
 
 Expected output shows all services as `healthy`:
@@ -542,14 +542,14 @@ git pull origin main
 3. Rebuild and restart containers:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
 4. Verify the update:
 
 ```bash
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f --tail=50
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f --tail=50
 ```
 
 ### Quick Restart (No Code Changes)
@@ -557,7 +557,7 @@ docker compose -f docker-compose.prod.yml logs -f --tail=50
 If you only changed environment variables:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 ```
 
 ### Rollback Procedure
@@ -567,7 +567,7 @@ If an update causes issues:
 1. Stop the current containers:
 
 ```bash
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml --env-file .env.production down
 ```
 
 2. Checkout the previous version:
@@ -580,7 +580,7 @@ git checkout <previous-commit-hash>
 3. Rebuild and start:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 
 4. After verifying, return to the latest commit and fix issues:
@@ -601,10 +601,10 @@ git checkout main
 
 ```bash
 # Check container status
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 
 # View container logs
-docker compose -f docker-compose.prod.yml logs backend
+docker compose -f docker-compose.prod.yml --env-file .env.production logs backend
 ```
 
 **Common Causes:**
@@ -639,10 +639,10 @@ docker system df
 
 ```bash
 # Check if postgres is healthy
-docker compose -f docker-compose.prod.yml ps postgres
+docker compose -f docker-compose.prod.yml --env-file .env.production ps postgres
 
 # Check postgres logs
-docker compose -f docker-compose.prod.yml logs postgres
+docker compose -f docker-compose.prod.yml --env-file .env.production logs postgres
 ```
 
 **Solutions:**
@@ -656,13 +656,13 @@ cat .env.production | grep DB_
 2. Ensure postgres container is running:
 
 ```bash
-docker compose -f docker-compose.prod.yml restart postgres
+docker compose -f docker-compose.prod.yml --env-file .env.production restart postgres
 ```
 
 3. Test database connection from backend:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec backend sh
+docker compose -f docker-compose.prod.yml --env-file .env.production exec backend sh
 wget -qO- http://postgres:5432 || echo "Cannot reach postgres"
 ```
 
@@ -708,10 +708,10 @@ echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -
 
 ```bash
 # Check backend logs for upload errors
-docker compose -f docker-compose.prod.yml logs backend | grep -i upload
+docker compose -f docker-compose.prod.yml --env-file .env.production logs backend | grep -i upload
 
 # Check nginx logs
-docker compose -f docker-compose.prod.yml logs nginx | grep -i upload
+docker compose -f docker-compose.prod.yml --env-file .env.production logs nginx | grep -i upload
 ```
 
 **Solutions:**
@@ -728,7 +728,7 @@ Wait a moment and retry. Upload endpoint has stricter rate limiting (2 requests/
 
 ```bash
 # Check uploads volume
-docker compose -f docker-compose.prod.yml exec backend ls -la /app/uploads
+docker compose -f docker-compose.prod.yml --env-file .env.production exec backend ls -la /app/uploads
 ```
 
 ### Nginx Configuration Errors
@@ -739,7 +739,7 @@ docker compose -f docker-compose.prod.yml exec backend ls -la /app/uploads
 
 ```bash
 # Test nginx configuration
-docker compose -f docker-compose.prod.yml exec nginx nginx -t
+docker compose -f docker-compose.prod.yml --env-file .env.production exec nginx nginx -t
 ```
 
 **Common Issues:**
@@ -755,7 +755,7 @@ ls -la nginx/ssl/
 
 ```bash
 # Validate configuration
-docker compose -f docker-compose.prod.yml exec nginx nginx -t
+docker compose -f docker-compose.prod.yml --env-file .env.production exec nginx nginx -t
 ```
 
 ---
@@ -839,22 +839,22 @@ OptiView uses a multi-container Docker architecture orchestrated by Docker Compo
 
 ```bash
 # Start all services
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 
 # Stop all services
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml --env-file .env.production down
 
 # Rebuild and restart
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 
 # View logs
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f
 
 # Check status
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 
 # Restart a single service
-docker compose -f docker-compose.prod.yml restart nginx
+docker compose -f docker-compose.prod.yml --env-file .env.production restart nginx
 ```
 
 ### File Locations
