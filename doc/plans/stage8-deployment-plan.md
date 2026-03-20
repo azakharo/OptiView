@@ -8,7 +8,7 @@ This document provides a detailed implementation plan for Stage 8: Deployment Pr
 
 ## 1. Deployment Strategy: VPS with Docker Compose
 
-**Description:** Deploy all services (frontend, backend, database, nginx) as Docker containers on a single VPS.
+**Description:** Deploy all services (nginx with frontend, backend, database) as Docker containers on a single VPS. The nginx container builds and serves the frontend statically.
 
 **Why this approach:**
 
@@ -45,8 +45,7 @@ flowchart TB
 
     subgraph VPS [VPS/Cloud VM]
         subgraph Docker [Docker Network]
-            Nginx[nginx container<br/>Port 80/443]
-            Frontend[frontend container<br/>Port 3001 internal]
+            Nginx[nginx container<br/>Port 80/443<br/>Serves frontend + proxies API]
             Backend[backend container<br/>Port 3000 internal]
             DB[(postgres container<br/>Port 5432 internal)]
         end
@@ -55,7 +54,7 @@ flowchart TB
     end
 
     User -->|HTTPS| Nginx
-    Nginx -->|Static files| Frontend
+    Nginx -->|Serves static files directly| Nginx
     Nginx -->|API requests| Backend
     Backend --> DB
     Backend --> Uploads
@@ -123,38 +122,45 @@ CMD ["node", "dist/main.js"]
 
 ---
 
-### 3.2 Frontend Dockerfile
+### 3.2 Nginx Dockerfile with Frontend Build
 
-**File:** `frontend/Dockerfile`
+**File:** `nginx/Dockerfile`
 
-**Purpose:** Multi-stage production Docker image for React frontend
+**Purpose:** Multi-stage Docker image that builds the frontend and serves it via nginx
 
 **Key Features:**
 
-- Build stage with Node.js
-- Production stage with nginx for static file serving
+- Build stage for React frontend with Node.js
+- Production stage with nginx Alpine
 - Build-time environment variable injection
-- Optimized production build
+- Single container for frontend serving and reverse proxy
+- No separate frontend container needed
 
 **Dockerfile Structure:**
 
 ```dockerfile
-# Stage 1: Build
-FROM node:22-alpine AS build
+# Stage 1: Build frontend
+FROM node:22-alpine AS frontend-build
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
-COPY . .
+COPY frontend/ ./
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-# Stage 2: Production (nginx will serve static files)
-# Note: This stage is for building only, nginx container will serve the files
-FROM node:22-alpine AS production
-WORKDIR /app
-COPY --from=build /app/dist ./dist
-# This stage outputs the built files for nginx to serve
+# Stage 2: Production nginx
+FROM nginx:1.27-alpine AS production
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+# Copy built frontend assets
+COPY --from=frontend-build /app/dist /usr/share/nginx/html
+# Copy custom nginx configuration
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+# Create SSL directory
+RUN mkdir -p /etc/nginx/ssl
+EXPOSE 80 443
+CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ---
@@ -163,16 +169,18 @@ COPY --from=build /app/dist ./dist
 
 **File:** `nginx/nginx.conf`
 
-**Purpose:** Reverse proxy configuration with SSL termination and static file caching
+**Purpose:** Combined configuration for serving static frontend files and reverse proxy to backend
 
 **Key Features:**
 
+- Direct static file serving from nginx (no proxy to frontend container)
 - SSL/TLS termination with modern cipher suites
 - Gzip compression for text-based assets
 - Aggressive caching for static assets (JS, CSS, images)
 - API proxy to backend
 - Security headers
 - Rate limiting for API endpoints
+- SPA fallback to index.html
 
 **Configuration Structure:**
 
@@ -184,10 +192,6 @@ limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
 limit_req_zone $binary_remote_addr zone=upload:10m rate=2r/s;
 
 # Upstream definitions
-upstream frontend {
-    server frontend:3001;
-}
-
 upstream backend {
     server backend:3000;
 }
@@ -201,6 +205,8 @@ server {
 server {
     listen 443 ssl http2;
     server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
     # SSL configuration
     ssl_certificate /etc/nginx/ssl/cert.pem;
@@ -227,22 +233,17 @@ server {
     # Client upload limit
     client_max_body_size 10M;
 
-    # Frontend static files with aggressive caching
-    location / {
-        proxy_pass http://frontend;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Static assets - long-term caching
+    # Static assets with content hash - immutable, cache forever
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        proxy_pass http://frontend;
-        proxy_set_header Host $host;
         expires 1y;
         add_header Cache-Control "public, immutable";
         access_log off;
+    }
+
+    # index.html - no cache to ensure users get updates
+    location = /index.html {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate";
     }
 
     # API endpoints
@@ -276,55 +277,8 @@ server {
         return 200 "ok";
         add_header Content-Type text/plain;
     }
-}
-```
 
----
-
-### 3.4 Frontend Nginx Configuration (Internal)
-
-**File:** `frontend/nginx/default.conf`
-
-**Purpose:** Internal nginx configuration for serving React static files
-
-**Key Features:**
-
-- Serve static files from /usr/share/nginx/html
-- SPA fallback to index.html
-- Aggressive caching for hashed assets
-- No caching for index.html
-
-**Configuration:**
-
-```nginx
-# frontend/nginx/default.conf
-
-server {
-    listen 3001;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 256;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-
-    # Assets with content hash - immutable, cache forever
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        access_log off;
-    }
-
-    # index.html - no cache to ensure users get updates
-    location = /index.html {
-        expires -1;
-        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate";
-    }
-
-    # SPA fallback
+    # SPA fallback - must be last
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -333,7 +287,8 @@ server {
 
 ---
 
-### 3.5 Production Docker Compose
+
+### 3.4 Production Docker Compose
 
 **File:** `docker-compose.prod.yml`
 
@@ -355,42 +310,25 @@ server {
 
 services:
   nginx:
-    image: nginx:1.27-alpine
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
     container_name: optiview_nginx
     restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      frontend:
-        condition: service_healthy
       backend:
         condition: service_healthy
     networks:
       - optiview-network
     healthcheck:
       test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
-    container_name: optiview_frontend
-    restart: always
-    expose:
-      - "3001"
-    networks:
-      - optiview-network
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -464,7 +402,7 @@ volumes:
 
 ---
 
-### 3.6 Environment Configuration
+### 3.5 Environment Configuration
 
 **File:** `.env.production.example`
 
@@ -486,7 +424,7 @@ VITE_API_URL=/api
 
 ---
 
-### 3.7 Deployment Documentation
+### 3.6 Deployment Documentation
 
 **File:** `docs/deployment.md`
 
@@ -567,17 +505,16 @@ VITE_API_URL=/api
 ### Phase 1: Docker Configuration
 
 - [ ] Create `backend/Dockerfile` with multi-stage build
-- [ ] Create `frontend/Dockerfile` with multi-stage build
-- [ ] Create `frontend/nginx/default.conf` for static file serving
+- [ ] Create `nginx/Dockerfile` with frontend build stage
 - [ ] Create `docker-compose.prod.yml` for production
 - [ ] Create `.env.production.example` template
-- [ ] Create `.dockerignore` files for both services
+- [ ] Create `.dockerignore` files for backend and nginx
 
 ### Phase 2: Nginx Configuration
 
-- [ ] Create `nginx/nginx.conf` with reverse proxy configuration
+- [ ] Create `nginx/nginx.conf` with combined static file serving and reverse proxy
 - [ ] Configure SSL/TLS termination
-- [ ] Configure static file caching headers
+- [ ] Configure static file caching headers (single location)
 - [ ] Configure API proxy with rate limiting
 - [ ] Configure security headers
 - [ ] Create SSL certificate generation script
@@ -625,12 +562,9 @@ optiview/
 │   ├── docker-compose.yml            # Existing (dev)
 │   └── ... (existing files)
 ├── frontend/
-│   ├── Dockerfile                    # NEW
-│   ├── .dockerignore                 # NEW
-│   ├── nginx/
-│   │   └── default.conf              # NEW
-│   └── ... (existing files)
+│   └── ... (existing files - no Dockerfile needed)
 ├── nginx/
+│   ├── Dockerfile                    # NEW - builds frontend + nginx
 │   ├── nginx.conf                    # NEW
 │   └── ssl/                          # NEW (certificates)
 │       └── .gitkeep
