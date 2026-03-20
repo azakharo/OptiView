@@ -23,3 +23,5 @@ uploads/lqip/*
 .idea/
 *.swp
 *.swo
+
+nginx/ssl/*
