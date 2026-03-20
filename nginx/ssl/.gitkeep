@@ -1,0 +1,7 @@
+# This file exists to ensure the ssl/ directory is tracked by git.
+# Place your SSL certificates here:
+# - cert.pem (SSL certificate)
+# - key.pem (SSL private key)
+#
+# For development, run: ./scripts/generate-dev-certs.sh
+# For production, use Let's Encrypt certificates.

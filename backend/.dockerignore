@@ -1,0 +1,51 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Test files
+test
+coverage
+*.spec.ts
+*.e2e-spec.ts
+jest*.json
+
+# Documentation
+*.md
+!README.md
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Uploads directory (should not be in image)
+uploads
+
+# IDE configs
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Misc
+*.log
+*.pid
+*.seed
+*.pid.lock
+.npm
+.eslintcache
+.nyc_output

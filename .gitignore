@@ -4,6 +4,7 @@ dist/
 
 # Environment
 .env
+.env.production
 
 # Uploads
 uploads/originals/*
