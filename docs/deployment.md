@@ -399,29 +399,35 @@ VITE_API_URL=https://api.yourdomain.com
 
 ### Running Migrations
 
-Database migrations run automatically when the backend container starts. TypeORM synchronizes the schema based on entity definitions.
+Migrations must be run manually after deployment. The production container uses compiled JavaScript migrations (not TypeScript).
 
-To manually run migrations or check database state:
+To run migrations in production:
+
+```bash
+# Run migrations in the production container
+docker compose -f docker-compose.prod.yml exec backend npm run migration:run:prod
+```
+
+To check migration status:
 
 ```bash
 # Access backend container
 docker compose -f docker-compose.prod.yml exec backend sh
 
-# Run migrations manually (if configured)
-npm run migration:run
+# Check migration status
+npm run migration:show
 ```
 
-### Seeding Data
+### Seeding Test Data
 
-If you need to seed initial data:
+Seed data is for testing/demo purposes only. Run it from your local machine pointing to the production API:
 
 ```bash
-# Access backend container
-docker compose -f docker-compose.prod.yml exec backend sh
-
-# Run seed script
-npm run seed
+# From your local machine, pointing to production
+BACKEND_URL=https://your-server.com/api npm run db:seed
 ```
+
+**Note:** Ensure your server firewall allows uploads and the API is accessible.
 
 ### Backup Considerations
 

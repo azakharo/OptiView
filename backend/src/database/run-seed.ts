@@ -6,7 +6,7 @@ import { DataSource } from 'typeorm';
 import { dataSourceOptions } from '../data-source';
 import { Genre } from '../entities/genre.enum';
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const TOTAL_IMAGES = 20;
 const TEMP_DIR = path.join(__dirname, '..', '..', 'temp-seed-images');
 
@@ -82,7 +82,7 @@ async function uploadImage(filepath: string, genre: Genre): Promise<unknown> {
     Buffer.from(endBoundary),
   ]);
 
-  const url = new URL(`${API_URL}/api/images/upload`);
+  const url = new URL(`${BACKEND_URL}/api/images/upload`);
 
   const response = await fetch(url, {
     method: 'POST',

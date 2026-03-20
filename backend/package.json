@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && npm run build:migrations",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -25,7 +25,9 @@
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
     "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:show -d src/data-source.ts",
     "db:seed": "ts-node -r tsconfig-paths/register src/database/run-seed.ts",
-    "db:reset": "ts-node -r tsconfig-paths/register src/database/reset-db.ts"
+    "db:reset": "ts-node -r tsconfig-paths/register src/database/reset-db.ts",
+    "build:migrations": "tsc -p tsconfig.build.json",
+    "migration:run:prod": "typeorm migration:run -d dist/data-source.js"
   },
   "dependencies": {
     "@nestjs/common": "11.1.16",
