@@ -406,7 +406,7 @@ volumes:
 
 **File:** `.env.production.example`
 
-**Purpose:** Template for production environment variables
+**Purpose:** Template for production environment variables (committed to git)
 
 ```env
 # Database
@@ -421,6 +421,24 @@ VITE_API_URL=/api
 # NGINX_HTTP_PORT=80
 # NGINX_HTTPS_PORT=443
 ```
+
+---
+
+**File:** `.env.production`
+
+**Purpose:** Actual production environment variables for VPS deployment (NOT committed to git, included in `.gitignore`)
+
+```env
+# Database
+DB_USERNAME=postgres
+DB_PASSWORD=<your_actual_secure_password>
+DB_DATABASE=optiview
+
+# Frontend
+VITE_API_URL=/api
+```
+
+**Important:** This file contains sensitive credentials and must never be committed to version control. Copy from `.env.production.example` and fill in your actual values.
 
 ---
 
@@ -517,7 +535,8 @@ VITE_API_URL=/api
 - [ ] Create `backend/Dockerfile` with multi-stage build
 - [ ] Create `nginx/Dockerfile` with frontend build stage
 - [ ] Create `docker-compose.prod.yml` for production
-- [ ] Create `.env.production.example` template
+- [ ] Create `.env.production.example` template (committed to git)
+- [ ] Create `.env.production` with actual VPS values (NOT committed, add to `.gitignore`)
 - [ ] Create `.dockerignore` files for backend and nginx
 
 ### Phase 2: Nginx Configuration
@@ -579,7 +598,8 @@ optiview/
 │   └── ssl/                          # NEW (certificates)
 │       └── .gitkeep
 ├── docker-compose.prod.yml           # NEW
-├── .env.production.example           # NEW
+├── .env.production.example           # NEW (committed to git)
+├── .env.production                   # NEW (NOT committed, in .gitignore)
 └── docs/
     └── deployment.md                 # NEW
 ```
