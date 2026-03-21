@@ -405,7 +405,7 @@ To run migrations in production:
 
 ```bash
 # Run migrations in the production container
-docker compose -f docker-compose.prod.yml exec backend npm run migration:run:prod
+docker compose -f docker-compose.prod.yml --env-file .env.production exec backend npm run migration:run:prod
 ```
 
 To check migration status:
