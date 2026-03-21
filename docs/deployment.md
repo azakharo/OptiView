@@ -397,16 +397,9 @@ VITE_API_URL=https://api.yourdomain.com
 
 ## 6. Database Management
 
-### Running Migrations
+### Database Migrations
 
-Migrations must be run manually after deployment. The production container uses compiled JavaScript migrations (not TypeScript).
-
-To run migrations in production:
-
-```bash
-# Run migrations in the production container
-docker compose -f docker-compose.prod.yml --env-file .env.production exec backend npm run migration:run:prod
-```
+Migrations run automatically when the backend application starts. TypeORM checks the `migrations` table and applies any pending mmigrations automatically. This ensures the database schema is always up-to-date with the application code.
 
 To check migration status:
 
