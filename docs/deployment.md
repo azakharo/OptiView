@@ -538,7 +538,7 @@ cd optiview
 2. Pull the latest changes:
 
 ```bash
-git pull origin main
+git pull origin master
 ```
 
 3. Rebuild and restart containers:
