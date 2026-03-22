@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: nginx/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_API_URL: ${VITE_API_URL}
     container_name: optiview_nginx
     restart: always
     ports:

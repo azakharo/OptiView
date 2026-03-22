@@ -146,7 +146,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_BASE_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Production nginx
@@ -314,7 +314,7 @@ services:
       context: .
       dockerfile: nginx/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_API_URL: ${VITE_API_URL}
     container_name: optiview_nginx
     restart: always
     ports:
@@ -415,7 +415,7 @@ DB_PASSWORD=your_secure_password_here
 DB_DATABASE=optiview
 
 # Frontend
-VITE_API_URL=/api
+VITE_API_URL=
 
 # Optional: Custom ports
 # NGINX_HTTP_PORT=80
@@ -435,7 +435,7 @@ DB_PASSWORD=<your_actual_secure_password>
 DB_DATABASE=optiview
 
 # Frontend
-VITE_API_URL=/api
+VITE_API_URL=
 ```
 
 **Important:** This file contains sensitive credentials and must never be committed to version control. Copy from `.env.production.example` and fill in your actual values.

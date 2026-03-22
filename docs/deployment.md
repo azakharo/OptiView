@@ -206,7 +206,7 @@ openssl rand -base64 32
 DB_USERNAME=postgres
 DB_PASSWORD=<your-generated-password>
 DB_DATABASE=optiview
-VITE_API_URL=/api
+VITE_API_URL=
 ```
 
 ### SSL Certificate Setup
@@ -373,7 +373,7 @@ chmod +x scripts/renew-ssl.sh
 | `DB_USERNAME`  | No       | `postgres` | PostgreSQL database username                      |
 | `DB_PASSWORD`  | **Yes**  | -          | PostgreSQL database password (required)           |
 | `DB_DATABASE`  | No       | `optiview` | PostgreSQL database name                          |
-| `VITE_API_URL` | No       | `/api`     | API URL for frontend (use `/api` for same-origin) |
+| `VITE_API_URL` | No       | ``     | API URL for frontend (use empty string for same-origin) |
 
 ### Configuration Examples
 
@@ -382,7 +382,7 @@ chmod +x scripts/renew-ssl.sh
 Frontend and backend served from the same domain:
 
 ```env
-VITE_API_URL=/api
+VITE_API_URL=
 ```
 
 #### Cross-Origin Deployment
