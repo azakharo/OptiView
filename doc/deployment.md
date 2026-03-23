@@ -154,10 +154,15 @@ sudo systemctl enable docker
 
 6. Add your user to the docker group (optional, for non-root access):
 
+> **Note:** Skip this step if you're logged in as `root`. Root already has full Docker access.
+> This step is only needed if you created a non-root user (e.g., `deploy`, `ubuntu`) and want to run Docker commands without `sudo`.
+
 ```bash
 sudo usermod -aG docker $USER
 newgrp docker
 ```
+
+Here, `$USER` refers to your current shell user (the non-root user you're logged in as).
 
 7. Verify Docker installation:
 
@@ -169,6 +174,21 @@ docker compose version
 ---
 
 ## 3. Application Deployment
+
+### Deployment User
+
+You can deploy OptiView as `root` or as a non-root user with sudo privileges.
+
+**Using root (simpler, acceptable for personal projects):**
+- All commands will work directly without `sudo` prefix
+- Docker containers still provide isolation and security
+- Acceptable for personal VPS or development environments
+
+**Using a non-root user (recommended for production):**
+- Create a dedicated user: `adduser deploy && usermod -aG sudo deploy`
+- Switch to that user: `su - deploy`
+- Add to docker group (step 2.6) to run Docker without `sudo`
+- More secure for multi-user or production environments
 
 ### Clone Repository
 
@@ -765,6 +785,22 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec nginx 
 ## 10. Architecture Overview
 
 ### Docker Setup
+
+### Container Security Model
+
+All containers in OptiView follow security best practices:
+
+**Non-root User Execution:**
+- The backend container runs as `appuser` (UID 1001), not as root
+- This user is created automatically during Docker image build (see [`backend/Dockerfile`](../backend/Dockerfile))
+- No manual user creation is required on your VPS
+- This reduces security risk if the container is compromised
+
+**What This Means for Deployment:**
+- When you run `docker compose up --build`, Docker automatically creates the `appuser` inside the image
+- Files and directories inside the container are owned by this user
+- You don't need to create this user on your host system
+- If you need to access files in Docker volumes, you may need to use `docker compose exec` commands
 
 OptiView uses a multi-container Docker architecture orchestrated by Docker Compose.
 
